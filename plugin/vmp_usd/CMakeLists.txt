@@ -1,27 +1,33 @@
-set(PXR_PACKAGE vmp_usd)
+set(LIB_NAME vmp_usd)
 
-if (NOT ${PXR_ENABLE_GL_SUPPORT})
-    message(STATUS
-        "Skipping ${PXR_PACKAGE} because PXR_ENABLE_GL_SUPPORT is OFF")
-    return()
-endif()
-
-pxr_plugin(${PXR_PACKAGE}
-    KATANA_PLUGIN
-    LIBRARIES
-        arch
-        tf
-        work
-        usd
-        usdUtils
-        glf
-        usdImaging
-        usdImagingGL
-        katanaPluginApi
-        usdKatana
-
-    CPPFILES
-        debugCodes.cpp
-        usdVMP.cpp
+set(CPPFILES
+    debugCodes.cpp
+    usdVMP.cpp
 )
 
+set(LIBRARIES
+    arch
+    tf
+    work
+    usd
+    usdUtils
+    glf
+    usdImaging
+    usdImagingGL
+    katanaPluginApi
+    usdKatana
+)
+
+add_library(${LIB_NAME} SHARED ${CPPFILES})
+
+target_link_libraries(${LIB_NAME} PRIVATE ${LIBRARIES})
+target_include_directories(${LIB_NAME} PRIVATE ${KATANA_API_INCLUDE_DIRS})
+
+set_target_properties(${LIB_NAME} PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    PREFIX ""
+    INSTALL_RPATH_USE_LINK_PATH TRUE
+    INSTALL_RPATH "$ORIGIN/../../lib"
+)
+
+install(TARGETS ${LIB_NAME} DESTINATION "${INSTALL_SUBDIR}/plugin/Libs")

@@ -1,71 +1,78 @@
-set(PXR_PACKAGE pxrUsdInShipped)
+set(LIB_NAME pxrUsdInShipped)
 
-pxr_plugin(${PXR_PACKAGE}
-    KATANA_PLUGIN
-    LIBRARIES
-        katanaAttrfncApi
-        katanaOpApi
-        katanaPluginApi
-        kind
-        usd
-        usdGeom
-        usdKatana
-        usdShade
-        usdLux
-        usdRi
+set(CPPFILES
+    register.cpp
 
-    PRIVATE_CLASSES
-        attrfnc_materialReference
-
-    PRIVATE_HEADERS
-        declareCoreOps.h
-
-    CPPFILES
-        register.cpp
-
-        basisCurves.cpp
-        camera.cpp
-        constraints.cpp
-        geomSubset.cpp
-        light.cpp
-        lightFilter.cpp
-        material.cpp
-        materialsGroup.cpp
-        mesh.cpp
-        model.cpp
-        nurbsPatch.cpp
-        pointInstancer.cpp
-        points.cpp
-        scope.cpp
-        uiUtils.cpp
-        xform.cpp
+    attrfnc_materialReference.cpp
+    basisCurves.cpp
+    camera.cpp
+    constraints.cpp
+    geomSubset.cpp
+    light.cpp
+    lightFilter.cpp
+    material.cpp
+    materialsGroup.cpp
+    mesh.cpp
+    model.cpp
+    nurbsPatch.cpp
+    pointInstancer.cpp
+    points.cpp
+    scope.cpp
+    uiUtils.cpp
+    xform.cpp
 )
 
-pxr_test_scripts(
-    testenv/Basic/testPxrUsdInShippedBasic.py
-    testenv/PointInstancer/testPxrUsdInShippedPointInstancer.py
+set(LIBRARIES
+    katanaAttrfncApi
+    katanaOpApi
+    katanaPluginApi
+    kind
+    usd
+    usdGeom
+    usdKatana
+    usdShade
+    usdLux
+    usdRi
 )
 
-pxr_install_test_dir(
-    SRC testenv/Basic
-    DEST testPxrUsdInShippedBasic
+add_library(${LIB_NAME} SHARED ${CPPFILES})
+
+target_link_libraries(${LIB_NAME} PRIVATE ${LIBRARIES})
+target_include_directories(${LIB_NAME} PRIVATE ${KATANA_API_INCLUDE_DIRS})
+
+set_target_properties(${LIB_NAME} PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    PREFIX ""
+    INSTALL_RPATH_USE_LINK_PATH TRUE
+    INSTALL_RPATH "$ORIGIN/../../lib"
 )
 
-pxr_install_test_dir(
-    SRC testenv/PointInstancer/oss
-    DEST testPxrUsdInShippedPointInstancer
-)
+install(TARGETS ${LIB_NAME} DESTINATION "${INSTALL_SUBDIR}/plugin/Libs")
 
-pxr_register_test(testPxrUsdInShippedBasic
-    COMMAND "${KATANA_API_BASE_DIR}/katana --script ${CMAKE_INSTALL_PREFIX}/tests/testPxrUsdInShippedBasic"
-    EXPECTED_RETURN_CODE 0
-    ENV
-        KATANA_RESOURCES=${CMAKE_INSTALL_PREFIX}/third_party/katana/plugin
-)
 
-pxr_register_test(testPxrUsdInShippedPointInstancer
-    COMMAND "${KATANA_API_BASE_DIR}/katana --script ${CMAKE_INSTALL_PREFIX}/tests/testPxrUsdInShippedPointInstancer"
-    EXPECTED_RETURN_CODE 0
-    ENV
-        KATANA_RESOURCES=${CMAKE_INSTALL_PREFIX}/third_party/katana/plugin
-)
+# Copy test files and add test target if tests are enabled.
+set(TESTS "")
+if(BUILD_TESTS)
+    set(TESTS "Basic" "PointInstancer")
+endif()
+foreach(TEST ${TESTS})
+    file(GLOB_RECURSE FILES "testenv/${TEST}/**")
+    install(
+        FILES ${FILES}
+        DESTINATION "${INSTALL_SUBDIR}/tests/${TEST}"
+    )
+    add_test(
+        NAME
+            "testPxrUsdInShipped${TEST}"
+        COMMAND
+            ${CMAKE_COMMAND} -E env
+                "KATANA_RESOURCES=${INSTALL_DIR}/plugin"
+            ${CMAKE_COMMAND} -E env
+                "PYTHONPATH=$PYTHONPATH:${USD_LIBRARY_DIR}/python"
+            "${KATANA_API_BASE_DIR}/katana"
+            "--script"
+            "${INSTALL_DIR}/tests/${TEST}/testPxrUsdInShipped${TEST}.py"
+        WORKING_DIRECTORY
+            "${INSTALL_DIR}/tests/${TEST}"
+    )
+endforeach()
