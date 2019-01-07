@@ -33,7 +33,8 @@
 
 find_path(KATANA_API_BASE_DIR
     NAMES
-        katana
+        bin/katanaBin
+        bin/katanaBin.exe
     HINTS
         "${KATANA_API_LOCATION}"
         "$ENV{KATANA_API_LOCATION}"
