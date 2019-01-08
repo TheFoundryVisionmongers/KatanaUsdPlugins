@@ -21,6 +21,18 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#ifdef _WIN32
+#include <windows.h>
+#include <winbase.h>
+#include <combaseapi.h>
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+#ifdef interface
+#undef interface
+#endif
+#endif
+
 #include <ciso646>
 
 #include "pxr/pxr.h"

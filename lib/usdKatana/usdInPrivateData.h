@@ -24,6 +24,18 @@
 #ifndef PXRUSDKATANA_USDIN_PRIVATEDATA_H
 #define PXRUSDKATANA_USDIN_PRIVATEDATA_H
 
+#ifdef _WIN32
+#include <windows.h>
+#include <winbase.h>
+#include <combaseapi.h>
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+#ifdef interface
+#undef interface
+#endif
+#endif
+
 #include "pxr/pxr.h"
 #include "usdKatana/usdInArgs.h"
 

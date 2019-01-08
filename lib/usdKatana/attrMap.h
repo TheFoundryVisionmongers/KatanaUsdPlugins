@@ -24,6 +24,18 @@
 #ifndef PXRUSDKATANA_ATTRMAP_H
 #define PXRUSDKATANA_ATTRMAP_H
 
+#ifdef _WIN32
+#include <windows.h>
+#include <winbase.h>
+#include <combaseapi.h>
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif
+#ifdef interface
+#undef interface
+#endif
+#endif
+
 #include "pxr/pxr.h"
 #include <FnAttribute/FnGroupBuilder.h>
 #include <FnGeolib/op/FnGeolibOp.h>
