@@ -72,7 +72,7 @@ find_package(KatanaAPI REQUIRED)
 find_package(TBB COMPONENTS tbb REQUIRED)
 add_definitions(${TBB_DEFINITIONS})
 find_package(PythonLibs 2.7 REQUIRED)
-find_package(Boost COMPONENTS python system thread REQUIRED)
+find_package(Boost COMPONENTS python regex system thread REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
 

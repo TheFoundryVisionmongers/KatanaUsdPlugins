@@ -104,6 +104,7 @@ set(LIBRARIES
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_THREAD_LIBRARY}
     ${Boost_PYTHON_LIBRARY}
+    ${Boost_REGEX_LIBRARY}
     ${PYTHON_LIBRARIES}
 )
 
