@@ -62,7 +62,7 @@ PXR_NAMESPACE_USING_DIRECTIVE
 namespace FnKat = Foundry::Katana;
 
 // convenience macro to report an error.
-#define ERROR(...)\
+#define SET_ERROR(...)\
     interface.setAttr("type", Foundry::Katana::StringAttribute("error"));\
     interface.setAttr("errorMessage", Foundry::Katana::StringAttribute(\
         TfStringPrintf(__VA_ARGS__)));
@@ -129,13 +129,13 @@ public:
         }
         // Validate usdInArgs.
         if (!usdInArgs) {
-            ERROR("Could not initialize PxrUsdIn usdInArgs.");
+            SET_ERROR("Could not initialize PxrUsdIn usdInArgs.");
             return;
         }
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            ERROR(usdInArgs->GetErrorMessage().c_str());
+            SET_ERROR(usdInArgs->GetErrorMessage().c_str());
             return;
         }
 
@@ -152,8 +152,8 @@ public:
         
         // Validate usd prim.
         if (!prim) {
-            ERROR("No USD prim at %s",
-                  interface.getRelativeOutputLocationPath().c_str());
+            SET_ERROR("No USD prim at %s",
+                      interface.getRelativeOutputLocationPath().c_str());
             return;
         }
 
@@ -245,7 +245,7 @@ public:
                 readerLock.unlock();
                 prim = _LoadPrim(stage, pathToLoad, verbose);
                 if (!prim) {
-                    ERROR("load prim %s failed", pathToLoad.GetText());
+                    SET_ERROR("load prim %s failed", pathToLoad.GetText());
                     return;
                 }
                 readerLock.lock();
@@ -640,8 +640,8 @@ public:
                 const UsdPrim& masterPrim = prim.GetMaster();
                 if (!masterPrim)
                 {
-                    ERROR("USD Prim is advertised as an instance "
-                        "but master prim cannot be found.");
+                    SET_ERROR("USD Prim is advertised as an instance "
+                              "but master prim cannot be found.");
                 }
                 else
                 {
@@ -999,13 +999,13 @@ public:
                         additionalOpArgs, interface.getRootLocationPath());
         
         if (!usdInArgs) {
-            ERROR("Could not initialize PxrUsdIn usdInArgs.");
+            SET_ERROR("Could not initialize PxrUsdIn usdInArgs.");
             return;
         }
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            ERROR(usdInArgs->GetErrorMessage().c_str());
+            SET_ERROR(usdInArgs->GetErrorMessage().c_str());
             return;
         }
 
@@ -1024,8 +1024,8 @@ public:
 
         if (tokens.empty())
         {
-            ERROR("Could not initialize PxrUsdIn op with "
-                "PxrUsdIn.Bootstrap op.");
+            SET_ERROR("Could not initialize PxrUsdIn op with "
+                      "PxrUsdIn.Bootstrap op.");
             return;
         }
 
@@ -1079,13 +1079,13 @@ public:
                         additionalOpArgs, interface.getRootLocationPath());
         
         if (!usdInArgs) {
-            ERROR("Could not initialize PxrUsdIn usdInArgs.");
+            SET_ERROR("Could not initialize PxrUsdIn usdInArgs.");
             return;
         }
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            ERROR(usdInArgs->GetErrorMessage().c_str());
+            SET_ERROR(usdInArgs->GetErrorMessage().c_str());
             return;
         }
 
