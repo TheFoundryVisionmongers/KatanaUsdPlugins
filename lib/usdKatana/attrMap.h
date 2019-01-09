@@ -36,6 +36,8 @@
 #endif
 #endif
 
+#include "usdKatana/api.h"
+
 #include "pxr/pxr.h"
 #include <FnAttribute/FnGroupBuilder.h>
 #include <FnGeolib/op/FnGeolibOp.h>
@@ -57,6 +59,7 @@ class PxrUsdKatanaAttrMap
 {
 public:
     /// Configure this object to evaluate USD attributes at the given time.
+    USDKATANA_API
     void SetUSDTimeCode(UsdTimeCode timeCode) {
         _usdTimeCode = timeCode;
     }
@@ -64,29 +67,36 @@ public:
     /// Set the katana attribute \p path by evaluating the given
     /// USD attribute \p attr at the time configured in SetUSDTime().
     /// Returns this object by reference so these calls can be chained.
+    USDKATANA_API
     PxrUsdKatanaAttrMap& Set(const std::string& path, const UsdAttribute& attr);
 
     /// \brief set \p attr at \p path.
+    USDKATANA_API
     void set(const std::string& path, const Foundry::Katana::Attribute& attr);
 
     /// \brief delete attribute at \p path
+    USDKATANA_API
     void del(const std::string& path);
 
     /// \brief build a group attribute
+    USDKATANA_API
     FnAttribute::GroupAttribute build();
 
     /// \brief sets attrs in \p attrs onto the \p interface.
+    USDKATANA_API
     void toInterface(Foundry::Katana::GeolibCookInterface& interface);
 
 
     /// \brief returns true if a call to build has been made prior to any
     ///        subsequent calls to set or del.
+    USDKATANA_API
     bool isBuilt();
     
 
     typedef boost::upgrade_mutex Mutex;
     /// \brief while no locking occurs internal to this class, calling code
     ///        may wish to manage read/write locks per-instance.
+    USDKATANA_API
     Mutex & getInstanceMutex() { return m_mutex; }
 
 private:

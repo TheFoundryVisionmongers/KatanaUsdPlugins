@@ -21,12 +21,14 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#ifndef PXRUSDKATANA_READPRIM_H
+#define PXRUSDKATANA_READPRIM_H
+
+#include "usdKatana/api.h"
+
 #include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
-
-#ifndef PXRUSDKATANA_READPRIM_H
-#define PXRUSDKATANA_READPRIM_H
 
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
@@ -34,18 +36,21 @@ class UsdPrim;
 class UsdGeomImageable;
 
 /// \brief read \p prim into \p attrs.
+USDKATANA_API
 void
 PxrUsdKatanaReadPrim(
         const UsdPrim& prim,
         const PxrUsdKatanaUsdInPrivateData& data,
         PxrUsdKatanaAttrMap& attrs);
 
+USDKATANA_API
 void
 PxrUsdKatanaReadPrimPrmanStatements(
         const UsdPrim& prim,
         double currentTime,
         Foundry::Katana::GroupBuilder& statementBuilder);
 
+USDKATANA_API
 Foundry::Katana::Attribute
 PxrUsdKatanaGeomGetPrimvarGroup(
         const UsdGeomImageable& imageable,

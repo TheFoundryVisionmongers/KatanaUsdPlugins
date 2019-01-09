@@ -66,6 +66,7 @@ public:
     /// Equivalent to UsdKatanaLookAPI::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
+    USDKATANA_API
     explicit UsdKatanaLookAPI(const UsdPrim& prim=UsdPrim())
         : UsdAPISchemaBase(prim)
     {
@@ -74,6 +75,7 @@ public:
     /// Construct a UsdKatanaLookAPI on the prim held by \p schemaObj .
     /// Should be preferred over UsdKatanaLookAPI(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
+    USDKATANA_API
     explicit UsdKatanaLookAPI(const UsdSchemaBase& schemaObj)
         : UsdAPISchemaBase(schemaObj)
     {
@@ -133,6 +135,7 @@ private:
     USDKATANA_API
     static const TfType &_GetStaticTfType();
 
+    USDKATANA_API
     static bool _IsTypedSchema();
 
     // override SchemaBase virtuals.

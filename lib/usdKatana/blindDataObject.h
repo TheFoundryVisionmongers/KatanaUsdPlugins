@@ -66,6 +66,7 @@ public:
     /// Equivalent to UsdKatanaBlindDataObject::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
+    USDKATANA_API
     explicit UsdKatanaBlindDataObject(const UsdPrim& prim=UsdPrim())
         : UsdTyped(prim)
     {
@@ -74,6 +75,7 @@ public:
     /// Construct a UsdKatanaBlindDataObject on the prim held by \p schemaObj .
     /// Should be preferred over UsdKatanaBlindDataObject(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
+    USDKATANA_API
     explicit UsdKatanaBlindDataObject(const UsdSchemaBase& schemaObj)
         : UsdTyped(schemaObj)
     {
@@ -142,6 +144,7 @@ private:
     USDKATANA_API
     static const TfType &_GetStaticTfType();
 
+    USDKATANA_API
     static bool _IsTypedSchema();
 
     // override SchemaBase virtuals.
@@ -232,6 +235,7 @@ public:
     /// \p katanaFullName should be the full attribute name from katana, i.e. 
     /// "materials.interface.foo".   \p usdType is the typename for the
     /// attribute and will be passed directly to \p UsdPrim::CreateAttribute().
+    USDKATANA_API
     UsdAttribute
     CreateKbdAttribute(
         const std::string &katanaFullName,
@@ -246,6 +250,7 @@ public:
     /// As noed above, rib attributes can be either UsdAttribute or 
     /// UsdRelationship, and like all UsdProperties, need not have a defined 
     /// value.
+    USDKATANA_API
     std::vector<UsdProperty>
     GetKbdAttributes(const std::string &nameSpace = "") const;
 
@@ -253,6 +258,7 @@ public:
     // GetKbdAttribute
     // --------------------------------------------------------------------- //
     /// Return a specific KBD attribute
+    USDKATANA_API
     UsdAttribute
     GetKbdAttribute(const std::string &katanaFullName);
 
@@ -263,6 +269,7 @@ public:
     /// "geometry" or "materials").  Can be used with
     /// GetGroupBuilderKeyForProperty()
     ///
+    USDKATANA_API
     static TfToken GetKbdAttributeNameSpace(const UsdProperty &prop);
 
     // --------------------------------------------------------------------- //
@@ -284,6 +291,7 @@ public:
     /// "interface.foo"
     ///
     /// To get "materials", use GetKbdAttributeNameSpace()
+    USDKATANA_API
     static std::string GetGroupBuilderKeyForProperty(const UsdProperty& prop);
 
     // --------------------------------------------------------------------- //
@@ -291,6 +299,7 @@ public:
     // --------------------------------------------------------------------- //
     /// Return true if the property is in the "ri:attributes" namespace.
     ///
+    USDKATANA_API
     static bool IsKbdAttribute(const UsdProperty &prop);
 };
 

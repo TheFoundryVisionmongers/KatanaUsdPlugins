@@ -21,18 +21,21 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#ifndef PXRUSDKATANA_READMESH_H
+#define PXRUSDKATANA_READMESH_H
+
+#include "usdKatana/api.h"
+
 #include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
-
-#ifndef PXRUSDKATANA_READMESH_H
-#define PXRUSDKATANA_READMESH_H
 
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdGeomMesh;
 
 /// \brief read \p mesh into \p attrs.
+USDKATANA_API
 void
 PxrUsdKatanaReadMesh(
         const UsdGeomMesh& mesh,

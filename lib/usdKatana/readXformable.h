@@ -21,20 +21,23 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
-
-PXR_NAMESPACE_OPEN_SCOPE
-
 #ifndef PXRUSDKATANA_READXFORMABLE_H
 #define PXRUSDKATANA_READXFORMABLE_H
 
+#include "usdKatana/api.h"
+
+#include "pxr/pxr.h"
+
 #include <FnAttribute/FnAttribute.h>
+
+PXR_NAMESPACE_OPEN_SCOPE
 
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdGeomXformable;
 
 /// \brief read \p xform into \p attrs.
+USDKATANA_API
 void
 PxrUsdKatanaReadXformable(
         const UsdGeomXformable& xform,
@@ -43,6 +46,7 @@ PxrUsdKatanaReadXformable(
 
 /// \brief read \p xform into \p attr.  Returns \c true iff there were any
 /// transformation ops.
+USDKATANA_API
 bool
 PxrUsdKatanaReadXformable(
         const UsdGeomXformable& xform,

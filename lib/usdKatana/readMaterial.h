@@ -21,12 +21,14 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#ifndef PXRUSDKATANA_READMATERIAL_H
+#define PXRUSDKATANA_READMATERIAL_H
+
+#include "usdKatana/api.h"
+
 #include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
-
-#ifndef PXRUSDKATANA_READMATERIAL_H
-#define PXRUSDKATANA_READMATERIAL_H
 
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
@@ -35,6 +37,7 @@ class UsdShadeMaterial;
 /// \brief read \p Material into \p attrs.  If \p flatten is specified, we treat it
 /// as if it is a "standalone" material (i.e. no "material" inheritance in the
 /// katana sense).
+USDKATANA_API
 void
 PxrUsdKatanaReadMaterial(
         const UsdShadeMaterial& material,

@@ -21,18 +21,21 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#ifndef PXRUSDKATANA_READCAMERA_H
+#define PXRUSDKATANA_READCAMERA_H
+
+#include "usdKatana/api.h"
+
 #include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
-
-#ifndef PXRUSDKATANA_READCAMERA_H
-#define PXRUSDKATANA_READCAMERA_H
 
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdGeomCamera;
 
 /// \brief Read \p camera into \p attrs.
+USDKATANA_API
 void
 PxrUsdKatanaReadCamera(
         const UsdGeomCamera& camera,
