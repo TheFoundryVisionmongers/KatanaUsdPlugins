@@ -8,6 +8,8 @@ set(CPPFILES
 set(LIBRARIES
     arch
     tf
+    gf
+    sdf
     work
     usd
     usdUtils
@@ -16,6 +18,11 @@ set(LIBRARIES
     usdImagingGL
     katanaPluginApi
     usdKatana
+    ${Boost_SYSTEM_LIBRARY}
+    ${Boost_PYTHON_LIBRARY}
+    ${PYTHON_LIBRARIES}
+    ${GLEW_LIBRARIES}
+    ${OPENGL_gl_LIBRARY}
 )
 
 add_library(${LIB_NAME} SHARED ${CPPFILES})

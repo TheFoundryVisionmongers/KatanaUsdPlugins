@@ -27,12 +27,19 @@ set(LIBRARIES
     katanaOpApi
     katanaPluginApi
     kind
+    arch
+    tf
+    sdf
+    vt
     usd
     usdGeom
     usdKatana
     usdShade
     usdLux
     usdRi
+    ${Boost_PYTHON_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+    ${PYTHON_LIBRARIES}
 )
 
 add_library(${LIB_NAME} SHARED ${CPPFILES})

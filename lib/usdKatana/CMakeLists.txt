@@ -74,6 +74,11 @@ set(CPPFILES
 )
 
 set(LIBRARIES
+    arch
+    pcp
+    kind
+    work
+    glf
     plug
     gf
     tf
@@ -94,9 +99,20 @@ set(LIBRARIES
     usdUtils
     cameraUtil
     katanaAttrfncApi
+    katanaOpApi
+    katanaPluginApi
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_THREAD_LIBRARY}
+    ${Boost_PYTHON_LIBRARY}
+    ${PYTHON_LIBRARIES}
 )
+
+# Hack to work around https://github.com/PixarAnimationStudios/USD/issues/738
+if(CMAKE_SYSTEM_NAME MATCHES Windows)
+set_source_files_properties(cache.cpp PROPERTIES COMPILE_FLAGS "/Od")
+endif()
+
+add_definitions(-DUSDKATANA_EXPORTS)
 
 add_library(${LIB_NAME} SHARED ${CPPFILES})
 
