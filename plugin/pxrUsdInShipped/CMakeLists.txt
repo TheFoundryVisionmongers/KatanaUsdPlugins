@@ -65,28 +65,62 @@ endif()
 
 
 # Copy test files and add test target if tests are enabled.
-set(TESTS "")
 if(BUILD_TESTS)
+
+    # Read the current environment variables and append paths.
+    set(KATANA_RESOURCES $ENV{KATANA_RESOURCES})
+    list(APPEND KATANA_RESOURCES
+        ${INSTALL_DIR}/plugin
+    )
+    set(PYTHONPATH $ENV{PYTHONPATH})
+    list(APPEND PYTHONPATH
+        ${USD_LIBRARY_DIR}/python
+    )
+    set(PATH $ENV{PATH})
+    list(APPEND PATH
+        ${USD_ROOT}/bin
+        ${USD_LIBRARY_DIR}
+        ${INSTALL_DIR}/lib
+    )
+
+    # Note that the ; character is used by CMake as a delimiter, which means
+    # that on Windows it needs to be scaped (a number of times).
+    set(PATHSEP ":")
+    if(CMAKE_SYSTEM_NAME MATCHES Windows)
+        set(PATHSEP "\\\\\\;")
+    endif()
+
+    # Join the lists into a single string.
+    list(JOIN KATANA_RESOURCES ${PATHSEP} KATANA_RESOURCES_STR)
+    list(JOIN PYTHONPATH ${PATHSEP} PYTHONPATH_STR)
+    list(JOIN PATH ${PATHSEP} PATH_STR)
+
+    # Join all the environment variables together.
+    set(ENVARS "KATANA_RESOURCES=${KATANA_RESOURCES_STR}")
+    set(ENVARS "${ENVARS}\\;PYTHONPATH=${PYTHONPATH_STR}")
+    set(ENVARS "${ENVARS}\\;PATH=${PATH_STR}")
+
+    # List of tests to run.
     set(TESTS "Basic" "PointInstancer")
+
+    foreach(TEST ${TESTS})
+        file(GLOB_RECURSE FILES "testenv/${TEST}/**")
+        install(
+            FILES ${FILES}
+            DESTINATION "${INSTALL_SUBDIR}/tests/${TEST}"
+        )
+        add_test(
+            NAME
+                "testPxrUsdInShipped${TEST}"
+            COMMAND
+                "${KATANA_BIN}"
+                "--script"
+                "${INSTALL_DIR}/tests/${TEST}/testPxrUsdInShipped${TEST}.py"
+            WORKING_DIRECTORY
+                "${INSTALL_DIR}/tests/${TEST}"
+        )
+        set_tests_properties("testPxrUsdInShipped${TEST}" PROPERTIES
+            ENVIRONMENT ${ENVARS}
+        )
+    endforeach()
 endif()
-foreach(TEST ${TESTS})
-    file(GLOB_RECURSE FILES "testenv/${TEST}/**")
-    install(
-        FILES ${FILES}
-        DESTINATION "${INSTALL_SUBDIR}/tests/${TEST}"
-    )
-    add_test(
-        NAME
-            "testPxrUsdInShipped${TEST}"
-        COMMAND
-            ${CMAKE_COMMAND} -E env
-                "KATANA_RESOURCES=${INSTALL_DIR}/plugin"
-            ${CMAKE_COMMAND} -E env
-                "PYTHONPATH=$PYTHONPATH:${USD_LIBRARY_DIR}/python"
-            "${KATANA_API_BASE_DIR}/katana"
-            "--script"
-            "${INSTALL_DIR}/tests/${TEST}/testPxrUsdInShipped${TEST}.py"
-        WORKING_DIRECTORY
-            "${INSTALL_DIR}/tests/${TEST}"
-    )
-endforeach()
