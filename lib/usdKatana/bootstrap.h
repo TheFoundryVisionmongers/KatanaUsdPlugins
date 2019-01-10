@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Pixar
+// Copyright 2016 Pixar
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -21,28 +21,19 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#ifndef USDKATANA_BOOTSTRAP_H
+#define USDKATANA_BOOTSTRAP_H
+
+#include "usdKatana/api.h"
 
 #include "pxr/pxr.h"
 
-#include "pxrUsdInPrman/declarePackageOps.h"
+PXR_NAMESPACE_OPEN_SCOPE
 
-#include "usdKatana/bootstrap.h"
+/// \brief bootstrap Geolib.
+USDKATANA_API
+void PxrUsdKatanaBootstrap();
 
+PXR_NAMESPACE_CLOSE_SCOPE
 
-PXR_NAMESPACE_USING_DIRECTIVE
-
-
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInPrman_LocationDecorator);
-
-void registerPlugins()
-{
-    USD_OP_REGISTER_PLUGIN(PxrUsdInPrman_LocationDecorator, 
-                       "PxrUsdInPrman_LocationDecorator", 
-                       0, 
-                       1);
-    
-    PxrUsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(
-            "PxrUsdInPrman_LocationDecorator");
-
-    PxrUsdKatanaBootstrap();
-}
+#endif // USDKATANA_BOOTSTRAP_H

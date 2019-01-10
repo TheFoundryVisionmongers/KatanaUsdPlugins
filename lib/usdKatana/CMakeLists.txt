@@ -6,6 +6,7 @@ set(PUBLICHEADERS
     attrMap.h
     baseMaterialHelpers.h
     blindDataObject.h
+    bootstrap.h
     cache.h
     debugCodes.h
     locks.h
@@ -39,6 +40,7 @@ set(CPPFILES
     attrMap.cpp
     baseMaterialHelpers.cpp
     blindDataObject.cpp
+    bootstrap.cpp
     cache.cpp
     debugCodes.cpp
     locks.cpp
