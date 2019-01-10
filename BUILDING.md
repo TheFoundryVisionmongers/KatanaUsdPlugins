@@ -83,22 +83,52 @@ cmake .. \
 cmake --build . --target install -- -j 18
 ```
 
+Example on Windows:
+
+```cmd.exe
+cd C:/path/to/usd_for_katana
+mkdir build
+cd build
+cmake ..  -G "Visual Studio 14 2015 Win64" \
+    -DKATANA_API_LOCATION="C:/Program Files/Foundry/Katana3.0v7" \
+    -DUSD_ROOT="C:/path/to/usd/" \
+    -DTBB_ROOT_DIR="C:/path/to/usd/" \
+    -DTBB_INCLUDE_DIRS="C:/path/to/usd/include/" \
+    -DTBB_tbb_LIBRARY="C:/path/to/usd/lib/tbb.lib" \
+    -DPYTHON_INCLUDE_DIR="C:/Python27/include/" \
+    -DPYTHON_LIBRARY="C:/Python27/libs/python27.lib" \
+    -DGLEW_INCLUDE_DIR="C:/path/to/usd/include/" \
+    -DGLEW_LIBRARY="C:/path/to/usd/lib/glew32.lib" \
+    -DBOOST_INCLUDEDIR="C:/path/to/usd/include/boost-1_61/boost/" \
+    -DBOOST_LIBRARYDIR="C:/path/to/usd/lib/" \
+    -DCMAKE_INSTALL_PREFIX="C:/path/to/usd/"
+
+cmake --build . --target install --config Release --parallel 18
+```
+
 It is possible to change the installation directory by setting the variable
 `CMAKE_INSTALL_PREFIX` before invoking CMake. By default, the plug-in will be
 installed in `/usr/local/` on Linux, or in `C:/Program Files/` on Windows,
 under the `third_party/katana/` subdirectory. It is encouraged to set the
 variable to a more sensible destination other than the default location.
 
-In the provided example, the plug-in will be effectively installed in
-`/path/to/usd_for_katana/third_party/katana/`.
+In the provided examples, the plug-in will be effectively installed in
+`/path/to/usd_for_katana/third_party/katana/` in Linux, or
+`C:/path/to/usd_for_katana/third_party/katana/` in Windows.
 
 ## Tests
 
 To optionally build the tests, turn `BUILD_TESTS` on when invoking CMake. After
 building, execute the following to run the tests:
 
-```
+```bash
 ctest
+```
+
+Or, in Windows, if built the optimized configuration:
+
+```cmd.exe
+ctest -C Release
 ```
 
 A valid Katana license will be required to execute the tests.
@@ -113,10 +143,25 @@ Linux:
 export KATANA_RESOURCES=$KATANA_RESOURCES:/path/to/usd_for_katana/third_party/katana/plugin/
 ```
 
+Or, in Windows:
+
+```cmd.exe
+set "KATANA_RESOURCES=%KATANA_RESOURCES%;C:/path/to/usd_for_katana/third_party/katana/plugin/"
+```
+
 If USD is not already set up, also adjust the following environment variables:
 
 ```bash
 export PATH=$PATH:/path/to/usd/bin/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/usd/lib/
 export PYTHONPATH=$PYTHONPATH:/path/to/usd/lib/python/
+```
+
+And, in Windows:
+
+```cmd.exe
+set "PATH=%PATH%;C:/path/to/usd/bin/"
+set "PATH=%PATH%;C:/path/to/usd/lib/"
+set "PATH=%PATH%;C:/path/to/usd_for_katana/third_party/katana/lib/"
+set "PYTHONPATH=%PYTHONPATH%;C:/path/to/usd/lib/python/"
 ```
