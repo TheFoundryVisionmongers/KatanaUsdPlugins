@@ -38,6 +38,10 @@ if(CMAKE_SYSTEM_NAME MATCHES Windows)
         # Reduce namespace pollution when #including windows.h
         -DWIN32_LEAN_AND_MEAN
     )
+
+    # Generate PDB files also in release.
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+    set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
 endif()
 
 add_definitions(

@@ -126,6 +126,13 @@ set_target_properties(${LIB_NAME} PROPERTIES
 )
 
 install(TARGETS ${LIB_NAME} DESTINATION ${INSTALL_SUBDIR}/lib)
+if(CMAKE_SYSTEM_NAME MATCHES Windows)
+    install(
+        FILES $<TARGET_PDB_FILE:${LIB_NAME}>
+        DESTINATION ${INSTALL_SUBDIR}/lib
+        OPTIONAL
+    )
+endif()
 
 install(
     FILES
