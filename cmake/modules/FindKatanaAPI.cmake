@@ -30,6 +30,7 @@
 # KATANA_API_INCLUDE_DIR   Path to the Katana API include directories
 # KATANA_API_SOURCE_DIR    Path to the Katana API source directories
 # KATANA_API_VERSION       Katana API version
+# KATANA_BIN               Path to the Katana executable file
 
 find_path(KATANA_API_BASE_DIR
     NAMES
@@ -128,3 +129,7 @@ find_package_handle_standard_args(Katana
 
 set(KATANA_API_INCLUDE_DIRS ${KATANA_API_INCLUDE_DIR})
 
+set(KATANA_BIN "${KATANA_API_BASE_DIR}/bin/katanaBin")
+if(CMAKE_SYSTEM_NAME MATCHES Windows)
+    set(KATANA_BIN "${KATANA_BIN}.exe")
+endif()
