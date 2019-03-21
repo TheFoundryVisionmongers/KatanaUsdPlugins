@@ -87,21 +87,22 @@ Example on Windows:
 
 ```cmd.exe
 cd C:/path/to/usd_for_katana
-mkdir build
+mkdir build\    
 cd build
-cmake ..  -G "Visual Studio 14 2015 Win64" \
-    -DKATANA_API_LOCATION="C:/Program Files/Foundry/Katana3.0v7" \
-    -DUSD_ROOT="C:/path/to/usd/" \
-    -DTBB_ROOT_DIR="C:/path/to/usd/" \
-    -DTBB_INCLUDE_DIRS="C:/path/to/usd/include/" \
-    -DTBB_tbb_LIBRARY="C:/path/to/usd/lib/tbb.lib" \
-    -DPYTHON_INCLUDE_DIR="C:/Python27/include/" \
-    -DPYTHON_LIBRARY="C:/Python27/libs/python27.lib" \
-    -DGLEW_INCLUDE_DIR="C:/path/to/usd/include/" \
-    -DGLEW_LIBRARY="C:/path/to/usd/lib/glew32.lib" \
-    -DBOOST_INCLUDEDIR="C:/path/to/usd/include/boost-1_61/boost/" \
-    -DBOOST_LIBRARYDIR="C:/path/to/usd/lib/" \
-    -DCMAKE_INSTALL_PREFIX="C:/path/to/usd/"
+cmake ..  -G "Visual Studio 14 2015 Win64"^
+    -DCMAKE_BUILD_TYPE="Release"^
+    -DKATANA_API_LOCATION="C:/Program Files/Foundry/Katana3.0v7"^
+    -DUSD_ROOT="C:/path/to/usd/"^
+    -DTBB_ROOT_DIR="C:/path/to/tbb/"^
+    -DTBB_INCLUDE_DIRS="C:/path/to/tbb/include/"^
+    -DTBB_tbb_LIBRARY="C:/path/to/tbb/lib/tbb.lib"^
+    -DTBB_LIBRARY=C:/path/to/tbb/lib^
+    -DPYTHON_INCLUDE_DIR="C:/Python27/include/"^
+    -DPYTHON_LIBRARY="C:/Python27/libs/python27.lib"^
+    -DGLEW_INCLUDE_DIR="C:/path/to/glew/include/"^
+    -DGLEW_LIBRARY="C:/path/to/glew/lib/glew32.lib"^
+    -DBOOST_ROOT="/path/to/boost/"^
+    -DCMAKE_INSTALL_PREFIX="C:/path/to/usd_for_katana/"
 
 cmake --build . --target install --config Release --parallel 18
 ```
