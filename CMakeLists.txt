@@ -108,9 +108,11 @@ add_definitions(
     )
 
 link_directories(${USD_LIBRARY_DIR})
+link_directories(${TBB_LIBRARY})
 
 include_directories(SYSTEM ${USD_INCLUDE_DIR})
 include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
+include_directories(SYSTEM ${GLEW_INCLUDE_DIRS})
 include_directories(SYSTEM ${PYTHON_INCLUDE_DIR})
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 

@@ -8,7 +8,6 @@ Advanced Build Configuration
 - [Setting Up Katana](#setting-up-katana)
 
 ## Dependencies
-
 The USD plug-in for Katana has the following dependencies:
 - Katana's Plug-ins API
 - USD
@@ -21,18 +20,15 @@ For TBB, Python, Boost and GLEW, the dependencies need to match the
 dependencies that were used to build USD.
 
 #### Katana's Plug-ins API
-
 Katana is shipped with a API (header and source files), used to build Katana
 plug-ins. A path to such file must be provided in `KATANA_API_LOCATION`.
 
 #### USD
-
 `USD_ROOT` needs to be provided, where header files and library files will be
 found. Alternatively, both `USD_INCLUDE_DIR` and `USD_LIBRARY_DIR` can be
 provided separetely.
 
 #### TBB
-
 The same TBB version that was used to build USD needs to be provided. There are
 several variables that can be set to point to a specific version:
 - `TBB_ROOT_DIR`
@@ -44,7 +40,6 @@ several variables that can be set to point to a specific version:
 If they are not provided, an attempt to use the system's TBB will be made.
 
 #### Python
-
 The user can specify `PYTHON_INCLUDE_DIR` and `PYTHON_LIBRARY` to use a
 specific Python version, which needs to match the version that was used to
 build USD. If no specific is provided, the system's Python will be used.
@@ -52,7 +47,6 @@ build USD. If no specific is provided, the system's Python will be used.
 More info in https://cmake.org/cmake/help/latest/module/FindPythonLibs.html.
 
 #### Boost
-
 `BOOST_ROOT` can be provided to point to a specific Boost build, which needs to
 match the one that was used for building the USD build. If it is not provided,
 an attempt to use the system's Boost will be made.
@@ -79,7 +73,7 @@ cmake .. \
     -DGLEW_INCLUDE_DIR=/path/to/usd/include/ \
     -DGLEW_LIBRARY=/path/to/usd/lib64/libGLEW.so \
     -DBOOST_ROOT=/path/to/boost/ \
-    -DCMAKE_INSTALL_PREFIX=/path/to/usd_for_katana/ \
+    -DCMAKE_INSTALL_PREFIX=/path/to/usd_for_katana/install \
 cmake --build . --target install -- -j 18
 ```
 
@@ -87,21 +81,22 @@ Example on Windows:
 
 ```cmd.exe
 cd C:/path/to/usd_for_katana
-mkdir build
+mkdir build\
 cd build
-cmake ..  -G "Visual Studio 14 2015 Win64" \
-    -DKATANA_API_LOCATION="C:/Program Files/Foundry/Katana3.0v7" \
-    -DUSD_ROOT="C:/path/to/usd/" \
-    -DTBB_ROOT_DIR="C:/path/to/usd/" \
-    -DTBB_INCLUDE_DIRS="C:/path/to/usd/include/" \
-    -DTBB_tbb_LIBRARY="C:/path/to/usd/lib/tbb.lib" \
-    -DPYTHON_INCLUDE_DIR="C:/Python27/include/" \
-    -DPYTHON_LIBRARY="C:/Python27/libs/python27.lib" \
-    -DGLEW_INCLUDE_DIR="C:/path/to/usd/include/" \
-    -DGLEW_LIBRARY="C:/path/to/usd/lib/glew32.lib" \
-    -DBOOST_INCLUDEDIR="C:/path/to/usd/include/boost-1_61/boost/" \
-    -DBOOST_LIBRARYDIR="C:/path/to/usd/lib/" \
-    -DCMAKE_INSTALL_PREFIX="C:/path/to/usd/"
+cmake ..  -G "Visual Studio 14 2015 Win64"^
+    -DCMAKE_BUILD_TYPE="Release"^
+    -DKATANA_API_LOCATION="C:/Program Files/Foundry/Katana3.0v7"^
+    -DUSD_ROOT="C:/path/to/usd/"^
+    -DTBB_ROOT_DIR="C:/path/to/tbb/"^
+    -DTBB_INCLUDE_DIRS="C:/path/to/tbb/include/"^
+    -DTBB_tbb_LIBRARY="C:/path/to/tbb/lib/tbb.lib"^
+    -DTBB_LIBRARY=C:/path/to/tbb/lib^
+    -DPYTHON_INCLUDE_DIR="C:/Python27/include/"^
+    -DPYTHON_LIBRARY="C:/Python27/libs/python27.lib"^
+    -DGLEW_INCLUDE_DIR="C:/path/to/glew/include/"^
+    -DGLEW_LIBRARY="C:/path/to/glew/lib/glew32.lib"^
+    -DBOOST_ROOT="C:/path/to/boost/"^
+    -DCMAKE_INSTALL_PREFIX="C:/path/to/usd_for_katana/install"
 
 cmake --build . --target install --config Release --parallel 18
 ```
@@ -137,31 +132,41 @@ A valid Katana license will be required to execute the tests.
 
 To enable the USD plug-in for Katana, append the path to the `plugin/`
 directory into the `KATANA_RESOURCES` environment variable. For instance, on
-Linux:
+#### Linux:
 
 ```bash
 export KATANA_RESOURCES=$KATANA_RESOURCES:/path/to/usd_for_katana/third_party/katana/plugin/
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/usd_for_katana/third_party/katana/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/usd_for_katana/third_party/katana/plugin/Libs
 ```
 
-Or, in Windows:
+#### Windows:
 
 ```cmd.exe
-set "KATANA_RESOURCES=%KATANA_RESOURCES%;C:/path/to/usd_for_katana/third_party/katana/plugin/"
+set KATANA_RESOURCES=%KATANA_RESOURCES%;C:/path/to/usd_for_katana/third_party/katana/plugin/
+set PATH=%PATH%;C:/path/to/usd_for_katana/third_party/katana/lib
+set PATH=%PATH%;C:/path/to/usd_for_katana/third_party/katana/plugin/Libs
 ```
+
+### Dependant Library setup
 
 If USD is not already set up, also adjust the following environment variables:
 
+#### Linux
 ```bash
 export PATH=$PATH:/path/to/usd/bin/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/usd/lib/
 export PYTHONPATH=$PYTHONPATH:/path/to/usd/lib/python/
 ```
 
-And, in Windows:
-
+#### Windows:
 ```cmd.exe
 set "PATH=%PATH%;C:/path/to/usd/bin/"
 set "PATH=%PATH%;C:/path/to/usd/lib/"
 set "PATH=%PATH%;C:/path/to/usd_for_katana/third_party/katana/lib/"
 set "PYTHONPATH=%PYTHONPATH%;C:/path/to/usd/lib/python/"
 ```
+You may also need to setup where to find the other dependant libraries Boost,
+TBB and GLEW. These can be done in the same way as above, append the lib
+directory paths for each dependant library to the PATH or LD_LIBRARY_PATH
+dependant on your system. This only applies if using shared libraries.
