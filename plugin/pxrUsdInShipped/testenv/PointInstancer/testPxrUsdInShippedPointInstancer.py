@@ -1,9 +1,3 @@
-# These files began life as part of the main USD distribution
-# https://github.com/PixarAnimationStudios/USD.
-# In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-# these plug-ins, and they moved to
-# https://github.com/TheFoundryVisionmongers/katana-USD
-# under the same Modified Apache 2.0 license, as shown below.
 #
 # Copyright 2017 Pixar
 #
@@ -28,6 +22,7 @@
 # language governing permissions and limitations under the Apache License.
 #
 import unittest
+import filecmp
 import os
 
 from Katana import NodegraphAPI, CacheManager
@@ -93,39 +88,9 @@ class TestPxrOpUsdInInternalPointInstancer(unittest.TestCase):
         baselinefile = testfile.replace('test.', 'baseline.')
         print 'Comparing %s against baseline %s' % \
                 (os.path.abspath(testfile), os.path.abspath(baselinefile))
-
-        # Load files.
-        text1 = open(testfile).read()
-        text2 = open(baselinefile).read()
-
-        # Split the text into words, so we compare word by word.
-        words1 = text1.replace(" ", "\n").split("\n")
-        words2 = text2.replace(" ", "\n").split("\n")
-
-        # If different number of words, assume mismatch.
-        if len(words1) != len(words2):
-            print "Number of lines mismatch ({} != {})".format(
-                len(words1), len(words2))
-            return False
-
-        # Compare word by word. If word is parseable as a real number,
-        # evaluate as numbers with a small epsilon.
-        for n in xrange(len(words1)):
-            word1 = words1[n]
-            word2 = words2[n]
-
-            try:
-                if abs(float(word1) - float(word2)) > 0.0001:
-                    print "{} and {} are too different".format(
-                        word1, word2)
-                    return False
-
-            except ValueError:
-                if word1 != word2:
-                    print "{} != {}".format(word1, word2)
-                    return False
-
-        return True
+        if filecmp.cmp(testfile, baselinefile, shallow=False):
+            return True
+        return False
 
     def test_motion(self):
         '''Change the PxrUsdIn's file and verify the dumped result.'''

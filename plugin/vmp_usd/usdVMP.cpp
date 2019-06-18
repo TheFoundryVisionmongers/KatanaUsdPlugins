@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -30,13 +24,13 @@
 #include "usdVMP.h"
 
 #include "pxr/pxr.h"
-#include "usdKatana/bootstrap.h"
 #include "usdKatana/cache.h"
 #include "usdKatana/locks.h"
 #include "pxr/base/work/threadLimits.h"
 
 #include "pxr/base/tf/envSetting.h"
 #include "pxr/base/arch/systemInfo.h"
+#include "pxr/imaging/glf/contextCaps.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -71,6 +65,7 @@ USDVMP::USDVMP(FnKat::GroupAttribute args) :
     TF_DEBUG(KATANA_DEBUG_VMP_USD).Msg("%s @ %p\n",
                 TF_FUNC_NAME().c_str(), this);
     GlfGlewInit();
+    GlfContextCaps::InitInstance();
 }
 
 USDVMP::~USDVMP()
@@ -436,8 +431,6 @@ DEFINE_VMP_PLUGIN(USDVMP)
 void registerPlugins()
 {
     REGISTER_PLUGIN(USDVMP, "USDVMP", 0, 1);
-
-    PxrUsdKatanaBootstrap();
 }
 
 // End

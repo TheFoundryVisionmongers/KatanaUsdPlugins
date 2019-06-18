@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -29,8 +23,6 @@
 //
 #ifndef PXRUSDKATANA_USDIN_ARGS_H
 #define PXRUSDKATANA_USDIN_ARGS_H
-
-#include "usdKatana/api.h"
 
 #include "pxr/pxr.h"
 #include "pxr/usd/usdGeom/bboxCache.h"
@@ -93,7 +85,6 @@ public:
 
     typedef std::map<std::string, std::vector<std::string> > StringListMap;
 
-    USDKATANA_API
     static PxrUsdKatanaUsdInArgsRefPtr New(
             UsdStageRefPtr stage,
             const std::string& rootLocation,
@@ -127,102 +118,82 @@ public:
     }
 
     // bounds computation is kind of important, so we centralize it here.
-    USDKATANA_API
     std::vector<GfBBox3d> ComputeBounds(
         const UsdPrim& prim,
         const std::vector<double>& motionSampleTimes,
         bool applyLocalTransform = false);
 
-    USDKATANA_API
     UsdPrim GetRootPrim() const;
 
-    USDKATANA_API
     UsdStageRefPtr GetStage() const {
         return _stage;
     }
 
-    USDKATANA_API
     std::string GetFileName() const {
         return _stage->GetRootLayer()->GetIdentifier();
     }
 
-    USDKATANA_API
     const std::string& GetRootLocationPath() const {
         return _rootLocation;
     }
 
-    USDKATANA_API
     const std::string& GetIsolatePath() const {
         return _isolatePath;
     }
 
-    USDKATANA_API
     const std::string& GetSessionLocationPath() const {
         return _sessionLocation;
     }
 
-    USDKATANA_API
     FnAttribute::GroupAttribute GetSessionAttr() {
         return _sessionAttr;
     }
 
-    USDKATANA_API
     const std::string& GetIgnoreLayerRegex() const {
         return _ignoreLayerRegex;
     }
 
-    USDKATANA_API
     double GetCurrentTime() const {
         return _currentTime;
     }
 
-    USDKATANA_API
     double GetShutterOpen() const {
         return _shutterOpen;
     }
 
-    USDKATANA_API
     double GetShutterClose() const {
         return _shutterClose;
     }
 
-    USDKATANA_API
     const std::vector<double>& GetMotionSampleTimes() const {
         return _motionSampleTimes;
     }
 
-    USDKATANA_API
     const StringListMap& GetExtraAttributesOrNamespaces() const {
         return _extraAttributesOrNamespaces;
     }
 
-    USDKATANA_API
     bool GetPrePopulate() const {
         return _prePopulate;
     }
 
-    USDKATANA_API
     bool IsVerbose() const {
         return _verbose;
     }
 
-    USDKATANA_API
     std::map<double, UsdGeomBBoxCache>& GetBBoxCache() {
         return _bboxCaches.local();
     }
 
-    USDKATANA_API
     UsdSkelCache& GetUsdSkelCache() {
         return _usdSkelCache;
     }
 
-    USDKATANA_API
     const std::string & GetErrorMessage() {
         return _errorMessage;
     }
 private:
 
-    USDKATANA_API
     PxrUsdKatanaUsdInArgs(
             UsdStageRefPtr stage,
             const std::string& rootLocation,
@@ -239,7 +210,6 @@ private:
             bool verbose,
             const char * errorMessage = 0);
 
-    USDKATANA_API
     ~PxrUsdKatanaUsdInArgs();
 
     UsdStageRefPtr _stage;
@@ -292,7 +262,6 @@ struct ArgsBuilder
     const char * errorMessage;
     
     
-    USDKATANA_API
     ArgsBuilder()
     : currentTime(0.0)
     , shutterOpen(0.0)
@@ -303,7 +272,6 @@ struct ArgsBuilder
     {
     }
     
-    USDKATANA_API
     PxrUsdKatanaUsdInArgsRefPtr build()
     {
         return PxrUsdKatanaUsdInArgs::New(
@@ -324,7 +292,6 @@ struct ArgsBuilder
             errorMessage);
     }
 
-    USDKATANA_API
     void update(PxrUsdKatanaUsdInArgsRefPtr other)
     {
         stage = other->GetStage();
@@ -343,7 +310,6 @@ struct ArgsBuilder
         errorMessage = other->GetErrorMessage().c_str();
     }
 
-    USDKATANA_API
     PxrUsdKatanaUsdInArgsRefPtr buildWithError(std::string errorStr)
     {
         errorMessage = errorStr.c_str();

@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -51,7 +45,6 @@
 #include "pxr/usd/usdGeom/curves.h"
 #include "pxr/usd/usdGeom/scope.h"
 #include "pxr/usd/usdGeom/xform.h"
-#include "pxr/usd/usdGeom/collectionAPI.h"
 
 #include "pxr/usd/usdShade/material.h"
 
@@ -68,9 +61,6 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-TF_DEFINE_ENV_SETTING(USD_KATANA_IMPORT_OLD_STYLE_COLLECTIONS, true, 
-        "Whether old-style collections encoded using UsdGeomCollectionAPI "
-        "must be imported by katana.");
 TF_DEFINE_ENV_SETTING(USD_KATANA_ALLOW_CUSTOM_MATERIAL_SCOPES, false,
         "Set to true to enable custom names for the parent scope "
         "of materials. Otherwise only scopes named Looks are allowed.");
@@ -523,55 +513,7 @@ _BuildCollections(
         }
     }
 
-
-    // Import old-style collections
-    if (!TfGetEnvSetting(USD_KATANA_IMPORT_OLD_STYLE_COLLECTIONS))
-        return collections.size() > 0;
-
-    std::vector<UsdGeomCollectionAPI> oldCollections = 
-        UsdGeomCollectionAPI::GetCollections(prim);
-    for (const auto &collection : oldCollections) {
-        TfToken name = collection.GetCollectionName();
-        // Skip if this is a property belonging to the new-style collection
-        // schema.
-        TfTokenVector nameTokens = SdfPath::TokenizeIdentifierAsTokens(name);
-        TfToken baseName = *nameTokens.rbegin();
-        if (nameTokens.size() > 2 &&
-            UsdCollectionAPI::IsSchemaPropertyBaseName(baseName)) {
-            continue; 
-        }
-
-        SdfPathVector targets;
-        FnKat::StringBuilder collectionBuilder;
-        // XXX: This code probably needs some work to be made
-        // instancing-aware.
-        collection.GetTargets(&targets);
-        for (size_t iTarget = 0; iTarget < targets.size(); ++iTarget)
-        {
-            std::string targetPath = targets[iTarget].GetString();
-            
-            if (targetPath.size() >= prefixLength)
-            {
-                std::string relativePath = targetPath.substr(prefixLength);
-                // follow katana convention for collections
-                // the "self" location relative path is "/". 
-                // Absolute paths start with "/root/"
-                // relative paths start without the "/" though.
-                if (relativePath == "")
-                    relativePath = "/";
-                collectionBuilder.push_back(relativePath);
-            }
-        }
-
-        // if empty, no point creating collection
-        FnKat::StringAttribute collectionAttr = collectionBuilder.build();
-        if (collectionAttr.getNearestSample(0).size() > 0) {
-            collectionsBuilder.set(name.GetString() + ".baked",
-                collectionAttr);
-        }
-    }
-
-    return (collections.size() + oldCollections.size()) > 0;
+    return collections.size() > 0;
 }
 
 
@@ -781,11 +723,9 @@ PxrUsdKatanaGeomGetPrimvarGroup(
         // to translate namespaced names...
         UsdAttribute blindAttr = kbd.GetKbdAttribute("geometry.arbitrary." + 
                                         primvar->GetPrimvarName().GetString());
-        if (blindAttr) {
-            VtValue vtValue;
-            if (!blindAttr.Get(&vtValue) && blindAttr.HasAuthoredValueOpinion()) {
-                continue;
-            }
+
+        if (blindAttr.GetResolveInfo().ValueIsBlocked()) {
+            continue;
         }
         
         TfToken          name, interpolation;

@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -27,13 +21,10 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include <ciso646>
-
 #include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
 
 #include "pxr/pxr.h"
 #include "usdKatana/blindDataObject.h"
-#include "usdKatana/bootstrap.h"
 #include "usdKatana/cache.h"
 #include "usdKatana/locks.h"
 #include "usdKatana/readBlindData.h"
@@ -71,7 +62,7 @@ PXR_NAMESPACE_USING_DIRECTIVE
 namespace FnKat = Foundry::Katana;
 
 // convenience macro to report an error.
-#define SET_ERROR(...)\
+#define ERROR(...)\
     interface.setAttr("type", Foundry::Katana::StringAttribute("error"));\
     interface.setAttr("errorMessage", Foundry::Katana::StringAttribute(\
         TfStringPrintf(__VA_ARGS__)));
@@ -138,13 +129,13 @@ public:
         }
         // Validate usdInArgs.
         if (!usdInArgs) {
-            SET_ERROR("Could not initialize PxrUsdIn usdInArgs.");
+            ERROR("Could not initialize PxrUsdIn usdInArgs.");
             return;
         }
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            SET_ERROR(usdInArgs->GetErrorMessage().c_str());
+            ERROR(usdInArgs->GetErrorMessage().c_str());
             return;
         }
 
@@ -161,8 +152,8 @@ public:
         
         // Validate usd prim.
         if (!prim) {
-            SET_ERROR("No USD prim at %s",
-                      interface.getRelativeOutputLocationPath().c_str());
+            ERROR("No USD prim at %s",
+                  interface.getRelativeOutputLocationPath().c_str());
             return;
         }
 
@@ -254,7 +245,7 @@ public:
                 readerLock.unlock();
                 prim = _LoadPrim(stage, pathToLoad, verbose);
                 if (!prim) {
-                    SET_ERROR("load prim %s failed", pathToLoad.GetText());
+                    ERROR("load prim %s failed", pathToLoad.GetText());
                     return;
                 }
                 readerLock.lock();
@@ -262,7 +253,7 @@ public:
 
             // When in "as sources and instances" mode, scan for instances
             // and masters at each location that contains a payload.
-            if (prim.HasPayload() &&
+            if (prim.HasAuthoredPayloads() &&
                 !usdInArgs->GetPrePopulate() &&
                 FnAttribute::StringAttribute(
                     interface.getOpArg("instanceMode")
@@ -544,7 +535,7 @@ public:
         // as each payload is loaded, and we emit them under the payload's
         // location.
         if (interface.atRoot() ||
-            (prim.HasPayload() && !usdInArgs->GetPrePopulate())) {
+            (prim.HasAuthoredPayloads() && !usdInArgs->GetPrePopulate())) {
             FnKat::GroupAttribute masterMapping =
                     opArgs.getChildByName("masterMapping");
             if (masterMapping.isValid() && masterMapping.getNumberOfChildren())
@@ -649,8 +640,8 @@ public:
                 const UsdPrim& masterPrim = prim.GetMaster();
                 if (!masterPrim)
                 {
-                    SET_ERROR("USD Prim is advertised as an instance "
-                              "but master prim cannot be found.");
+                    ERROR("USD Prim is advertised as an instance "
+                        "but master prim cannot be found.");
                 }
                 else
                 {
@@ -1008,13 +999,13 @@ public:
                         additionalOpArgs, interface.getRootLocationPath());
         
         if (!usdInArgs) {
-            SET_ERROR("Could not initialize PxrUsdIn usdInArgs.");
+            ERROR("Could not initialize PxrUsdIn usdInArgs.");
             return;
         }
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            SET_ERROR(usdInArgs->GetErrorMessage().c_str());
+            ERROR(usdInArgs->GetErrorMessage().c_str());
             return;
         }
 
@@ -1033,8 +1024,8 @@ public:
 
         if (tokens.empty())
         {
-            SET_ERROR("Could not initialize PxrUsdIn op with "
-                      "PxrUsdIn.Bootstrap op.");
+            ERROR("Could not initialize PxrUsdIn op with "
+                "PxrUsdIn.Bootstrap op.");
             return;
         }
 
@@ -1088,13 +1079,13 @@ public:
                         additionalOpArgs, interface.getRootLocationPath());
         
         if (!usdInArgs) {
-            SET_ERROR("Could not initialize PxrUsdIn usdInArgs.");
+            ERROR("Could not initialize PxrUsdIn usdInArgs.");
             return;
         }
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            SET_ERROR(usdInArgs->GetErrorMessage().c_str());
+            ERROR(usdInArgs->GetErrorMessage().c_str());
             return;
         }
 
@@ -1410,5 +1401,5 @@ void registerPlugins()
     REGISTER_PLUGIN(FlushStageFnc,
         "PxrUsdIn.FlushStage", 0, 1);
     
-    PxrUsdKatanaBootstrap();
+    
 }

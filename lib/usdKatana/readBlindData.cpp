@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -78,10 +72,9 @@ PxrUsdKatanaReadBlindData(
                 attrs.set(attrName, 
                     PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
             }
-            else if (blindAttr.HasAuthoredValueOpinion())
+            else if (blindAttr.GetResolveInfo().ValueIsBlocked())
             {
                 // The attr has a block, so set a null attr
-                // (see bug 136179 for a better detection api)
                 attrs.set(attrName, FnKat::NullAttribute());
             }
         }

@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -30,20 +24,6 @@
 #ifndef PXRUSDKATANA_USDIN_PRIVATEDATA_H
 #define PXRUSDKATANA_USDIN_PRIVATEDATA_H
 
-#ifdef _WIN32
-#include <windows.h>
-#include <winbase.h>
-#include <combaseapi.h>
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
-#ifdef interface
-#undef interface
-#endif
-#endif
-
-#include "usdKatana/api.h"
-
 #include "pxr/pxr.h"
 #include "usdKatana/usdInArgs.h"
 
@@ -68,49 +48,40 @@ public:
         std::map<SdfPath, std::vector<SdfPath>> derivedMaterialPaths;
     };
 
-    USDKATANA_API
     PxrUsdKatanaUsdInPrivateData(
             const UsdPrim& prim,
             PxrUsdKatanaUsdInArgsRefPtr usdInArgs,
             const PxrUsdKatanaUsdInPrivateData* parentData = NULL);
 
-    USDKATANA_API
     virtual ~PxrUsdKatanaUsdInPrivateData()
     {
         delete _extGb;
     }
 
-    USDKATANA_API
     const UsdPrim& GetUsdPrim() const {
         return _prim;
     }
 
-    USDKATANA_API
     const PxrUsdKatanaUsdInArgsRefPtr GetUsdInArgs() const {
         return _usdInArgs;
     }
 
-    USDKATANA_API
     const SdfPath& GetInstancePath() const {
         return _instancePath;
     }
 
-    USDKATANA_API
     const SdfPath& GetMasterPath() const {
         return _masterPath;
     }
 
-    USDKATANA_API
     const double GetCurrentTime() const {
         return _currentTime;
     }
 
-    USDKATANA_API
     const double GetShutterOpen() const {
         return _shutterOpen;
     }
 
-    USDKATANA_API
     const double GetShutterClose() const {
         return _shutterClose;
     }
@@ -120,24 +91,20 @@ public:
     /// PxrUsdIn supports both forward and backward motion blur. Motion
     /// blur is considered backward if multiple samples are requested
     /// and the first specified sample is later than the last sample.
-    USDKATANA_API
     const bool IsMotionBackward() const;
 
-    USDKATANA_API
     const std::vector<double> GetMotionSampleTimes(
         const UsdAttribute& attr = UsdAttribute()) const;
 
     /// \brief Returns a list of <usd, katana> times for use in clients that
     ///        wish to multi-sample USD data and build corresponding Katana 
     ///        attributes.
-    USDKATANA_API
     std::vector<std::pair<double, double> > GetUsdAndKatanaTimes(
         const UsdAttribute& attr = UsdAttribute()) const;
 
 
     /// \brief Allows a registered op or location decorator function to set
     ///        share and accumulate state during traversal.
-    USDKATANA_API
     void setExtensionOpArg(const std::string & name,
                 FnAttribute::Attribute attr) const;
 
@@ -145,7 +112,6 @@ public:
     ///        retrieve state accumulated during traversal. Arguments set via
     ///        previous consumer's calls to setExtensionOpArg are visible as
     ///        part of the opArgs sent in the op or function.
-    USDKATANA_API
     FnAttribute::Attribute getExtensionOpArg(const std::string & name,
                 FnAttribute::GroupAttribute opArgs) const;
 
@@ -153,14 +119,12 @@ public:
     ///        setExtensionOpArg and apply back onto the provided opArgs.
     ///        NOTE: This should not be called by an executed op or function as
     ///              it's intended for use the callers of those. 
-    USDKATANA_API
     FnAttribute::GroupAttribute updateExtensionOpArgs(
             FnAttribute::GroupAttribute opArgs) const;
     
     
     /// \brief extract private data from either the interface (its natural
     ///        location) with room for future growth
-    USDKATANA_API
     static PxrUsdKatanaUsdInPrivateData * GetPrivateData(
             const FnKat::GeolibCookInterface& interface);
 

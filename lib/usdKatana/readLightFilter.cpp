@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -74,7 +68,7 @@ struct _UsdBuilder {
 
     _UsdBuilder& Set(std::string kat_name, UsdAttribute attr) {
         VtValue val;
-        if (attr.IsValid() && attr.HasAuthoredValueOpinion()
+        if (attr.HasAuthoredValueOpinion()
             && attr.Get(&val, _time)) {
             FnKat::Attribute kat_attr =
                 PxrUsdKatanaUtils::ConvertVtValueToKatAttr(val);
@@ -83,7 +77,7 @@ struct _UsdBuilder {
         return *this;
     }
 
-    _UsdBuilder& SetSpline(std::string kat_prefix, std::string valueSuffix,
+    _UsdBuilder& SetSpline(std::string kat_prefix, const std::string& valueSuffix,
                            UsdRiSplineAPI spline) {
         // Knot count
         VtFloatArray posVec;
@@ -101,7 +95,7 @@ struct _UsdBuilder {
         {
             VtValue val;
             UsdAttribute attr = spline.GetInterpolationAttr();
-            if (attr.IsValid() && attr.HasAuthoredValueOpinion()
+            if (attr.HasAuthoredValue()
                 && attr.Get(&val, _time) && val.IsHolding<TfToken>()) {
                 TfToken t = val.UncheckedGet<TfToken>();
                 if (t == UsdRiTokens->linear) {
@@ -164,7 +158,7 @@ PxrUsdKatanaReadLightFilter(
         {
             VtValue val;
             UsdAttribute attr = f.GetRiCombineModeAttr();
-            if (attr.IsValid() && attr.HasAuthoredValueOpinion()
+            if (attr.HasAuthoredValue()
                 && attr.Get(&val, currentTime) && val.IsHolding<TfToken>()) {
                 TfToken t = val.Get<TfToken>();
                 if (t == UsdRiTokens->multiply) {
@@ -221,7 +215,7 @@ PxrUsdKatanaReadLightFilter(
         {
             VtValue val;
             UsdAttribute attr = f.GetBarnModeAttr();
-            if (attr.IsValid() && attr.HasAuthoredValueOpinion()
+            if (attr.HasAuthoredValue()
                 && attr.Get(&val, currentTime) && val.IsHolding<TfToken>()) {
                 TfToken t = val.Get<TfToken>();
                 if (t == UsdRiTokens->analytic) {
@@ -235,7 +229,7 @@ PxrUsdKatanaReadLightFilter(
         {
             VtValue val;
             UsdAttribute attr = f.GetPreBarnEffectAttr();
-            if (attr.IsValid() && attr.HasAuthoredValueOpinion()
+            if (attr.HasAuthoredValue()
                 && attr.Get(&val, currentTime) && val.IsHolding<TfToken>()) {
                 TfToken t = val.Get<TfToken>();
                 if (t == UsdRiTokens->noEffect) {
@@ -255,7 +249,7 @@ PxrUsdKatanaReadLightFilter(
         {
             VtValue val;
             UsdAttribute attr = f.GetCookieModeAttr();
-            if (attr.IsValid() && attr.HasAuthoredValueOpinion()
+            if (attr.HasAuthoredValue()
                 && attr.Get(&val, currentTime) && val.IsHolding<TfToken>()) {
                 TfToken t = val.Get<TfToken>();
                 if (t == UsdRiTokens->analytic) {
@@ -269,7 +263,7 @@ PxrUsdKatanaReadLightFilter(
         {
             VtValue val;
             UsdAttribute attr = f.GetTextureWrapModeAttr();
-            if (attr.IsValid() && attr.HasAuthoredValueOpinion()
+            if (attr.HasAuthoredValue()
                 && attr.Get(&val, currentTime) && val.IsHolding<TfToken>()) {
                 TfToken t = val.Get<TfToken>();
                 if (t == UsdRiTokens->off) {
@@ -334,7 +328,7 @@ PxrUsdKatanaReadLightFilter(
         {
             VtValue val;
             UsdAttribute attr = f.GetRampModeAttr();
-            if (attr.IsValid() && attr.HasAuthoredValueOpinion()
+            if (attr.HasAuthoredValue()
                 && attr.Get(&val, currentTime) && val.IsHolding<TfToken>()) {
                 TfToken t = val.Get<TfToken>();
                 if (t == UsdRiTokens->distanceToLight) {

@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -48,8 +42,7 @@
 #include "pxr/base/tf/instantiateSingleton.h"
 
 #include <set>
-
-#include <boost/regex.hpp>
+#include <regex.h>
 
 #include <pystring/pystring.h>
 
@@ -475,8 +468,18 @@ UsdKatanaCache::_SetMutedLayers(
     SdfLayerHandleVector stageLayers = stage->GetUsedLayers();
 
     bool regexIsEmpty = layerRegex == "" || layerRegex == "^$";
+    
+    // use a better regex library?
+    regex_t regex;
+    if (regcomp(&regex, layerRegex.c_str(), REG_EXTENDED))
+    {
+        TF_WARN("UsdKatanaCache: Invalid ignoreLayerRegex value: %s",
+                layerRegex.c_str());
+        regexIsEmpty = true;
+    }
 
-    boost::regex regex(layerRegex);
+
+    regmatch_t* rmatch = 0;
 
     TF_FOR_ALL(stageLayer, stageLayers)
     {
@@ -491,7 +494,10 @@ UsdKatanaCache::_SetMutedLayers(
         
         if (!regexIsEmpty)
         {
-            if (boost::regex_match(layerIdentifier, regex))
+            if (layer && !regexec(
+                &regex, 
+                layerIdentifier.c_str(), 
+                0, rmatch, 0))
             {
                 match = true;
             }
@@ -511,6 +517,7 @@ UsdKatanaCache::_SetMutedLayers(
             stage->MuteLayer(layerIdentifier);
         }
     }
+    regfree(&regex);
 }
 
 UsdKatanaCache::UsdKatanaCache() 
@@ -666,10 +673,6 @@ UsdStageRefPtr UsdKatanaCache::GetStage(
         std::string const& ignoreLayerRegex,
         bool forcePopulate)
 {
-    bool givenAbsPath = TfStringStartsWith(fileName, "/");
-    const std::string contextPath = givenAbsPath ? 
-                                    TfGetPathName(fileName) : ArchGetCwd();
-
     TF_DEBUG(USDKATANA_CACHE_STAGE).Msg(
             "{USD STAGE CACHE} Creating and caching UsdStage for "
             "given filePath @%s@, which resolves to @%s@\n", 
@@ -743,10 +746,6 @@ UsdKatanaCache::GetUncachedStage(std::string const& fileName,
                             std::string const& ignoreLayerRegex,
                             bool forcePopulate)
 {
-    bool givenAbsPath = TfStringStartsWith(fileName, "/");
-    const std::string contextPath = givenAbsPath ? 
-                                    TfGetPathName(fileName) : ArchGetCwd();
-
     TF_DEBUG(USDKATANA_CACHE_STAGE).Msg(
             "{USD STAGE CACHE} Creating UsdStage for "
             "given filePath @%s@, which resolves to @%s@\n", 
@@ -869,7 +868,10 @@ std::string UsdKatanaCache::_ComputeCacheKey(
     FnAttribute::GroupAttribute sessionAttr,
     const std::string& rootLocation) {
     return FnAttribute::GroupAttribute(
-        "s", sessionAttr, "r", FnAttribute::StringAttribute(rootLocation), true)
+        // replace invalid sessionAttr with empty valid group for consistency
+        // with external queries based on "info.usd.outputSession"
+        "s", sessionAttr.isValid() ? sessionAttr : FnAttribute::GroupAttribute(true),
+        "r", FnAttribute::StringAttribute(rootLocation), true)
         .getHash()
         .str();
 }
