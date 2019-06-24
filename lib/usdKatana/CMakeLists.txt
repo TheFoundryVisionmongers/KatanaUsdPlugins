@@ -84,3 +84,7 @@ pxr_shared_library(${PXR_PACKAGE}
         schema.usda:usdKatana/schema.usda
 )
 
+# Hack to work around https://github.com/PixarAnimationStudios/USD/issues/738
+if(CMAKE_SYSTEM_NAME MATCHES Windows)
+set_source_files_properties(cache.cpp PROPERTIES COMPILE_FLAGS "/Od")
+endif()
