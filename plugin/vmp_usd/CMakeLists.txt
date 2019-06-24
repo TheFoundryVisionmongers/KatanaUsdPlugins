@@ -12,13 +12,19 @@ pxr_plugin(${PXR_PACKAGE}
         arch
         tf
         work
+        gf
         usd
         usdUtils
         glf
+        sdf
         usdImaging
         usdImagingGL
         katanaPluginApi
         usdKatana
+        vtKatana
+        ${Boost_PYTHON_LIBRARY}
+        ${Boost_SYSTEM_LIBRARY}
+        ${GLEW_LIBRARIES}
 
     CPPFILES
         debugCodes.cpp

@@ -7,9 +7,13 @@ pxr_plugin(${PXR_PACKAGE}
         katanaOpApi
         katanaPluginApi
         kind
+        sdf
+        tf
         usd
         usdGeom
         usdKatana
+        vtKatana
+        ${Boost_PYTHON_LIBRARY}
     
     PRIVATE_HEADERS
         declarePackageOps.h
