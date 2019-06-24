@@ -1,3 +1,9 @@
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
+                      ${CMAKE_SOURCE_DIR}/cmake/modules
+                      ${CMAKE_SOURCE_DIR}/cmake/macros)
+
+include(Support)
+
 set(PXR_INSTALL_SUBDIR "third_party/katana")
 
 # Transform the KATANA_API versions into defines to be used by this code
