@@ -29,40 +29,22 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "usdKatana/bootstrap.h"
+#include "vtKatana/bootstrap.h"
 
 #include "pxr/base/arch/systemInfo.h"
 #include "pxr/base/tf/stringUtils.h"
 #include "pxr/base/arch/fileSystem.h"
-#include "pxr/base/tf/dl.h"
 
-#include <FnPluginManager/FnPluginManager.h>
 #include <FnLogging/FnLogging.h>
 #include <FnAttribute/FnAttribute.h>
 
-#if defined(ARCH_OS_WINDOWS)
-#include "Windows.h"
-#endif
-
 #include <mutex> // for std::call_once
-
-typedef FnPluginManagerHostSuite_v1 const* (*GetFnPluginManagerHostSuite)(
-    char const* apiName, unsigned int apiVersion);
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-FnLogSetup("PxrUsdKatanaBootstrap");
+FnLogSetup("PxrVtKatanaBootstrap");
 
-static void* findSymbol(void* const handle, const char* const name)
-{
-#if defined(ARCH_OS_WINDOWS)
-    return GetProcAddress(reinterpret_cast<HMODULE>(handle), name);
-#else
-    return dlsym(handle, name);
-#endif
-}
-
-void PxrUsdKatanaBootstrap()
+void PxrVtKatanaBootstrap()
 {
     static std::once_flag once;
     std::call_once(once, []()
@@ -83,40 +65,6 @@ void PxrUsdKatanaBootstrap()
             FnLogError("Failed to bootstrap FnAttribute from Katana at " << path);
             return;
         }
-
-        // Load Katana's Plugin Manager dynamic library.
-        path += binPrefix + "FnPluginSystem" ARCH_LIBRARY_SUFFIX;
-        std::string dlError;
-        void* handle = TfDlopen(path, ARCH_LIBRARY_NOW, &dlError);
-        if (!handle)
-        {
-            FnLogError("Failed to open " << path << " to bootstrap Katana");
-            return;
-        }
-
-        // Find the symbol.
-        void* symbol = findSymbol(handle, "FnPluginSystemGetHostSuite");
-        if (!symbol)
-        {
-            FnLogError("Failed to symbol " << path << " to bootstrap Katana");
-            return;
-        }
-
-        GetFnPluginManagerHostSuite pfnGetFnPluginManagerHostSuite =
-            reinterpret_cast<GetFnPluginManagerHostSuite>(symbol);
-
-        // Get the Host Suite.
-        FnPluginManagerHostSuite_v1 const * hostSuite =
-            pfnGetFnPluginManagerHostSuite("PluginManager", 1);
-
-        if (hostSuite)
-        {
-            FnPluginHost* host = hostSuite->getHost();
-
-            Foundry::Katana::PluginManager::setHost(host);
-        }
-
-        TfDlclose(handle);
     });
 }
 

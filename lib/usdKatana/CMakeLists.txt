@@ -64,6 +64,8 @@ pxr_shared_library(${PXR_PACKAGE}
         readPrim
         readXformable
 
+        bootstrap
+
     PUBLIC_HEADERS
         api.h
 

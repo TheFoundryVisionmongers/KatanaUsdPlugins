@@ -13,6 +13,8 @@ pxr_shared_library(${PXR_PACKAGE}
         traits
         value
 
+        bootstrap
+
     PRIVATE_CLASSES
         internalTraits
 

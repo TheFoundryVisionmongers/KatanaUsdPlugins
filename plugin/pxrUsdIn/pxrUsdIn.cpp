@@ -29,6 +29,8 @@
 #include "usdKatana/locks.h"
 #include "usdKatana/readBlindData.h"
 #include "usdKatana/usdInPluginRegistry.h"
+#include "usdKatana/bootstrap.h"
+#include "vtKatana/bootstrap.h"
 
 #include "pxr/usd/usd/modelAPI.h"
 #include "pxr/usd/usd/prim.h"
@@ -1401,5 +1403,6 @@ void registerPlugins()
     REGISTER_PLUGIN(FlushStageFnc,
         "PxrUsdIn.FlushStage", 0, 1);
     
-    
+    PxrUsdKatanaBootstrap();
+    PxrVtKatanaBootstrap();
 }

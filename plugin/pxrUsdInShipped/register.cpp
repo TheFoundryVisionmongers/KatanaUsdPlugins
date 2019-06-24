@@ -27,6 +27,8 @@
 
 #include "pxr/pxr.h"
 #include "usdKatana/usdInPluginRegistry.h"
+#include "usdKatana/bootstrap.h"
+#include "vtKatana/bootstrap.h"
 
 #include "pxr/usd/kind/registry.h"
 #include "pxr/usd/usdGeom/basisCurves.h"
@@ -143,4 +145,7 @@ void registerPlugins()
 
     REGISTER_PLUGIN(MaterialReferenceAttrFnc, "PxrUsdInMaterialReference", 0, 1);
     REGISTER_PLUGIN(LibraryMaterialNamesAttrFnc, "PxrUsdInLibraryMaterialNames", 0, 1);
+
+    PxrUsdKatanaBootstrap();
+    PxrVtKatanaBootstrap();
 }

@@ -1,5 +1,11 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
-// Copyright 2017 Pixar
+// Copyright 2016 Pixar
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -21,29 +27,19 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#ifndef VTKATANA_BOOTSTRAP_H
+#define VTKATANA_BOOTSTRAP_H
+
+#include "vtKatana/api.h"
 
 #include "pxr/pxr.h"
 
-#include "pxrUsdInPrman/declarePackageOps.h"
+PXR_NAMESPACE_OPEN_SCOPE
 
-#include "usdKatana/bootstrap.h"
-#include "vtKatana/bootstrap.h"
+/// \brief bootstrap Geolib.
+VTKATANA_API
+void PxrVtKatanaBootstrap();
 
-PXR_NAMESPACE_USING_DIRECTIVE
+PXR_NAMESPACE_CLOSE_SCOPE
 
-
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInPrman_LocationDecorator);
-
-void registerPlugins()
-{
-    USD_OP_REGISTER_PLUGIN(PxrUsdInPrman_LocationDecorator, 
-                       "PxrUsdInPrman_LocationDecorator", 
-                       0, 
-                       1);
-    
-    PxrUsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(
-            "PxrUsdInPrman_LocationDecorator");
-
-    PxrUsdKatanaBootstrap();
-    PxrVtKatanaBootstrap();
-}
+#endif // VTKATANA_BOOTSTRAP_H
