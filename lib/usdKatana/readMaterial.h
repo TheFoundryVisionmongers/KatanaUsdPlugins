@@ -28,6 +28,8 @@ PXR_NAMESPACE_OPEN_SCOPE
 #ifndef PXRUSDKATANA_READMATERIAL_H
 #define PXRUSDKATANA_READMATERIAL_H
 
+#include "api.h"
+
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdShadeMaterial;
@@ -35,7 +37,7 @@ class UsdShadeMaterial;
 /// \brief read \p Material into \p attrs.  If \p flatten is specified, we treat it
 /// as if it is a "standalone" material (i.e. no "material" inheritance in the
 /// katana sense).
-void
+USDKATANA_API void
 PxrUsdKatanaReadMaterial(
         const UsdShadeMaterial& material,
         bool flatten,

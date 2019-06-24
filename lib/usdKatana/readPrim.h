@@ -28,13 +28,15 @@ PXR_NAMESPACE_OPEN_SCOPE
 #ifndef PXRUSDKATANA_READPRIM_H
 #define PXRUSDKATANA_READPRIM_H
 
+#include "api.h"
+
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdPrim;
 class UsdGeomImageable;
 
 /// \brief read \p prim into \p attrs.
-void
+USDKATANA_API void
 PxrUsdKatanaReadPrim(
         const UsdPrim& prim,
         const PxrUsdKatanaUsdInPrivateData& data,

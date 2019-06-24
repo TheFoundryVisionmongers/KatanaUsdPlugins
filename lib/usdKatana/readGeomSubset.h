@@ -28,12 +28,14 @@ PXR_NAMESPACE_OPEN_SCOPE
 #ifndef PXRUSDKATANA_READGEOMSUBSET_H
 #define PXRUSDKATANA_READGEOMSUBSET_H
 
+#include "api.h"
+
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdGeomSubset;
 
 /// \brief read \p GeomSubset into \p attrs.
-void
+USDKATANA_API void
 PxrUsdKatanaReadGeomSubset(
         const UsdGeomSubset& mesh,
         const PxrUsdKatanaUsdInPrivateData& data,

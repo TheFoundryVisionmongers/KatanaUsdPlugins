@@ -27,6 +27,8 @@
 #include "pxr/pxr.h"
 #include "usdKatana/usdInPrivateData.h"
 
+#include "api.h"
+
 #include "pxr/usd/usd/prim.h"
 #include "pxr/base/tf/type.h"
 
@@ -74,7 +76,7 @@ public:
 
     /// \brief Registers \p opName to handle \p kind (and possibly other kinds
     /// that are descendents of \p kind in the kind hierarchy).
-    static void RegisterKind(
+    USDKATANA_API static void RegisterKind(
             const TfToken& kind,
             const std::string& opName);
 
@@ -87,7 +89,7 @@ public:
 
     /// \brief Returns true if there are any site-specific ops registered
     /// for at least one \p kind.
-    static bool HasKindsForSite();
+    USDKATANA_API static bool HasKindsForSite();
 
     /// \brief Finds a reader if one exists for \p usdTypeName.
     ///
@@ -95,7 +97,7 @@ public:
     /// \code
     /// usdPrim.GetTypeName()
     /// \endcode
-    static bool FindUsdType(
+    USDKATANA_API static bool FindUsdType(
             const TfToken& usdTypeName,
             std::string* opName);
 
@@ -105,20 +107,20 @@ public:
     /// \code
     /// usdPrim.GetTypeName()
     /// \endcode
-    static bool FindUsdTypeForSite(
+    USDKATANA_API static bool FindUsdTypeForSite(
             const TfToken& usdTypeName,
             std::string* opName);
 
     /// \brief Finds a reader if one exists for \p kind.  This will walk up the
     /// kind hierarchy and find the nearest applicable one.
-    static bool FindKind(
+    USDKATANA_API static bool FindKind(
             const TfToken& kind,
             std::string* opName);
 
     /// \brief Finds a reader that extends or overrides the core op, if one 
     /// exists, for \p kind.  This will walk up the kind hierarchy and find the 
     /// nearest applicable one.
-    static bool FindKindForSite(
+    USDKATANA_API static bool FindKindForSite(
             const TfToken& kind,
             std::string* opName);
 
@@ -134,11 +136,11 @@ public:
     /// resolver does not necessarily run at the location where this
     /// function is run so the function needs to establish the initial
     /// enabled status correctly.)
-    static void RegisterLightListFnc(LightListFnc);
+    USDKATANA_API static void RegisterLightListFnc(LightListFnc);
 
     /// \brief Run the registered plug-in light list functions at a light
     /// path. This allows for modifying the Katana light list.
-    static void ExecuteLightListFncs(
+    USDKATANA_API static void ExecuteLightListFncs(
                     PxrUsdKatanaUtilsLightListAccess& access);
     
     
@@ -159,7 +161,7 @@ public:
     ///        NOTE: This is normally not necessary to call directly as it's
     ///              handled as part of the USD_OP_REGISTER_PLUGIN used to
     ///              define the op.
-    static void RegisterOpDirectExecFnc(
+    USDKATANA_API static void RegisterOpDirectExecFnc(
            const std::string& opName,
            OpDirectExecFnc fnc);
     
@@ -168,7 +170,7 @@ public:
     ///        and private data not from the interface but from their function
     ///        parameters. This is to allow either to be locally overriden
     ///        without the overhead or limitations (in 2.x) of execOp
-    static void ExecuteOpDirectExecFnc(
+    USDKATANA_API static void ExecuteOpDirectExecFnc(
             const std::string& opName,
             const PxrUsdKatanaUsdInPrivateData& privateData,
             FnKat::GroupAttribute opArgs,
@@ -183,20 +185,20 @@ public:
     /// previously registered with RegisterOpDirectExecFnc -- which will
     /// happen automatically for any op defined with one of the PXRUSDKATANA_*
     /// macros and registered via USD_OP_REGISTER_PLUGIN.
-    static void RegisterLocationDecoratorOp(const std::string& opName);
+    USDKATANA_API static void RegisterLocationDecoratorOp(const std::string& opName);
     
     
     // \brief Run the registered plug-in ops at a katana location
     /// and UsdPrim. It returns opArgs -- which may be altered by the executed
     /// ops.
-    static FnKat::GroupAttribute ExecuteLocationDecoratorOps(
+    USDKATANA_API static FnKat::GroupAttribute ExecuteLocationDecoratorOps(
             const PxrUsdKatanaUsdInPrivateData& privateData,
             FnKat::GroupAttribute opArgs,
             FnKat::GeolibCookInterface& interface);
 
 
 private:
-    static void _RegisterUsdType(
+    USDKATANA_API static void _RegisterUsdType(
             const std::string& tfTypeName, 
             const std::string& opName);
 

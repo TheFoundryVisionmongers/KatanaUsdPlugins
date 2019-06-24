@@ -28,10 +28,12 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
+#include "api.h"
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 
-boost::upgrade_mutex& UsdKatanaGetStageLock();
+USDKATANA_API boost::upgrade_mutex& UsdKatanaGetStageLock();
 boost::upgrade_mutex& UsdKatanaGetRendererCacheLock();
 boost::upgrade_mutex& UsdKatanaGetSessionCacheLock();
 

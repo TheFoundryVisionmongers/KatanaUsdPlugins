@@ -28,12 +28,14 @@ PXR_NAMESPACE_OPEN_SCOPE
 #ifndef PXRUSDKATANA_READCAMERA_H
 #define PXRUSDKATANA_READCAMERA_H
 
+#include "api.h"
+
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdGeomCamera;
 
 /// \brief Read \p camera into \p attrs.
-void
+USDKATANA_API void
 PxrUsdKatanaReadCamera(
         const UsdGeomCamera& camera,
         const PxrUsdKatanaUsdInPrivateData& data,

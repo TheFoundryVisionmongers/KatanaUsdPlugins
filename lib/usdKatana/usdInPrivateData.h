@@ -27,6 +27,8 @@
 #include "pxr/pxr.h"
 #include "usdKatana/usdInArgs.h"
 
+#include "api.h"
+
 #include "pxr/usd/usd/prim.h"
 #include <FnGeolib/op/FnGeolibOp.h>
 #include <memory>
@@ -48,7 +50,7 @@ public:
         std::map<SdfPath, std::vector<SdfPath>> derivedMaterialPaths;
     };
 
-    PxrUsdKatanaUsdInPrivateData(
+    USDKATANA_API PxrUsdKatanaUsdInPrivateData(
             const UsdPrim& prim,
             PxrUsdKatanaUsdInArgsRefPtr usdInArgs,
             const PxrUsdKatanaUsdInPrivateData* parentData = NULL);
@@ -93,7 +95,7 @@ public:
     /// and the first specified sample is later than the last sample.
     const bool IsMotionBackward() const;
 
-    const std::vector<double> GetMotionSampleTimes(
+    USDKATANA_API const std::vector<double> GetMotionSampleTimes(
         const UsdAttribute& attr = UsdAttribute()) const;
 
     /// \brief Returns a list of <usd, katana> times for use in clients that
@@ -119,13 +121,13 @@ public:
     ///        setExtensionOpArg and apply back onto the provided opArgs.
     ///        NOTE: This should not be called by an executed op or function as
     ///              it's intended for use the callers of those. 
-    FnAttribute::GroupAttribute updateExtensionOpArgs(
+    USDKATANA_API FnAttribute::GroupAttribute updateExtensionOpArgs(
             FnAttribute::GroupAttribute opArgs) const;
     
     
     /// \brief extract private data from either the interface (its natural
     ///        location) with room for future growth
-    static PxrUsdKatanaUsdInPrivateData * GetPrivateData(
+    USDKATANA_API static PxrUsdKatanaUsdInPrivateData * GetPrivateData(
             const FnKat::GeolibCookInterface& interface);
 
 private:

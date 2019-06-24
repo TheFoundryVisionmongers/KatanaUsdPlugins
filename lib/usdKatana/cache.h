@@ -37,6 +37,8 @@
 
 #include <FnAttribute/FnAttribute.h>
 
+#include "usdKatana/api.h"
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 
@@ -79,17 +81,17 @@ class UsdKatanaCache : public TfSingleton<UsdKatanaCache>
 
 public:
 
-    static UsdKatanaCache& GetInstance() {
+    USDKATANA_API static UsdKatanaCache& GetInstance() {
         return TfSingleton<UsdKatanaCache>::GetInstance();
     }
 
     /// Clear all caches
-    void Flush();
+    USDKATANA_API void Flush();
 
     
     /// Get (or create) a cached usd stage with a sessionLayer containing
     /// variant selections and activations (so far)
-    UsdStageRefPtr GetStage(std::string const& fileName, 
+    USDKATANA_API UsdStageRefPtr GetStage(std::string const& fileName, 
                             FnAttribute::GroupAttribute sessionAttr,
                             const std::string & sessionRootLocation,
                             std::string const& ignoreLayerRegex,
@@ -103,13 +105,13 @@ public:
                             bool forcePopulate);
 
     /// Flushes an individual stage if present in the cache
-    void FlushStage(const UsdStageRefPtr & stage);
+    USDKATANA_API void FlushStage(const UsdStageRefPtr & stage);
 
 
 
 
     /// Get (or create) a cached renderer for a given prim path.
-    UsdImagingGLEngineSharedPtr const& GetRenderer(UsdStageRefPtr const& stage,
+    USDKATANA_API UsdImagingGLEngineSharedPtr const& GetRenderer(UsdStageRefPtr const& stage,
                                              UsdPrim const& root,
                                              std::string const& sessionKey);
 
@@ -119,18 +121,17 @@ public:
         const std::string& rootLocation);
 
 
-    SdfLayerRefPtr FindSessionLayer(
+    USDKATANA_API SdfLayerRefPtr FindSessionLayer(
         const std::string& cacheKey) ;
     
     
-    SdfLayerRefPtr FindOrCreateSessionLayer(
+    USDKATANA_API SdfLayerRefPtr FindOrCreateSessionLayer(
         const std::string& sessionAttrXML,
         const std::string& rootLocation);
 
     
 
 };
-
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

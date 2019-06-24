@@ -28,6 +28,8 @@
 #include "usdKatana/attrMap.h"
 #include "usdKatana/usdInPrivateData.h"
 
+#include "api.h"
+
 #include "pxr/usd/usd/relationship.h"
 
 #include "pxr/usd/sdf/path.h"
@@ -94,10 +96,10 @@ struct PxrUsdKatanaUtils {
         const UsdPrim& shadingNode);
 
     // Scan the model hierarchy for models with kind=camera.
-    static SdfPathVector FindCameraPaths( const UsdStageRefPtr& stage );
+    USDKATANA_API static SdfPathVector FindCameraPaths( const UsdStageRefPtr& stage );
 
     /// Discover published lights (without a full scene traversal).
-    static SdfPathVector FindLightPaths( const UsdStageRefPtr& stage );
+    USDKATANA_API static SdfPathVector FindLightPaths( const UsdStageRefPtr& stage );
 
     /// Convert the given SdfPath in the UsdStage to the corresponding
     /// katana location, given a scenegraph generator configuration.
@@ -111,7 +113,7 @@ struct PxrUsdKatanaUtils {
             const SdfPath &path,
             const PxrUsdKatanaUsdInPrivateData& data,
             bool allowOutsideIsolation = false);
-    static std::string ConvertUsdPathToKatLocation(
+    USDKATANA_API static std::string ConvertUsdPathToKatLocation(
             const SdfPath &path,
             const PxrUsdKatanaUsdInArgsRefPtr &usdInArgs,
             bool allowOutsideIsolation = false);
@@ -123,7 +125,7 @@ struct PxrUsdKatanaUtils {
             const UsdPrim &prim,
             const SdfPath& path);
     static std::string _GetDisplayName(const UsdPrim &prim);
-    static std::string ConvertUsdMaterialPathToKatLocation(
+    USDKATANA_API static std::string ConvertUsdMaterialPathToKatLocation(
             const SdfPath &path,
             const PxrUsdKatanaUsdInPrivateData& data);
 
@@ -135,7 +137,7 @@ struct PxrUsdKatanaUtils {
     /// However, katana has a meaningful (behaviorially) distinction between
     /// assemblies and groups.  This fn encapsulates the heuristics for when
     /// we translate a Usd modelGroup into an assembly, and when we don't
-    static bool ModelGroupIsAssembly(const UsdPrim &prim);
+    USDKATANA_API static bool ModelGroupIsAssembly(const UsdPrim &prim);
 
     // this finds prims with kind=subcomponent, increasingly used in complex
     // Sets models.
@@ -147,11 +149,11 @@ struct PxrUsdKatanaUtils {
     static bool ModelGroupNeedsProxy(const UsdPrim &prim);
 
     /// Creates the 'proxies' group attribute for consumption by the viewer.
-    static FnKat::GroupAttribute GetViewerProxyAttr(
+    USDKATANA_API static FnKat::GroupAttribute GetViewerProxyAttr(
             const PxrUsdKatanaUsdInPrivateData& data);
     
     /// Creates the 'proxies' group attribute directly from fields
-    static FnKat::GroupAttribute GetViewerProxyAttr(
+    USDKATANA_API static FnKat::GroupAttribute GetViewerProxyAttr(
             double currentTime,
             const std::string & fileName,
             const std::string & referencePath,
@@ -177,9 +179,9 @@ struct PxrUsdKatanaUtils {
 
     /// \name Bounds
     /// \{
-    static bool IsBoundable(const UsdPrim& prim);
+    USDKATANA_API static bool IsBoundable(const UsdPrim& prim);
 
-    static FnKat::DoubleAttribute ConvertBoundsToAttribute(
+    USDKATANA_API static FnKat::DoubleAttribute ConvertBoundsToAttribute(
             const std::vector<GfBBox3d>& bounds,
             const std::vector<double>& motionSampleTimes,
             bool isMotionBackward,
@@ -189,7 +191,7 @@ struct PxrUsdKatanaUtils {
     /// Build and return, as a group attribute for convenience, a map
     /// from instances to masters.  Only traverses paths at and below
     /// the given rootPath.
-    static FnKat::GroupAttribute BuildInstanceMasterMapping(
+    USDKATANA_API static FnKat::GroupAttribute BuildInstanceMasterMapping(
             const UsdStageRefPtr& stage, const SdfPath &rootPath);
     
 };
@@ -198,13 +200,13 @@ struct PxrUsdKatanaUtils {
 class PxrUsdKatanaUtilsLightListAccess {
 public:
     /// Get the Usd prim at the current light path.
-    UsdPrim GetPrim() const;
+    USDKATANA_API UsdPrim GetPrim() const;
 
     /// Get the Katana location for the current light path.
-    std::string GetLocation() const;
+    USDKATANA_API std::string GetLocation() const;
 
     /// Get the Katana location for a given Usd path.
-    std::string GetLocation(const SdfPath& path) const;
+    USDKATANA_API std::string GetLocation(const SdfPath& path) const;
 
     /// Add an attribute to lightList.
     template <class T>
@@ -216,7 +218,7 @@ public:
     }
 
     /// Set linking for the light.
-    bool SetLinks(const UsdCollectionAPI &collectionAPI,
+    USDKATANA_API bool SetLinks(const UsdCollectionAPI &collectionAPI,
                   const std::string &linkName);
 
     /// Append the string \p value to a custom string list named \p tag.
@@ -224,19 +226,19 @@ public:
     void AddToCustomStringList(const std::string& tag,const std::string& value);
 
 protected:
-    PxrUsdKatanaUtilsLightListAccess(
+    USDKATANA_API PxrUsdKatanaUtilsLightListAccess(
         FnKat::GeolibCookInterface &interface,
         const PxrUsdKatanaUsdInArgsRefPtr& usdInArgs);
-    ~PxrUsdKatanaUtilsLightListAccess();
+    USDKATANA_API ~PxrUsdKatanaUtilsLightListAccess();
 
     /// Change the light path being accessed.
-    void SetPath(const SdfPath& lightPath);
+    USDKATANA_API void SetPath(const SdfPath& lightPath);
 
     /// Build into \p interface.
-    void Build();
+    USDKATANA_API void Build();
 
 private:
-    void _Set(const std::string& name, const VtValue& value);
+    USDKATANA_API void _Set(const std::string& name, const VtValue& value);
     void _Set(const std::string& name, const FnKat::Attribute& attr);
 
 private:

@@ -28,12 +28,14 @@ PXR_NAMESPACE_OPEN_SCOPE
 #ifndef PXRUSDKATANA_READLIGHT_H
 #define PXRUSDKATANA_READLIGHT_H
 
+#include "api.h"
+
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdLuxLight;
 
 /// \brief read \p Light into \p attrs.
-void
+USDKATANA_API void
 PxrUsdKatanaReadLight(
         const UsdLuxLight& light,
         const PxrUsdKatanaUsdInPrivateData& data,

@@ -29,6 +29,8 @@
 #include "pxr/usd/usdSkel/cache.h"
 #include "pxr/base/tf/refPtr.h"
 
+#include "api.h"
+
 #include <tbb/enumerable_thread_specific.h>
 
 /// \brief Reference counted container for op state that should be constructed
@@ -85,7 +87,7 @@ public:
 
     typedef std::map<std::string, std::vector<std::string> > StringListMap;
 
-    static PxrUsdKatanaUsdInArgsRefPtr New(
+    USDKATANA_API static PxrUsdKatanaUsdInArgsRefPtr New(
             UsdStageRefPtr stage,
             const std::string& rootLocation,
             const std::string& isolatePath,
@@ -118,12 +120,12 @@ public:
     }
 
     // bounds computation is kind of important, so we centralize it here.
-    std::vector<GfBBox3d> ComputeBounds(
+    USDKATANA_API std::vector<GfBBox3d> ComputeBounds(
         const UsdPrim& prim,
         const std::vector<double>& motionSampleTimes,
         bool applyLocalTransform = false);
 
-    UsdPrim GetRootPrim() const;
+    USDKATANA_API UsdPrim GetRootPrim() const;
 
     UsdStageRefPtr GetStage() const {
         return _stage;

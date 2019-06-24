@@ -28,12 +28,14 @@ PXR_NAMESPACE_OPEN_SCOPE
 #ifndef PXRUSDKATANA_READCONSTRAINTTARGET_H
 #define PXRUSDKATANA_READCONSTRAINTTARGET_H
 
+#include "api.h"
+
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdGeomConstraintTarget;
 
 /// \brief read \p constraintTarget into \p attrs
-void
+USDKATANA_API void
 PxrUsdKatanaReadConstraintTarget(
         const UsdGeomConstraintTarget& constraintTarget,
         const PxrUsdKatanaUsdInPrivateData& data,

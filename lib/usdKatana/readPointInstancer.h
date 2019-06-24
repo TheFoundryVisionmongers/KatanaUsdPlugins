@@ -28,12 +28,14 @@ PXR_NAMESPACE_OPEN_SCOPE
 #ifndef PXRUSDKATANA_READPOINTINSTANCER_H
 #define PXRUSDKATANA_READPOINTINSTANCER_H
 
+#include "api.h"
+
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdGeomPointInstancer;
 
 /// \brief Read \p point instancer into \p attrs.
-void
+USDKATANA_API void
 PxrUsdKatanaReadPointInstancer(
         const UsdGeomPointInstancer& instancer,
         const PxrUsdKatanaUsdInPrivateData& data,

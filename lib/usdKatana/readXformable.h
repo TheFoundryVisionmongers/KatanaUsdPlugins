@@ -28,6 +28,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 #ifndef PXRUSDKATANA_READXFORMABLE_H
 #define PXRUSDKATANA_READXFORMABLE_H
 
+#include "api.h"
 #include <FnAttribute/FnAttribute.h>
 
 class PxrUsdKatanaAttrMap;
@@ -35,7 +36,7 @@ class PxrUsdKatanaUsdInPrivateData;
 class UsdGeomXformable;
 
 /// \brief read \p xform into \p attrs.
-void
+USDKATANA_API void
 PxrUsdKatanaReadXformable(
         const UsdGeomXformable& xform,
         const PxrUsdKatanaUsdInPrivateData& data,
