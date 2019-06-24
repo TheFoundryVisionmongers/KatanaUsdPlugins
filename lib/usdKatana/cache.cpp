@@ -42,7 +42,7 @@
 #include "pxr/base/tf/instantiateSingleton.h"
 
 #include <set>
-#include <regex.h>
+#include <boost/regex.h>
 
 #include <pystring/pystring.h>
 
