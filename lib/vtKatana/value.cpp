@@ -22,6 +22,8 @@
 // language governing permissions and limitations under the Apache License.
 //
 #include "pxr/pxr.h"
+#include "vtKatana/value.h"
+
 #include "vtKatana/internalFromVt.h"
 #include "vtKatana/internalToVt.h"
 
