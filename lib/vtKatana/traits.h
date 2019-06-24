@@ -145,12 +145,29 @@ struct VtKatana_IsNumeric
                     std::is_arithmetic<typename VtKatana_GetNumericScalarType<
                         T>::type>::value> {};
 
+#if defined(ARCH_OS_WINDOWS)
+// Introduced because FnAttribute::NullAttribute does not have a value_type or array_type
+// typedef, and VtKatana_GetKatanaAttrValueType will attempt to use it (VS2017+ gives a better error message)
+struct NullAttribute
+{
+    typedef void value_type;
+    typedef intptr_t array_type;
+};
+
+/// Every Numeric and String type can be mapped to a single Katana Attribute
+/// Type
+template <typename T, typename = void>
+struct VtKatana_GetKatanaAttrType {
+    typedef NullAttribute type;
+};
+#else
 /// Every Numeric and String type can be mapped to a single Katana Attribute
 /// Type
 template <typename T, typename = void>
 struct VtKatana_GetKatanaAttrType {
     typedef FnAttribute::NullAttribute type;
 };
+#endif
 
 /// Strings and String Holders map to Katana StringAttributes
 /// (ie. SdfAssetPath => StringAttribute)
