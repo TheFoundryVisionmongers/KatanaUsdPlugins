@@ -88,11 +88,10 @@ cmake ..  -G "Visual Studio 14 2015 Win64"^
     -DKATANA_API_LOCATION="C:/Program Files/Foundry/Katana3.0v7"^
     -DUSD_ROOT="C:/path/to/usd/"^
     -DTBB_ROOT_DIR="C:/path/to/tbb/"^
-    -DTBB_INCLUDE_DIRS="C:/path/to/tbb/include/"^
-    -DTBB_tbb_LIBRARY="C:/path/to/tbb/lib/tbb.lib"^
-    -DTBB_LIBRARY=C:/path/to/tbb/lib^
+    -DTBB_tbb_LIBRARY=tbb.lib^
     -DPYTHON_INCLUDE_DIR="C:/Python27/include/"^
     -DPYTHON_LIBRARY="C:/Python27/libs/python27.lib"^
+    -DPYTHON_EXECUTABLE="C:/Python27/python.exe"^
     -DGLEW_INCLUDE_DIR="C:/path/to/glew/include/"^
     -DGLEW_LIBRARY="C:/path/to/glew/lib/glew32.lib"^
     -DBOOST_ROOT="C:/path/to/boost/"^
