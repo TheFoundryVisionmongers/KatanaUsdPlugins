@@ -15,6 +15,7 @@ file(GLOB cppFiles
     ${KATANA_API_SOURCE_DIR}/FnAsset/client/*.cpp
     ${KATANA_API_SOURCE_DIR}/FnAsset/plugin/*.cpp
     ${KATANA_API_SOURCE_DIR}/FnAttribute/client/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnAttributeFunction/plugin/*.cpp
     ${KATANA_API_SOURCE_DIR}/FnConfig/*.cpp
     ${KATANA_API_SOURCE_DIR}/FnDefaultAttributeProducer/plugin/*.cpp
     ${KATANA_API_SOURCE_DIR}/FnGeolibServices/client/*.cpp
