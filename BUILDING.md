@@ -40,7 +40,7 @@ several variables that can be set to point to a specific version:
 If they are not provided, an attempt to use the system's TBB will be made.
 
 #### Python
-The user can specify `PYTHON_INCLUDE_DIR` and `PYTHON_LIBRARY` to use a
+The user can specify `PYTHON_ROOT` to use a
 specific Python version, which needs to match the version that was used to
 build USD. If no specific is provided, the system's Python will be used.
 
@@ -68,8 +68,9 @@ cmake .. \
     -DKATANA_API_LOCATION=/opt/Foundry/Katana3.0v7/ \
     -DUSD_ROOT=/path/to/usd/ \
     -DTBB_ROOT_DIR=/path/to/tbb/ \
-    -DPYTHON_INCLUDE_DIR=/path/to/python/include/python27/ \
-    -DPYTHON_LIBRARY=/path/to/python/lib/libpython2.7.so \
+    -DTBB_INCLUDE_DIRS=/path/to/tbb/include \
+    -DPYTHON_ROOT=/path/to/python \
+    -DPYTHON_EXECUTABLE=/path/to/python/python \
     -DGLEW_INCLUDE_DIR=/path/to/usd/include/ \
     -DGLEW_LIBRARY=/path/to/usd/lib64/libGLEW.so \
     -DBOOST_ROOT=/path/to/boost/ \
@@ -89,8 +90,7 @@ cmake ..  -G "Visual Studio 14 2015 Win64"^
     -DUSD_ROOT="C:/path/to/usd/"^
     -DTBB_ROOT_DIR="C:/path/to/tbb/"^
     -DTBB_tbb_LIBRARY=tbb.lib^
-    -DPYTHON_INCLUDE_DIR="C:/Python27/include/"^
-    -DPYTHON_LIBRARY="C:/Python27/libs/python27.lib"^
+    -DPYTHON_ROOT="C:/Python27"^
     -DPYTHON_EXECUTABLE="C:/Python27/python.exe"^
     -DGLEW_INCLUDE_DIR="C:/path/to/glew/include/"^
     -DGLEW_LIBRARY="C:/path/to/glew/lib/glew32.lib"^
