@@ -42,7 +42,7 @@
 #include "pxr/base/tf/instantiateSingleton.h"
 
 #include <set>
-#include <boost/regex.h>
+#include <boost/regex.hpp>
 
 #include <pystring/pystring.h>
 
@@ -469,17 +469,7 @@ UsdKatanaCache::_SetMutedLayers(
 
     bool regexIsEmpty = layerRegex == "" || layerRegex == "^$";
     
-    // use a better regex library?
-    regex_t regex;
-    if (regcomp(&regex, layerRegex.c_str(), REG_EXTENDED))
-    {
-        TF_WARN("UsdKatanaCache: Invalid ignoreLayerRegex value: %s",
-                layerRegex.c_str());
-        regexIsEmpty = true;
-    }
-
-
-    regmatch_t* rmatch = 0;
+    boost::regex regex(layerRegex);
 
     TF_FOR_ALL(stageLayer, stageLayers)
     {
@@ -494,10 +484,7 @@ UsdKatanaCache::_SetMutedLayers(
         
         if (!regexIsEmpty)
         {
-            if (layer && !regexec(
-                &regex, 
-                layerIdentifier.c_str(), 
-                0, rmatch, 0))
+            if (boost::regex_match(layerIdentifier, regex))
             {
                 match = true;
             }
@@ -517,7 +504,6 @@ UsdKatanaCache::_SetMutedLayers(
             stage->MuteLayer(layerIdentifier);
         }
     }
-    regfree(&regex);
 }
 
 UsdKatanaCache::UsdKatanaCache() 
