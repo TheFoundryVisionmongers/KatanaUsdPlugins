@@ -5,6 +5,19 @@ find_package(Boost COMPONENTS python thread system regex REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(TBB REQUIRED)
 
+if(NOT DEFINED USD_ROOT)
+    message(FATAL_ERROR "Build option USD_ROOT is not defined")
+endif()
+include(${USD_ROOT}/pxrConfig.cmake)
+
+if(NOT DEFINED PYTHON_ROOT)
+    message(FATAL_ERROR "Build option PYTHON_ROOT is not defined")
+endif()
+
+if(NOT DEFINED PYTHON_EXECUTABLE)
+    message(FATAL_ERROR "Build option PYTHON_EXECUTABLE is not defined")
+endif()
+
 function(pxr_library NAME)
     set(options
     )
@@ -76,14 +89,15 @@ function(pxr_library NAME)
         ${NAME}
         PRIVATE
         ${args_INCLUDE_DIRS}
-        ${USD_ROOT}/include
+        ${PXR_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}/lib
         ${CMAKE_SOURCE_DIR}/plugin
         ${BOOST_ROOT}/include
         ${KATANA_API_INCLUDE_DIR}
-        ${PYTHON_INCLUDE_DIR}
         ${TBB_INCLUDE_DIRS}
         ${GLEW_INCLUDE_DIR}
+        $<$<CXX_COMPILER_ID:GNU>:${PYTHON_ROOT}/include/python2.7>
+        $<$<CXX_COMPILER_ID:MSVC>:${PYTHON_ROOT}/include>
     )
     target_compile_definitions(
         ${NAME}
@@ -117,14 +131,13 @@ function(pxr_library NAME)
     target_compile_options(
         ${NAME}
         PRIVATE
-        $<$<CXX_COMPILER_ID:GNU>:-Wall>
+        $<$<CXX_COMPILER_ID:GNU>:-Wall -std=c++11 -Wno-unused-but-set-variable -Wno-deprecated -Wno-unused-local-typedefs>
         $<$<CXX_COMPILER_ID:MSVC>:/W4 /wd4267 /wd4100 /wd4702 /wd4244 /wd4800 /wd4996 /wd4456 /wd4127 /wd4701 /wd4305 /wd4838 /wd4624 /wd4506 /wd4245 /DWIN32_LEAN_AND_MEAN /DNOMINMAX /DNOGDI /FIiso646.h>
     )
     target_link_directories(
         ${NAME}
         PRIVATE
-        ${PYTHON_INCLUDE_DIR}/../lib
-        ${USD_ROOT}/lib
+        ${PYTHON_ROOT}/lib
         ${TBB_ROOT_DIR}/lib
     )
     target_link_libraries(
@@ -143,10 +156,11 @@ function(pxr_library NAME)
             PRIVATE
             ${BOOST_ROOT}/include
             ${CMAKE_SOURCE_DIR}/lib
-            ${USD_ROOT}/include
-            ${PYTHON_INCLUDE_DIR}
+            ${PXR_INCLUDE_DIRS}
             ${KATANA_API_INCLUDE_DIR}
             ${TBB_INCLUDE_DIRS}
+            $<$<CXX_COMPILER_ID:GNU>:${PYTHON_ROOT}/include/python2.7>
+            $<$<CXX_COMPILER_ID:MSVC>:${PYTHON_ROOT}/include>
         )
         target_compile_definitions(
             _${NAME}
@@ -160,14 +174,13 @@ function(pxr_library NAME)
         target_compile_options(
             _${NAME}
             PRIVATE
-            $<$<CXX_COMPILER_ID:GNU>:-Wall>
+            $<$<CXX_COMPILER_ID:GNU>:-Wall -std=c++11 -Wno-deprecated -Wno-unused-local-typedefs>
             $<$<CXX_COMPILER_ID:MSVC>:/W4 /wd4244 /wd4305 /wd4100 /wd4459 /DWIN32_LEAN_AND_MEAN /DNOMINMAX>
         )
         target_link_directories(
             _${NAME}
             PRIVATE
-            ${PYTHON_INCLUDE_DIR}/../lib
-            ${USD_ROOT}/lib
+            ${PYTHON_ROOT}/lib
             ${TBB_ROOT_DIR}/lib
         )
         target_link_libraries(

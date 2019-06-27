@@ -7,10 +7,6 @@ endif()
 
 pxr_shared_library(${PXR_PACKAGE}
     LIBRARIES
-        arch
-        pcp
-        kind
-        work
         plug
         gf
         tf
@@ -32,11 +28,9 @@ pxr_shared_library(${PXR_PACKAGE}
         cameraUtil
         hio
         glf
-        katanaPluginApi
         katanaAttrfncApi
         ${vtKatana_LIBRARY}
         ${Boost_THREAD_LIBRARY}
-        ${Boost_PYTHON_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
         ${Boost_REGEX_LIBRARY}
 

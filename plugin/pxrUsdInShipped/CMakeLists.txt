@@ -10,15 +10,9 @@ pxr_plugin(${PXR_PACKAGE}
         usd
         usdGeom
         usdKatana
-        vtKatana
         usdShade
         usdLux
         usdRi
-        tf
-        sdf
-        vt
-        arch
-        ${Boost_PYTHON_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
 
     PRIVATE_CLASSES
