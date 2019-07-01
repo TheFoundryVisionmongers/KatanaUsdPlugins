@@ -29,6 +29,7 @@ pxr_shared_library(${PXR_PACKAGE}
         hio
         glf
         katanaAttrfncApi
+        katanaPluginApi
         ${vtKatana_LIBRARY}
         ${Boost_THREAD_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}

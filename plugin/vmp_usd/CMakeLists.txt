@@ -6,6 +6,11 @@ if (NOT ${PXR_ENABLE_GL_SUPPORT})
     return()
 endif()
 
+set(vtKatana_LIBRARY "")
+if (NOT ${KATANA_API_VERSION} VERSION_LESS "3.0.0")
+    set(vtKatana_LIBRARY "vtKatana")
+endif()
+
 pxr_plugin(${PXR_PACKAGE}
     KATANA_PLUGIN
     LIBRARIES
@@ -19,6 +24,7 @@ pxr_plugin(${PXR_PACKAGE}
         usdImagingGL
         katanaPluginApi
         usdKatana
+        ${vtKatana_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
 
     CPPFILES
