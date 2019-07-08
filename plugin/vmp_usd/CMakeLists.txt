@@ -14,18 +14,10 @@ endif()
 pxr_plugin(${PXR_PACKAGE}
     KATANA_PLUGIN
     LIBRARIES
-        arch
-        tf
-        work
-        usd
-        usdUtils
-        glf
-        usdImaging
         usdImagingGL
         katanaPluginApi
         usdKatana
         ${vtKatana_LIBRARY}
-        ${Boost_SYSTEM_LIBRARY}
 
     CPPFILES
         debugCodes.cpp

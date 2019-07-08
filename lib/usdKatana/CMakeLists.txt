@@ -7,33 +7,19 @@ endif()
 
 pxr_shared_library(${PXR_PACKAGE}
     LIBRARIES
-        plug
-        gf
-        tf
-        trace
         vt
-        ar
         sdf
-        usd
         usdHydra
-        usdImaging
         usdImagingGL
-        usdShade
         usdSkel
         usdGeom
-        usdLux
         usdRi
         usdUI
         usdUtils
-        cameraUtil
         hio
-        glf
-        katanaAttrfncApi
         katanaPluginApi
         ${vtKatana_LIBRARY}
-        ${Boost_THREAD_LIBRARY}
-        ${Boost_SYSTEM_LIBRARY}
-        ${Boost_REGEX_LIBRARY}
+        Boost::system
 
     PUBLIC_CLASSES
         attrMap

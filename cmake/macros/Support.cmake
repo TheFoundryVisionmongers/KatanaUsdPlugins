@@ -3,7 +3,15 @@ include(PxrUsdUtils)
 find_package(KatanaAPI REQUIRED)
 find_package(Boost COMPONENTS python thread system regex REQUIRED)
 find_package(GLEW REQUIRED)
-find_package(TBB REQUIRED)
+find_package(TBB CONFIG REQUIRED)
+find_package(Python CONFIG REQUIRED)
+find_package(OpenEXR CONFIG REQUIRED)
+find_package(OpenImageIO CONFIG REQUIRED)
+find_package(JPEG REQUIRED)
+find_package(PNG REQUIRED)
+find_package(TIFF REQUIRED)
+find_package(ZLib REQUIRED)
+find_package(OpenSubDiv REQUIRED)
 
 if(NOT DEFINED USD_ROOT)
     message(FATAL_ERROR "Build option USD_ROOT is not defined")
@@ -89,21 +97,14 @@ function(pxr_library NAME)
         ${NAME}
         PRIVATE
         ${args_INCLUDE_DIRS}
-        ${PXR_INCLUDE_DIRS}
         ${CMAKE_SOURCE_DIR}/lib
         ${CMAKE_SOURCE_DIR}/plugin
-        ${BOOST_ROOT}/include
         ${KATANA_API_INCLUDE_DIR}
-        ${TBB_INCLUDE_DIRS}
-        ${GLEW_INCLUDE_DIR}
-        $<$<CXX_COMPILER_ID:GNU>:${PYTHON_ROOT}/include/python2.7>
-        $<$<CXX_COMPILER_ID:MSVC>:${PYTHON_ROOT}/include>
     )
     target_compile_definitions(
         ${NAME}
         PRIVATE
         -DBOOST_ALL_NO_LIB
-        -DBOOST_PYTHON_STATIC_LIB
         -DFNASSET_STATIC=1
         -DFNATTRIBUTE_STATIC=1
         -DFNATTRIBUTEFUNCTION_STATIC=1
@@ -134,12 +135,6 @@ function(pxr_library NAME)
         $<$<CXX_COMPILER_ID:GNU>:-Wall -std=c++11 -Wno-unused-but-set-variable -Wno-deprecated -Wno-unused-local-typedefs>
         $<$<CXX_COMPILER_ID:MSVC>:/W4 /wd4267 /wd4100 /wd4702 /wd4244 /wd4800 /wd4996 /wd4456 /wd4127 /wd4701 /wd4305 /wd4838 /wd4624 /wd4506 /wd4245 /DWIN32_LEAN_AND_MEAN /DNOMINMAX /DNOGDI /FIiso646.h>
     )
-    target_link_directories(
-        ${NAME}
-        PRIVATE
-        ${PYTHON_ROOT}/lib
-        ${TBB_ROOT_DIR}/lib
-    )
     target_link_libraries(
         ${NAME}
         PRIVATE
@@ -154,19 +149,13 @@ function(pxr_library NAME)
         target_include_directories(
             _${NAME}
             PRIVATE
-            ${BOOST_ROOT}/include
             ${CMAKE_SOURCE_DIR}/lib
-            ${PXR_INCLUDE_DIRS}
             ${KATANA_API_INCLUDE_DIR}
-            ${TBB_INCLUDE_DIRS}
-            $<$<CXX_COMPILER_ID:GNU>:${PYTHON_ROOT}/include/python2.7>
-            $<$<CXX_COMPILER_ID:MSVC>:${PYTHON_ROOT}/include>
         )
         target_compile_definitions(
             _${NAME}
             PRIVATE
             -DBOOST_ALL_NO_LIB
-            -DBOOST_PYTHON_STATIC_LIB
             MFB_PACKAGE_NAME=${NAME}
             MFB_ALT_PACKAGE_NAME=${NAME}
             MFB_PACKAGE_MODULE="${pyModuleName}"
@@ -176,12 +165,6 @@ function(pxr_library NAME)
             PRIVATE
             $<$<CXX_COMPILER_ID:GNU>:-Wall -std=c++11 -Wno-deprecated -Wno-unused-local-typedefs>
             $<$<CXX_COMPILER_ID:MSVC>:/W4 /wd4244 /wd4305 /wd4100 /wd4459 /DWIN32_LEAN_AND_MEAN /DNOMINMAX>
-        )
-        target_link_directories(
-            _${NAME}
-            PRIVATE
-            ${PYTHON_ROOT}/lib
-            ${TBB_ROOT_DIR}/lib
         )
         target_link_libraries(
             _${NAME}
