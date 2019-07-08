@@ -2,7 +2,7 @@ include(PxrUsdUtils)
 
 find_package(KatanaAPI REQUIRED)
 find_package(Boost COMPONENTS python thread system regex REQUIRED)
-find_package(GLEW REQUIRED)
+find_package(GLEW CONFIG REQUIRED)
 find_package(TBB CONFIG REQUIRED)
 find_package(Python CONFIG REQUIRED)
 find_package(OpenEXR CONFIG REQUIRED)
@@ -17,14 +17,6 @@ if(NOT DEFINED USD_ROOT)
     message(FATAL_ERROR "Build option USD_ROOT is not defined")
 endif()
 include(${USD_ROOT}/pxrConfig.cmake)
-
-if(NOT DEFINED PYTHON_ROOT)
-    message(FATAL_ERROR "Build option PYTHON_ROOT is not defined")
-endif()
-
-if(NOT DEFINED PYTHON_EXECUTABLE)
-    message(FATAL_ERROR "Build option PYTHON_EXECUTABLE is not defined")
-endif()
 
 function(pxr_library NAME)
     set(options
