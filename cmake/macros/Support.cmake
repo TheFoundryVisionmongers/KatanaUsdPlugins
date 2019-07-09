@@ -11,7 +11,7 @@ find_package(JPEG REQUIRED)
 find_package(PNG REQUIRED)
 find_package(TIFF REQUIRED)
 find_package(ZLIB REQUIRED)
-find_package(OpenSubDiv REQUIRED)
+find_package(OpenSubdiv REQUIRED)
 
 if(NOT DEFINED USD_ROOT)
     message(FATAL_ERROR "Build option USD_ROOT is not defined")
