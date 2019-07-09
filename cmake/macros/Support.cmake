@@ -10,7 +10,7 @@ find_package(OpenImageIO CONFIG REQUIRED)
 find_package(JPEG REQUIRED)
 find_package(PNG REQUIRED)
 find_package(TIFF REQUIRED)
-find_package(ZLib REQUIRED)
+find_package(ZLIB REQUIRED)
 find_package(OpenSubDiv REQUIRED)
 
 if(NOT DEFINED USD_ROOT)
