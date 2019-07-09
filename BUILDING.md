@@ -38,10 +38,6 @@ plug-ins.
 
 #### TBB
 `TBB_DIR` must be provided, to the cmake folder of the TBB installation.
-In addition, specify:
-- `CONAN_INCLUDE_DIRS_TBB`
-- `CONAN_LIB_DIRS_TBB`
-to the relevant subdirectories of TBB.
 
 #### Python
 `Python_DIR` must be provided, to the cmake folder of the Python installation.
@@ -60,17 +56,9 @@ is also useful.
 
 #### OpenEXR
 `OpenEXR_DIR` must be provided, to the cmake folder of the OpenEXR installation.
-In addition, specify:
-- `CONAN_INCLUDE_DIRS_OPENEXR`
-- `CONAN_LIB_DIRS_OPENEXR`
-to the relevant subdirectories of OpenEXR.
 
 #### OpenImageIO
 `OpenImageIO_DIR` must be provided, to the cmake folder of the OpenImageIO installation.
-In addition, specify:
-- `CONAN_INCLUDE_DIRS_OPENIMAGEIO`
-- `CONAN_LIB_DIRS_OPENIMAGEIO`
-to the relevant subdirectories of OpenImageIO.
 
 #### JPEG
 The following must be provided:
@@ -92,17 +80,9 @@ The following must be provided:
 
 #### OpenSubdiv
 `OpenSubdiv_DIR` must be provided, to the cmake folder of the OpenSubdiv installation.
-In addition, specify:
-- `CONAN_INCLUDE_DIRS_OPENSUBDIV`
-- `CONAN_LIB_DIRS_OPENSUBDIV`
-to the relevant subdirectories of OpenSubdiv.
 
 #### PTex
 `PTex_DIR` must be provided, to the cmake folder of the PTex installation.
-In addition, specify:
-- `CONAN_INCLUDE_DIRS_PTEX`
-- `CONAN_LIB_DIRS_PTEX`
-to the relevant subdirectories of PTex.
 
 ## Building With CMake
 
@@ -116,19 +96,13 @@ cmake .. \
     -DKATANA_API_LOCATION=/opt/Foundry/Katana3.2v1/ \
     -DUSD_ROOT=/path/to/USD/^
     -DTBB_DIR=/path/to/TBB/cmake^
-    -DCONAN_INCLUDE_DIRS_TBB=/path/to/TBB/include^
-    -DCONAN_LIB_DIRS_TBB=/path/to/TBB/lib^
     -DPython_DIR=/path/to/Python/cmake^
     -DPYTHON_EXECUTABLE=/path/to/Python/bin/python.exe^
     -DBOOST_ROOT=/path/to/Boost^
     -DBoost_USE_STATIC_LIBS=OFF^
     -DGLEW_DIR=/path/to/GLEW/lib/cmake/glew^
     -DOpenEXR_DIR=/path/to/OpenEXR/cmake^
-    -DCONAN_INCLUDE_DIRS_OPENEXR=/path/to/OpenEXR/include^
-    -DCONAN_LIB_DIRS_OPENEXR=/path/to/OpenEXR/lib^
     -DOpenImageIO_DIR=/path/to/OpenImageIO/cmake^
-    -DCONAN_INCLUDE_DIRS_OPENIMAGEIO=/path/to/OpenImageIO/include^
-    -DCONAN_LIB_DIRS_OPENIMAGEIO=/path/to/OpenImageIO/lib^
     -DJPEG_INCLUDE_DIR=/path/to/JPEG/include^
     -DJPEG_LIBRARY_RELEASE=/path/to/JPEG/lib/libjpeg.lib^
     -DPNG_PNG_INCLUDE_DIR=/path/to/PNG/include^
@@ -137,11 +111,7 @@ cmake .. \
     -DTIFF_LIBRARY=/path/to/JPEG/lib/libtiff.lib^
     -DZLIB_ROOT=/path/to/Zlib^
     -DOpenSubdiv_DIR=/path/to/OpenSubdiv/cmake^
-    -DCONAN_INCLUDE_DIRS_OPENSUBDIV=/path/to/OpenSubdiv/include^
-    -DCONAN_LIB_DIRS_OPENSUBDIV=/path/to/OpenSubdiv/lib^
     -DPTex_DIR=/path/to/PTex/cmake^
-    -DCONAN_INCLUDE_DIRS_OPENSUBDIV=/path/to/PTex/include^
-    -DCONAN_LIB_DIRS_OPENSUBDIV=/path/to/PTex/lib^
     -DCMAKE_INSTALL_PREFIX=/path/to/usd_for_katana/install
 
 cmake --build . --target install -- -j 18
@@ -158,19 +128,13 @@ cmake ..  -G "Visual Studio 14 2015 Win64"^
     -DKATANA_API_LOCATION="C:/Program Files/Foundry/Katana3.2v1"^
     -DUSD_ROOT="C:/path/to/USD/"^
     -DTBB_DIR="C:/path/to/TBB/cmake"^
-    -DCONAN_INCLUDE_DIRS_TBB="C:/path/to/TBB/include"^
-    -DCONAN_LIB_DIRS_TBB="C:/path/to/TBB/lib"^
     -DPython_DIR="C:/path/to/Python/cmake"^
     -DPYTHON_EXECUTABLE="C:/path/to/Python/bin/python.exe"^
     -DBOOST_ROOT="C:/path/to/Boost"^
     -DBoost_USE_STATIC_LIBS=OFF^
     -DGLEW_DIR="C:/path/to/GLEW/lib/cmake/glew"^
     -DOpenEXR_DIR="C:/path/to/OpenEXR/cmake"^
-    -DCONAN_INCLUDE_DIRS_OPENEXR="C:/path/to/OpenEXR/include"^
-    -DCONAN_LIB_DIRS_OPENEXR="C:/path/to/OpenEXR/lib"^
     -DOpenImageIO_DIR="C:/path/to/OpenImageIO/cmake"^
-    -DCONAN_INCLUDE_DIRS_OPENIMAGEIO="C:/path/to/OpenImageIO/include"^
-    -DCONAN_LIB_DIRS_OPENIMAGEIO="C:/path/to/OpenImageIO/lib"^
     -DJPEG_INCLUDE_DIR="C:/path/to/JPEG/include"^
     -DJPEG_LIBRARY_RELEASE="C:/path/to/JPEG/lib/libjpeg.lib"^
     -DPNG_PNG_INCLUDE_DIR="C:/path/to/PNG/include"^
@@ -179,11 +143,7 @@ cmake ..  -G "Visual Studio 14 2015 Win64"^
     -DTIFF_LIBRARY="C:/path/to/JPEG/lib/libtiff.lib"^
     -DZLIB_ROOT="C:/path/to/Zlib"^
     -DOpenSubdiv_DIR="C:/path/to/OpenSubdiv/cmake"^
-    -DCONAN_INCLUDE_DIRS_OPENSUBDIV="C:/path/to/OpenSubdiv/include"^
-    -DCONAN_LIB_DIRS_OPENSUBDIV="C:/path/to/OpenSubdiv/lib"^
     -DPTex_DIR="C:/path/to/PTex/cmake"^
-    -DCONAN_INCLUDE_DIRS_OPENSUBDIV="C:/path/to/PTex/include"^
-    -DCONAN_LIB_DIRS_OPENSUBDIV="C:/path/to/PTex/lib"^
     -DCMAKE_INSTALL_PREFIX="C:/path/to/usd_for_katana/install"
 
 cmake --build . --target install --config Release --parallel 18
