@@ -18,11 +18,22 @@ function(pxr_katana_nodetypes NODE_TYPES)
     # Install a __init__.py that imports all the known node types
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/generated_NodeTypes_init.py"
          "${importLines}")
-    install(
-        FILES "${CMAKE_CURRENT_BINARY_DIR}/generated_NodeTypes_init.py"
-        DESTINATION "${installDir}"
-        RENAME "__init__.py"
-    )
+    if(${BUILD_KATANA_INTERNAL_USD_PLUGINS})
+        bundle_files(
+            TARGET 
+            USD.NodeTypes.bundle
+            DESTINATION_FOLDER
+            ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Plugins/${pyModuleName}
+            FILES
+            ${pyFiles}
+        )
+    else()
+        install(
+            FILES "${CMAKE_CURRENT_BINARY_DIR}/generated_NodeTypes_init.py"
+            DESTINATION "${installDir}"
+            RENAME "__init__.py"
+        )
+    endif()
 endfunction() # pxr_katana_nodetypes
 
 # from USD/cmake/macros/Private.cmake
@@ -84,7 +95,7 @@ function(_install_python LIBRARY_NAME)
             add_custom_command(OUTPUT ${outfile}
                 COMMAND
                     ${PYTHON_EXECUTABLE}
-                    ${PROJECT_SOURCE_DIR}/cmake/macros/compilePython.py
+                    ${KATANA_USD_PLUGINS_SRC_ROOT}/cmake/macros/compilePython.py
                     ${CMAKE_CURRENT_SOURCE_DIR}/${file}
                     ${CMAKE_CURRENT_SOURCE_DIR}/${file}
                     ${CMAKE_CURRENT_BINARY_DIR}/${file_we}.pyc
