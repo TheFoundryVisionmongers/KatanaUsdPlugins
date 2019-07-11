@@ -12,26 +12,26 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 file(GLOB cppFiles
-    ${KATANA_API_SOURCE_DIR}/FnAsset/client/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAsset/plugin/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAttribute/client/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAttributeFunction/plugin/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnConfig/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnDefaultAttributeProducer/plugin/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnGeolibServices/client/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnGeolib/op/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnGeolib/util/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnLogging/client/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnPluginManager/client/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnPluginSystem/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnRender/plugin/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnRenderOutputLocation/client/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnRenderOutputLocation/plugin/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnRenderOutputUtils/client/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnScenegraphGenerator/plugin/*.cpp
-    ${KATANA_API_SOURCE_DIR}/FnScenegraphIterator/client/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnAsset/client/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnAsset/plugin/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnAttribute/client/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnAttributeFunction/plugin/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnConfig/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnDefaultAttributeProducer/plugin/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnGeolibServices/client/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnGeolib/op/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnGeolib/util/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnLogging/client/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnPluginManager/client/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnPluginSystem/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnRender/plugin/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnRenderOutputLocation/client/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnRenderOutputLocation/plugin/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnRenderOutputUtils/client/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnScenegraphGenerator/plugin/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnScenegraphIterator/client/*.cpp
     ${KATANA_API_SOURCE_DIR}/FnViewerModifier/plugin/*.cpp
-    ${KATANA_API_SOURCE_DIR}/pystring/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/pystring/*.cpp
 )
 
 pxr_static_library(${PXR_PACKAGE}

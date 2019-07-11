@@ -15,46 +15,74 @@ The USD plug-in for Katana has the following dependencies:
 - Python
 - Boost
 - GLEW
+- OpenEXR
+- OpenImageIO
+- JPEG
+- PNG
+- TIFF
+- Zlib
+- OpenSubdiv
+- PTex
 
-For TBB, Python, Boost and GLEW, the dependencies need to match the
-dependencies that were used to build USD.
+The dependencies need to match the versions that were used to build USD.
+
+Many of the dependencies are found via CMake's config mechanism.
 
 #### Katana's Plug-ins API
 Katana is shipped with a API (header and source files), used to build Katana
-plug-ins. A path to such file must be provided in `KATANA_API_LOCATION`.
+plug-ins.
+`KATANA_API_LOCATION` must be provided, to the Katana installation prefix.
 
 #### USD
-`USD_ROOT` needs to be provided, where header files and library files will be
-found. Alternatively, both `USD_INCLUDE_DIR` and `USD_LIBRARY_DIR` can be
-provided separetely.
+`USD_ROOT` must be provided, to the USD installation prefix.
 
 #### TBB
-The same TBB version that was used to build USD needs to be provided. There are
-several variables that can be set to point to a specific version:
-- `TBB_ROOT_DIR`
-- `TBB_INCLUDE_DIR`
-- `TBB_LIBRARY`
-- `TBB_tbb_LIBRARY` (for custom library names)
-- `TBB_tbbmalloc_LIBRARY` (for custom library names)
-
-If they are not provided, an attempt to use the system's TBB will be made.
+`TBB_DIR` must be provided, to the cmake folder of the TBB installation.
 
 #### Python
-The user can specify `PYTHON_ROOT` to use a
-specific Python version, which needs to match the version that was used to
-build USD. If no specific is provided, the system's Python will be used.
-
-More info in https://cmake.org/cmake/help/latest/module/FindPythonLibs.html.
+`Python_DIR` must be provided, to the cmake folder of the Python installation.
+In addition, specify:
+- `PYTHON_EXECUTABLE`
+to use to compile Python code.
 
 #### Boost
-`BOOST_ROOT` can be provided to point to a specific Boost build, which needs to
-match the one that was used for building the USD build. If it is not provided,
-an attempt to use the system's Boost will be made.
+`BOOST_ROOT` must be provided, to the Boost installation prefix.
+Dynamic Boost is used, so specifying
+- `Boost_USE_STATIC_LIBS=OFF`
+is also useful.
 
 #### GLEW
-`GLEW_INCLUDE_DIR` and `GLEW_LIBRARY` can be provided to point to a specific
-GLEW build, that needs to match the version used the USD. If not provided,
-an attempt to use the system's version will be made.
+`GLEW_DIR` must be provided, to the cmake folder of the GLEW installation.
+
+#### OpenEXR
+`OpenEXR_DIR` must be provided, to the cmake folder of the OpenEXR installation.
+
+#### OpenImageIO
+`OpenImageIO_DIR` must be provided, to the cmake folder of the OpenImageIO installation.
+
+#### JPEG
+The following must be provided:
+- `JPEG_INCLUDE_DIR` to the location of JPEG headers
+- `JPEG_LIBRARY_RELEASE` to the location of the JPEG library to link
+
+#### PNG
+The following must be provided:
+- `PNG_PNG_INCLUDE_DIR` to the location of PNG headers
+- `PNG_LIBRARY` to the location of the PNG library to link
+
+#### TIFF
+The following must be provided:
+- `TIFF_INCLUDE_DIR` to the location of TIFF headers
+- `TIFF_LIBRARY` to the location of the TIFF library to link
+
+#### Zlib
+`ZLIB_ROOT` must be provided, to the Zlib installation prefix.
+
+#### OpenSubdiv
+`OpenSubdiv_DIR` must be provided, to the cmake folder of the OpenSubdiv installation.
+
+#### PTex
+`PTex_DIR` must be provided, to the cmake folder of the PTex installation.
 
 ## Building With CMake
 
@@ -65,16 +93,27 @@ cd /path/to/usd_for_katana
 mkdir build
 cd build
 cmake .. \
-    -DKATANA_API_LOCATION=/opt/Foundry/Katana3.0v7/ \
-    -DUSD_ROOT=/path/to/usd/ \
-    -DTBB_ROOT_DIR=/path/to/tbb/ \
-    -DTBB_INCLUDE_DIRS=/path/to/tbb/include \
-    -DPYTHON_ROOT=/path/to/python \
-    -DPYTHON_EXECUTABLE=/path/to/python/python \
-    -DGLEW_INCLUDE_DIR=/path/to/usd/include/ \
-    -DGLEW_LIBRARY=/path/to/usd/lib64/libGLEW.so \
-    -DBOOST_ROOT=/path/to/boost/ \
-    -DCMAKE_INSTALL_PREFIX=/path/to/usd_for_katana/install \
+    -DKATANA_API_LOCATION=/opt/Foundry/Katana3.2v1/ \
+    -DUSD_ROOT=/path/to/USD/^
+    -DTBB_DIR=/path/to/TBB/cmake^
+    -DPython_DIR=/path/to/Python/cmake^
+    -DPYTHON_EXECUTABLE=/path/to/Python/bin/python.exe^
+    -DBOOST_ROOT=/path/to/Boost^
+    -DBoost_USE_STATIC_LIBS=OFF^
+    -DGLEW_DIR=/path/to/GLEW/lib/cmake/glew^
+    -DOpenEXR_DIR=/path/to/OpenEXR/cmake^
+    -DOpenImageIO_DIR=/path/to/OpenImageIO/cmake^
+    -DJPEG_INCLUDE_DIR=/path/to/JPEG/include^
+    -DJPEG_LIBRARY_RELEASE=/path/to/JPEG/lib/libjpeg.lib^
+    -DPNG_PNG_INCLUDE_DIR=/path/to/PNG/include^
+    -DPNG_LIBRARY=/path/to/JPEG/lib/libpng.lib^
+    -DTIFF_INCLUDE_DIR=/path/to/TIFF/include^
+    -DTIFF_LIBRARY=/path/to/JPEG/lib/libtiff.lib^
+    -DZLIB_ROOT=/path/to/Zlib^
+    -DOpenSubdiv_DIR=/path/to/OpenSubdiv/cmake^
+    -DPTex_DIR=/path/to/PTex/cmake^
+    -DCMAKE_INSTALL_PREFIX=/path/to/usd_for_katana/install
+
 cmake --build . --target install -- -j 18
 ```
 
@@ -86,15 +125,25 @@ mkdir build\
 cd build
 cmake ..  -G "Visual Studio 14 2015 Win64"^
     -DCMAKE_BUILD_TYPE="Release"^
-    -DKATANA_API_LOCATION="C:/Program Files/Foundry/Katana3.0v7"^
-    -DUSD_ROOT="C:/path/to/usd/"^
-    -DTBB_ROOT_DIR="C:/path/to/tbb/"^
-    -DTBB_tbb_LIBRARY=tbb.lib^
-    -DPYTHON_ROOT="C:/Python27"^
-    -DPYTHON_EXECUTABLE="C:/Python27/python.exe"^
-    -DGLEW_INCLUDE_DIR="C:/path/to/glew/include/"^
-    -DGLEW_LIBRARY="C:/path/to/glew/lib/glew32.lib"^
-    -DBOOST_ROOT="C:/path/to/boost/"^
+    -DKATANA_API_LOCATION="C:/Program Files/Foundry/Katana3.2v1"^
+    -DUSD_ROOT="C:/path/to/USD/"^
+    -DTBB_DIR="C:/path/to/TBB/cmake"^
+    -DPython_DIR="C:/path/to/Python/cmake"^
+    -DPYTHON_EXECUTABLE="C:/path/to/Python/bin/python.exe"^
+    -DBOOST_ROOT="C:/path/to/Boost"^
+    -DBoost_USE_STATIC_LIBS=OFF^
+    -DGLEW_DIR="C:/path/to/GLEW/lib/cmake/glew"^
+    -DOpenEXR_DIR="C:/path/to/OpenEXR/cmake"^
+    -DOpenImageIO_DIR="C:/path/to/OpenImageIO/cmake"^
+    -DJPEG_INCLUDE_DIR="C:/path/to/JPEG/include"^
+    -DJPEG_LIBRARY_RELEASE="C:/path/to/JPEG/lib/libjpeg.lib"^
+    -DPNG_PNG_INCLUDE_DIR="C:/path/to/PNG/include"^
+    -DPNG_LIBRARY="C:/path/to/JPEG/lib/libpng.lib"^
+    -DTIFF_INCLUDE_DIR="C:/path/to/TIFF/include"^
+    -DTIFF_LIBRARY="C:/path/to/JPEG/lib/libtiff.lib"^
+    -DZLIB_ROOT="C:/path/to/Zlib"^
+    -DOpenSubdiv_DIR="C:/path/to/OpenSubdiv/cmake"^
+    -DPTex_DIR="C:/path/to/PTex/cmake"^
     -DCMAKE_INSTALL_PREFIX="C:/path/to/usd_for_katana/install"
 
 cmake --build . --target install --config Release --parallel 18

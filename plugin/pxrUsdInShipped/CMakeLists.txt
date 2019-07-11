@@ -8,18 +8,12 @@ endif()
 pxr_plugin(${PXR_PACKAGE}
     KATANA_PLUGIN
     LIBRARIES
-        katanaAttrfncApi
-        katanaOpApi
         katanaPluginApi
-        kind
-        usd
-        usdGeom
         usdKatana
         usdShade
         usdLux
-        usdRi
         ${vtKatana_LIBRARY}
-        ${Boost_SYSTEM_LIBRARY}
+        Boost::system
 
     PRIVATE_CLASSES
         attrfnc_materialReference

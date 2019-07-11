@@ -2,9 +2,6 @@ set(PXR_PACKAGE vtKatana)
 
 pxr_shared_library(${PXR_PACKAGE}
     LIBRARIES
-        gf
-        tf
-        vt
         sdf
         katanaPluginApi
 
