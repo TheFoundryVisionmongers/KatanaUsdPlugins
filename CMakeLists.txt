@@ -1,9 +1,13 @@
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
-                      ${CMAKE_SOURCE_DIR}/cmake/modules
-                      ${CMAKE_SOURCE_DIR}/cmake/macros)
+                      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules
+                      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/macros)
 
+if(NOT GEOLIB_API_SOURCE_DIR)
+    set(GEOLIB_API_SOURCE_DIR ${KATANA_API_SOURCE_DIR})
+endif()
+# Ensure we can get the root of this project at all times.
+set(KATANA_USD_PLUGINS_SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 include(Support)
-
 set(PXR_INSTALL_SUBDIR "third_party/katana")
 
 # Transform the KATANA_API versions into defines to be used by this code
