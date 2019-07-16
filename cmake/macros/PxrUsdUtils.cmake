@@ -18,7 +18,7 @@ function(pxr_katana_nodetypes NODE_TYPES)
     # Install a __init__.py that imports all the known node types
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/generated_NodeTypes_init.py"
          "${importLines}")
-    if(${BUILD_KATANA_INTERNAL_USD_PLUGINS})
+    if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
         bundle_files(
             TARGET 
             USD.NodeTypes.bundle

@@ -65,7 +65,7 @@ function(pxr_library NAME)
         # no install for static libraries
         _get_install_dir("lib/usd" pluginInstallPrefix)
     elseif (args_TYPE STREQUAL "SHARED")
-        if(${BUILD_KATANA_INTERNAL_USD_PLUGINS})
+        if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
             add_katana_plugin(${NAME} 
                 OUTPUT_PATH
                 ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
@@ -76,12 +76,12 @@ function(pxr_library NAME)
         endif()
         set_target_properties(${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
-        if(NOT ${BUILD_KATANA_INTERNAL_USD_PLUGINS})
+        if(NOT BUILD_KATANA_INTERNAL_USD_PLUGINS)
             install(TARGETS ${NAME} DESTINATION "${PXR_INSTALL_SUBDIR}/lib")
         endif()
         _get_install_dir("lib/usd" pluginInstallPrefix)
     elseif (args_TYPE STREQUAL "PLUGIN")
-        if(${BUILD_KATANA_INTERNAL_USD_PLUGINS})
+        if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
             add_katana_plugin(${NAME} 
                 OUTPUT_PATH
                 ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
@@ -93,7 +93,7 @@ function(pxr_library NAME)
         set_target_properties(${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
         
-        if(NOT ${BUILD_KATANA_INTERNAL_USD_PLUGINS})
+        if(NOT BUILD_KATANA_INTERNAL_USD_PLUGINS)
             install(TARGETS ${NAME} DESTINATION "${PXR_INSTALL_SUBDIR}/plugin/Libs")
         endif()
         _get_install_dir("plugin" pluginInstallPrefix)
