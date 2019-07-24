@@ -91,15 +91,25 @@ function(_install_python LIBRARY_NAME)
 
             set(outfile ${CMAKE_CURRENT_BINARY_DIR}/${file_we}.pyc)
             list(APPEND files_copied ${outfile})
-
-            add_custom_command(OUTPUT ${outfile}
-                COMMAND
+            if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
+                add_custom_command(OUTPUT ${outfile}
+                    COMMAND
+                    ${BIN_BUNDLE_PATH}/python
+                    ${KATANA_USD_PLUGINS_SRC_ROOT}/cmake/macros/compilePython.py
+                    ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+                    ${CMAKE_CURRENT_BINARY_DIR}/${file_we}.pyc
+                )
+            else()
+                add_custom_command(OUTPUT ${outfile}
+                    COMMAND
                     ${PYTHON_EXECUTABLE}
                     ${KATANA_USD_PLUGINS_SRC_ROOT}/cmake/macros/compilePython.py
                     ${CMAKE_CURRENT_SOURCE_DIR}/${file}
                     ${CMAKE_CURRENT_SOURCE_DIR}/${file}
                     ${CMAKE_CURRENT_BINARY_DIR}/${file_we}.pyc
-            )
+                )
+            endif()
             list(APPEND filesToInstall ${CMAKE_CURRENT_SOURCE_DIR}/${file})
             list(APPEND filesToInstall ${CMAKE_CURRENT_BINARY_DIR}/${file_we}.pyc)
         elseif (${file} MATCHES ".qss$")
