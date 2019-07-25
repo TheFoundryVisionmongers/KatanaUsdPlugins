@@ -644,8 +644,15 @@ _GetMaterialAttr(
                 // relying on traversing the bxdf.
                 // We can remove this once the "derives" usd composition
                 // works, along with partial composition
-                _CreateShadingNode(curr, currentTime,
+                std::string handle = _CreateShadingNode(curr, currentTime,
                         nodesBuilder, interfaceBuilder, "prman", flatten);
+
+                // set the name of the preview shader for Katana to pick up
+                // TODO
+                // preview surfaces seem to come last, so are always the final string attribute set here
+                // but ideally, this should detect if the current UsdShadeShader prim (curr) is actually
+                // representative of a preview surface (don't know how to do that)
+                terminalsBuilder.set("usdPreviewSurface", FnKat::StringAttribute(handle));
             }
 
             if (!curr.IsA<UsdGeomScope>()) {
