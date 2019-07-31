@@ -65,43 +65,49 @@ function(pxr_library NAME)
         # no install for static libraries
         _get_install_dir("lib/usd" pluginInstallPrefix)
     elseif (args_TYPE STREQUAL "SHARED")
+        add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
-            add_katana_plugin(${NAME} 
-                OUTPUT_PATH
+            # Output location for internal Katana build steps
+            set_target_properties("${NAME}"
+                PROPERTIES
+                LIBRARY_OUTPUT_DIRECTORY
                 ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
-                "${args_CPPFILES};${${NAME}_CPPFILES}"
+                LIBRARY_OUTPUT_DIRECTORY_DEBUG
+                ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
+                LIBRARY_OUTPUT_DIRECTORY_RELEASE
+                ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
             )
-        else()
-            add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         endif()
         set_target_properties(${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
-        if(NOT BUILD_KATANA_INTERNAL_USD_PLUGINS)
-            install(TARGETS ${NAME} DESTINATION "${PXR_INSTALL_SUBDIR}/lib")
-        endif()
         _get_install_dir("lib/usd" pluginInstallPrefix)
     elseif (args_TYPE STREQUAL "PLUGIN")
+        add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
-            add_katana_plugin(${NAME} 
-                OUTPUT_PATH
+            # Output location for internal Katana build steps
+            set_target_properties("${NAME}"
+                PROPERTIES
+                LIBRARY_OUTPUT_DIRECTORY
                 ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
-                "${args_CPPFILES};${${NAME}_CPPFILES}"
+                LIBRARY_OUTPUT_DIRECTORY_DEBUG
+                ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
+                LIBRARY_OUTPUT_DIRECTORY_RELEASE
+                ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
             )
-        else()
-            add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         endif()
         set_target_properties(${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
-        
-        if(NOT BUILD_KATANA_INTERNAL_USD_PLUGINS)
-            install(TARGETS ${NAME} DESTINATION "${PXR_INSTALL_SUBDIR}/plugin/Libs")
-        endif()
         _get_install_dir("plugin" pluginInstallPrefix)
     else()
         message(FATAL_ERROR "Unsupported library type: " args_TYPE)
     endif()
     set(pluginToLibraryPath "")
 
+    if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
+        set_target_properties(${NAME} PROPERTIES CXX_VISIBILITY_PRESET default)
+        set_target_properties(${NAME} PROPERTIES CMAKE_C_VISIBILITY_PRESET default)
+        set_target_properties(${NAME} PROPERTIES CMAKE_VISIBILITY_INLINES_HIDDEN FALSE)
+    endif()
     _install_resource_files(
         ${NAME}
         "${pluginInstallPrefix}"
