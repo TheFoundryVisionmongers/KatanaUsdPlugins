@@ -1,0 +1,106 @@
+{
+  "linters": {
+    "chmod": {
+      "type": "chmod"
+    },
+    "filename": {
+      "type": "filename"
+    },
+    "cpp-cpplint": {
+      "type": "cpplint",
+      "bin": ["../../Resources/DevTools/bin/cpplint", "cpplint"],
+      "include": ["(\\.(c|h|cpp)$)"],
+      "severity": {
+        "build/c++11": "disabled",
+        "build/header_guard": "disabled",
+        "build/include": "disabled",
+        "build/include_order": "disabled",
+        "legal/copyright": "disabled",
+        "runtime/indentation_namespace": "disabled",
+        "runtime/references": "disabled",
+        "whitespace/braces": "disabled",
+        "whitespace/end_of_line": "disabled",
+        "whitespace/indent": "disabled",
+        "whitespace/line_length": "disabled",
+        "whitespace/newline": "disabled"
+      }
+    },
+    "json": {
+      "type": "json",
+      "include": ["(^\\.arcconfig$)", "(^\\.arclint$)", "(\\.json$)"]
+    },
+    "merge-conflict": {
+      "type": "merge-conflict"
+    },
+    "python-pylint": {
+      "type": "pylint",
+      "bin": ["../../Resources/DevTools/bin/pylint", "pylint"],
+      "include": ["(\\.py$)"],
+      "exclude": ["((FnAddDependency|SCons).*\\.py$)"],
+      "pylint.config": "../../Resources/DevTools/pylintrc"
+    },
+    "python-pylint-scons": {
+      "type": "pylint",
+      "bin": ["../../Resources/DevTools/bin/pylint", "pylint"],
+      "include": ["((FnAddDependency|SCons).*\\.py$)"],
+      "pylint.config": "../../Resources/DevTools/pylintrc",
+      "flags": [
+        "--disable=bad-indentation,bad-continuation",
+        "--additional-builtins=env,ARGUMENTS,Action,Builder,Copy,Dir,Exit,File,Flatten,GetOption,Import,Return,SConscript,Value"
+      ]
+    },
+    "spelling": {
+      "type": "spelling",
+      "spelling.dictionaries": [
+        "../../Resources/DevTools/phabricator/spelling.json"
+      ]
+    },
+    "text": {
+      "type": "text",
+      "exclude": [
+        "(CMakeLists\\.txt$|\\.cmake$)",
+        "(\\.py$)",
+        "(\\.(xml|xsd|qrc|args)$)",
+        "(\\.(conf|ini)$)"
+      ],
+      "severity": {
+        "2": "warning",
+        "4": "autofix",
+        "5": "warning",
+        "10": "warning"
+      }
+    },
+    "text-long-lines": {
+      "type": "text",
+      "include": [
+        "(CMakeLists\\.txt$|\\.cmake$)",
+        "((FnAddDependency|SCons).*\\.py$)",
+        "(\\.(xml|xsd|qrc|args)$)",
+        "(\\.(conf|ini)$)"
+      ],
+      "text.max-line-length": 120,
+      "severity": {
+        "2": "warning",
+        "4": "autofix",
+        "5": "warning",
+        "10": "warning"
+      }
+    },
+    "text-python": {
+      "type": "text",
+      "include": ["(\\.py$)"],
+      "exclude": ["((FnAddDependency|SCons).*\\.py$)"],
+      "text.max-line-length": 79,
+      "severity": {
+        "2": "warning",
+        "4": "autofix",
+        "5": "warning",
+        "10": "warning"
+      }
+    },
+    "xml": {
+      "type": "xml",
+      "include": ["(\\.(xml|xsd|qrc|args)$)"]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "base": "git:branch-unique(origin/v19.05_BRANCH), arc:upstream, git:HEAD^",
+  "phabricator.uri": "http://phabricator.thefoundry.co.uk/",
+  "load": ["../../Resources/DevTools/phabricator"]
+}
