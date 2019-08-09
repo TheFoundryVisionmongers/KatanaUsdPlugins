@@ -47,7 +47,7 @@ gb.set('fileName', '')
 nb.setHintsForParameter('fileName', {
     'help' : 'The USD file to read.',
     'widget':'assetIdInput',
-    'fileTypes':'usd|usda|usdb|usdc',
+    'fileTypes':'usd|usda|usdb|usdc|usdz',
 })
 
 gb.set('location', '/root/world/geo')
