@@ -77,6 +77,17 @@ function(pxr_library NAME)
                 LIBRARY_OUTPUT_DIRECTORY_RELEASE
                 ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
             )
+            if(WIN32)
+                set_target_properties(${NAME}
+                                      PROPERTIES
+                                      RUNTIME_OUTPUT_DIRECTORY
+                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
+                                      RUNTIME_OUTPUT_DIRECTORY_DEBUG
+                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
+                                      RUNTIME_OUTPUT_DIRECTORY_RELEASE
+                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
+                )
+            endif()
         endif()
         set_target_properties(${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
@@ -94,6 +105,17 @@ function(pxr_library NAME)
                 LIBRARY_OUTPUT_DIRECTORY_RELEASE
                 ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
             )
+            if(WIN32)
+                set_target_properties(${NAME}
+                                      PROPERTIES
+                                      RUNTIME_OUTPUT_DIRECTORY
+                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
+                                      RUNTIME_OUTPUT_DIRECTORY_DEBUG
+                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
+                                      RUNTIME_OUTPUT_DIRECTORY_RELEASE
+                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
+                )
+            endif()
         endif()
         set_target_properties(${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
