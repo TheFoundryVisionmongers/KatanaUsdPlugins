@@ -65,11 +65,9 @@ function(pxr_library NAME)
         # no install for static libraries
         _get_install_dir("lib/usd" pluginInstallPrefix)
     elseif (args_TYPE STREQUAL "SHARED")
-        message( "BUILD_KATANA_INTERNAL_USD_PLUGINS = ${BUILD_KATANA_INTERNAL_USD_PLUGINS}" )
         add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
             # Output location for internal Katana build steps
-            message("Installing  ${NAME} to ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib")
             set_target_properties("${NAME}"
                 PROPERTIES
                 LIBRARY_OUTPUT_DIRECTORY
@@ -98,7 +96,6 @@ function(pxr_library NAME)
         add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
             # Output location for internal Katana build steps
-            message("Installing  ${NAME} to ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs")
             set_target_properties("${NAME}"
                 PROPERTIES
                 LIBRARY_OUTPUT_DIRECTORY
