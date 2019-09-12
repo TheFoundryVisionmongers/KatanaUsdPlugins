@@ -89,5 +89,5 @@ DEFINE_DEFAULTATTRIBUTEPRODUCER_PLUGIN(PxrUsdInUtilExtraHintsDap)
 void registerPxrUsdInShippedUiUtils()
 {
     REGISTER_PLUGIN(PxrUsdInUtilExtraHintsDap,
-            "PxrUsdInUtilExtraHintsDap", 0, 1);
+            "UsdInUtilExtraHintsDap", 0, 1);
 }

@@ -144,11 +144,12 @@ PxrUsdKatanaReadLightFilter(
     const UsdPrim filterPrim = lightFilter.GetPrim();
     const SdfPath primPath = filterPrim.GetPath();
     const double currentTime = data.GetCurrentTime();
+    const bool prmanOutputTarget = data.hasOutputTarget("prman");
 
     GroupBuilder materialBuilder;
     GroupBuilder filterBuilder;
     _UsdBuilder usdBuilder = {filterBuilder, currentTime};
-    
+
     if (filterPrim) {
         UsdRiLightFilterAPI f(filterPrim);
         usdBuilder
@@ -217,7 +218,7 @@ PxrUsdKatanaReadLightFilter(
             .Set("densityPow", f.GetAnalyticDensityExponentAttr())
             ;
 
-        // barnMode 
+        // barnMode
         {
             VtValue val;
             UsdAttribute attr = f.GetBarnModeAttr();
@@ -251,7 +252,7 @@ PxrUsdKatanaReadLightFilter(
     if (UsdRiPxrCookieLightFilter f = UsdRiPxrCookieLightFilter(filterPrim)) {
         materialBuilder.set("prmanLightfilterShader",
                             FnKat::StringAttribute("PxrCookieLightFilter"));
-        // cookieMode 
+        // cookieMode
         {
             VtValue val;
             UsdAttribute attr = f.GetCookieModeAttr();
@@ -380,10 +381,16 @@ PxrUsdKatanaReadLightFilter(
     }
 
     // Gather prman statements
-    FnKat::GroupBuilder prmanBuilder;
-    PxrUsdKatanaReadPrimPrmanStatements(filterPrim, currentTime, prmanBuilder);
-    attrs.set("prmanStatements", prmanBuilder.build());
-    materialBuilder.set("prmanLightfilterParams", filterBuilder.build());
+    FnKat::GroupBuilder primStatements;
+    PxrUsdKatanaReadPrimPrmanStatements(filterPrim, currentTime, 
+        primStatements, prmanOutputTarget);
+    if (prmanOutputTarget)
+    {
+        attrs.set("prmanStatements", primStatements.build());
+        materialBuilder.set("prmanLightfilterParams", filterBuilder.build());
+    }
+    attrs.set("usd", primStatements.build());
+    
     attrs.set("material", materialBuilder.build());
     PxrUsdKatanaReadXformable(lightFilter, data, attrs);
     attrs.set("type", FnKat::StringAttribute("light filter"));

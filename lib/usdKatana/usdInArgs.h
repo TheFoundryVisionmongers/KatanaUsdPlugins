@@ -107,6 +107,7 @@ public:
             const StringListMap& extraAttributesOrNamespaces,
             bool prePopulate,
             bool verbose,
+            const std::set<std::string>& outputTargets,
             const char * errorMessage = 0) {
         return TfCreateRefPtr(new PxrUsdKatanaUsdInArgs(
                     stage, 
@@ -122,6 +123,7 @@ public:
                     extraAttributesOrNamespaces,
                     prePopulate,
                     verbose,
+                    outputTargets,
                     errorMessage));
     }
 
@@ -196,6 +198,10 @@ public:
     UsdSkelCache& GetUsdSkelCache() {
         return _usdSkelCache;
     }
+    
+    const std::set<std::string> & GetOutputTargets() {
+        return _outputTargets;
+    }
 
     const std::string & GetErrorMessage() {
         return _errorMessage;
@@ -216,6 +222,7 @@ private:
             const StringListMap& extraAttributesOrNamespaces,
             bool prePopulate,
             bool verbose,
+            const std::set<std::string>& outputTargets,
             const char * errorMessage = 0);
 
     ~PxrUsdKatanaUsdInArgs();
@@ -239,6 +246,8 @@ private:
 
     bool _prePopulate;
     bool _verbose;
+
+    std::set<std::string> _outputTargets;
 
     typedef tbb::enumerable_thread_specific< std::map<double, UsdGeomBBoxCache> > _ThreadLocalBBoxCaches;
     _ThreadLocalBBoxCaches _bboxCaches;
@@ -267,6 +276,7 @@ struct ArgsBuilder
     PxrUsdKatanaUsdInArgs::StringListMap extraAttributesOrNamespaces;
     bool prePopulate;
     bool verbose;
+    std::set<std::string> outputTargets;
     const char * errorMessage;
     
     
@@ -297,6 +307,7 @@ struct ArgsBuilder
             extraAttributesOrNamespaces,
             prePopulate,
             verbose,
+            outputTargets,
             errorMessage);
     }
 
@@ -315,6 +326,7 @@ struct ArgsBuilder
         extraAttributesOrNamespaces = other->GetExtraAttributesOrNamespaces();
         prePopulate = other->GetPrePopulate();
         verbose = other->IsVerbose();
+        outputTargets = other->GetOutputTargets();
         errorMessage = other->GetErrorMessage().c_str();
     }
 

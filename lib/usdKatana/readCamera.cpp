@@ -54,6 +54,7 @@ PxrUsdKatanaReadCamera(
         PxrUsdKatanaAttrMap& attrs)
 {
     const double currentTime = data.GetCurrentTime();
+    const bool prmanOutputTarget = data.hasOutputTarget("prman");
 
     //
     // Set all general attributes for a xformable type.
@@ -107,7 +108,11 @@ PxrUsdKatanaReadCamera(
     cameraBuilder.set("depthOfField", dofBuilder.build());
     pgsBuilder.set("camera", cameraBuilder.build());
 
-    attrs.set("prmanGlobalStatements", pgsBuilder.build());
+    if (prmanOutputTarget)
+    {
+        attrs.set("prmanGlobalStatements", pgsBuilder.build());
+    }
+    
 
     //
     // Set the 'geometry' attribute.

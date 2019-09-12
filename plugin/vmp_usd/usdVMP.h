@@ -56,7 +56,7 @@
 
 #include "debugCodes.h"
 
-FnLogSetup("USDVMP")
+FnLogSetup("FnUSDVMP")
 
 namespace FnKat = Foundry::Katana;
 

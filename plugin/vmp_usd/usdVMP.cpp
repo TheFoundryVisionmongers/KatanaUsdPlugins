@@ -438,7 +438,7 @@ DEFINE_VMP_PLUGIN(USDVMP)
 
 void registerPlugins()
 {
-    REGISTER_PLUGIN(USDVMP, "USDVMP", 0, 1);
+    REGISTER_PLUGIN(USDVMP, "FnUSDVMP", 0, 1);
 
     PxrUsdKatanaBootstrap();
     PxrVtKatanaBootstrap();

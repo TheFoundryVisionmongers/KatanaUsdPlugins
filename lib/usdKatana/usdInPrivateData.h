@@ -94,6 +94,15 @@ public:
         return _shutterClose;
     }
 
+
+    const bool hasOutputTarget(const std::string& renderer) const {
+        return _outputTargets.find(renderer) != _outputTargets.end();
+    }
+
+    const std::set<std::string>& GetOutputTargets(std::string renderer) const {
+        return _outputTargets;
+    }
+
     /// \brief Return true if motion blur is backward.
     ///
     /// PxrUsdIn supports both forward and backward motion blur. Motion
@@ -151,7 +160,8 @@ private:
 
     std::vector<double> _motionSampleTimesOverride;
     std::vector<double> _motionSampleTimesFallback;
-    
+
+    std::set<std::string> _outputTargets;
     
     mutable FnAttribute::GroupBuilder * _extGb;
 

@@ -43,12 +43,12 @@ DEFINE_GEOLIBOP_PLUGIN(PxrUsdInPrman_LocationDecorator);
 void registerPlugins()
 {
     USD_OP_REGISTER_PLUGIN(PxrUsdInPrman_LocationDecorator, 
-                       "PxrUsdInPrman_LocationDecorator", 
+                       "UsdInPrman_LocationDecorator", 
                        0, 
                        1);
     
     PxrUsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(
-            "PxrUsdInPrman_LocationDecorator");
+            "UsdInPrman_LocationDecorator");
 
     PxrUsdKatanaBootstrap();
     PxrVtKatanaBootstrap();

@@ -44,6 +44,7 @@
 
 #include <FnPluginManager/FnPluginManager.h>
 #include <FnLogging/FnLogging.h>
+#include <FnConfig/FnConfig.h>
 #include <FnAttribute/FnAttribute.h>
 
 #if defined(ARCH_OS_WINDOWS)
@@ -91,7 +92,11 @@ void PxrUsdKatanaBootstrap()
         }
 
         // Load Katana's Plugin Manager dynamic library.
+        #if defined(ARCH_OS_WINDOWS)
         path += binPrefix + "FnPluginSystem" ARCH_LIBRARY_SUFFIX;
+        #else
+        path += binPrefix + "libFnPluginSystem" ARCH_LIBRARY_SUFFIX;
+        #endif 
         std::string dlError;
         void* handle = TfDlopen(path, ARCH_LIBRARY_NOW, &dlError);
         if (!handle)
@@ -118,6 +123,7 @@ void PxrUsdKatanaBootstrap()
         if (hostSuite)
         {
             FnPluginHost* host = hostSuite->getHost();
+            FnConfig::Config::setHost(host);
 
             Foundry::Katana::PluginManager::setHost(host);
         }

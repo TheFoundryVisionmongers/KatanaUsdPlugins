@@ -98,7 +98,7 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_LightOp, privateData, opArgs, inte
                         // same op because we are already in the
                         // light-specific op, and we need to run a
                         // light-filter op instead.)
-                        "PxrUsdIn",
+                        "UsdIn",
                         opArgs,
                         FnKat::GeolibCookInterface::ResetRootFalse,
                         new PxrUsdKatanaUsdInPrivateData(

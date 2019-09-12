@@ -52,7 +52,8 @@ void
 PxrUsdKatanaReadPrimPrmanStatements(
         const UsdPrim& prim,
         double currentTime,
-        Foundry::Katana::GroupBuilder& statementBuilder);
+        Foundry::Katana::GroupBuilder& statementBuilder,
+        const bool prmanOutputTarget);
 
 Foundry::Katana::Attribute
 PxrUsdKatanaGeomGetPrimvarGroup(

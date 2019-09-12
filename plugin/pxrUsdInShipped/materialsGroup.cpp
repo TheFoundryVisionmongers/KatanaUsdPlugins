@@ -192,7 +192,7 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(
     auto args = sscb.build();
     
     
-    interface.execOp("PxrUsdIn.BuildIntermediate",
+    interface.execOp("UsdIn.BuildIntermediate",
                 FnKat::GroupBuilder()
                         .update(interface.getOpArg())
                         .set("staticScene", args)

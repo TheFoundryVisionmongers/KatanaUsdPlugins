@@ -102,7 +102,7 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_PointInstancerOp, privateData, opA
     {
         interface.createChild(
             childAttrs.getChildName(i),
-            "PxrUsdIn.BuildIntermediate",
+            "UsdIn.BuildIntermediate",
             FnKat::GroupBuilder()
                 .update(opArgs)
                 .set("staticScene", childAttrs.getChildByIndex(i))

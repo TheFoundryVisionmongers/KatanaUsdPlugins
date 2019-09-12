@@ -54,7 +54,8 @@ PxrUsdKatanaUsdInPrivateData::PxrUsdKatanaUsdInPrivateData(
         return;
     }
     
-    
+    _outputTargets = _usdInArgs->GetOutputTargets();
+
     // XXX: manually track instance and master path for possible
     //      relationship re-retargeting. This approach does not yet
     //      support nested instances -- which is expected to be handled

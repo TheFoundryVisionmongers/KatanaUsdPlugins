@@ -52,6 +52,7 @@ PxrUsdKatanaUsdInArgs::PxrUsdKatanaUsdInArgs(
         const StringListMap& extraAttributesOrNamespaces,
         bool prePopulate,
         bool verbose,
+        const std::set<std::string>& outputTargets,
         const char * errorMessage) :
     _stage(stage),
     _rootLocation(rootLocation),
@@ -65,7 +66,8 @@ PxrUsdKatanaUsdInArgs::PxrUsdKatanaUsdInArgs(
     _motionSampleTimes(motionSampleTimes),
     _extraAttributesOrNamespaces(extraAttributesOrNamespaces),
     _prePopulate(prePopulate),
-    _verbose(verbose)
+    _verbose(verbose),
+    _outputTargets(outputTargets)
 {
     if (errorMessage)
     {

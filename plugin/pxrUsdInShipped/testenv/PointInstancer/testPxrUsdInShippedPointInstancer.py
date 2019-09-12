@@ -42,7 +42,7 @@ class TestPxrOpUsdInInternalPointInstancer(unittest.TestCase):
 
         # Add a PxrUsdIn node and set its motion sample times
         pxrUsdInNode = NodegraphAPI.CreateNode(
-            'PxrUsdIn', NodegraphAPI.GetRootNode())
+            'UsdIn', NodegraphAPI.GetRootNode())
         pxrUsdInNode.getParameter('motionSampleTimes').setValue('0 -1', 0)
 
         # Add a RenderSettings node and turn on motion blur
@@ -103,7 +103,7 @@ class TestPxrOpUsdInInternalPointInstancer(unittest.TestCase):
 
         # test.motion.usda is a UsdGeomPointInstancer with positions,
         # orientations, scales, velocities, and angular velocities
-        NodegraphAPI.GetNode('PxrUsdIn').getParameter('fileName').setValue(
+        NodegraphAPI.GetNode('UsdIn').getParameter('fileName').setValue(
             'test.motion.usda', 0)
         CacheManager.flush()
 
@@ -118,7 +118,7 @@ class TestPxrOpUsdInInternalPointInstancer(unittest.TestCase):
         '''Change the PxrUsdIn's file and verify the dumped result.'''
 
         # test.translateOnly.usda is a UsdGeomPointInstancer with positions
-        NodegraphAPI.GetNode('PxrUsdIn').getParameter('fileName').setValue(
+        NodegraphAPI.GetNode('UsdIn').getParameter('fileName').setValue(
             'test.translateOnly.usda', 0)
         CacheManager.flush()
 

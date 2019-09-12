@@ -300,7 +300,7 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE_WITH_FLUSH(
     if (staticScene.isValid())
     {
         
-        interface.execOp("PxrUsdIn.BuildIntermediate",
+        interface.execOp("UsdIn.BuildIntermediate",
                     opArgs
 // katana 2.x doesn't allow private data to be overridden in execOp as it'll
 // automatically use that of the calling op while katana 3.x does allow it

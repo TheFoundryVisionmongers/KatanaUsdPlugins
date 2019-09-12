@@ -58,9 +58,14 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInPrman_LocationDecorator,
                 char const *katScheme = 
                     (scheme == UsdGeomTokens->catmullClark
                             ? catclark : scheme.GetText());
+                if (privateData.hasOutputTarget("prman"))
+                {
+                    interface.setAttr("prmanStatements.subdivisionMesh.scheme",
+                            FnKat::StringAttribute(katScheme));
+                }
+                interface.setAttr("usd.subdivisionScheme", 
+                    FnKat::StringAttribute(scheme.GetText()));
                 
-                interface.setAttr("prmanStatements.subdivisionMesh.scheme",
-                         FnKat::StringAttribute(katScheme));
             }
         }
     }
