@@ -291,7 +291,7 @@ PxrUsdKatanaReadLight(
         materialBuilder.set("prmanLightParams", lightBuilder.build());
     }
     attrs.set("usd", primStatements.build());
-    materialBuilder.set("usdLuxLightParams", lightBuilder.build());
+    materialBuilder.set("usdLightParams", lightBuilder.build());
 
     
     attrs.set("material", materialBuilder.build());
