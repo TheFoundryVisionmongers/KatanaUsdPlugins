@@ -238,6 +238,12 @@ PxrUsdKatanaReadMesh(
 
     attrs.set("type", FnKat::StringAttribute(isSubd ? "subdmesh" : "polymesh"));
 
+    if (isSubd)
+    {
+        attrs.set("usd.subdivisionScheme",
+            FnKat::StringAttribute(scheme.GetText()));
+    }
+
     //
     // Construct the 'geometry' attribute.
     //
