@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -29,8 +23,6 @@
 //
 #ifndef USDKATANA_CACHE_H
 #define USDKATANA_CACHE_H
-
-#include "api.h"
 
 #include "pxr/pxr.h"
 #include "pxr/usd/usd/stage.h"
@@ -64,25 +56,21 @@ class UsdKatanaCache : public TfSingleton<UsdKatanaCache>
 {
     friend class TfSingleton<UsdKatanaCache>;
 
-    USDKATANA_API
     UsdKatanaCache();
 
     /// Construct a session layer from the groupAttr encoding of variants
     /// and deactivations -- or return a previously created one
-    USDKATANA_API
     SdfLayerRefPtr& _FindOrCreateSessionLayer(
             FnAttribute::GroupAttribute sessionAttr, 
             const std::string& rootLocation);
 
 
     /// Mute layers by name
-    USDKATANA_API
     static void _SetMutedLayers(
         const UsdStageRefPtr &stage, const std::string &layerRegex);
 
     typedef std::map<std::string, UsdImagingGLEngineSharedPtr> _RendererCache;
 
-    USDKATANA_API
     std::string _ComputeCacheKey(FnAttribute::GroupAttribute sessionAttr, 
         const std::string& rootLocation);
 
@@ -91,19 +79,16 @@ class UsdKatanaCache : public TfSingleton<UsdKatanaCache>
 
 public:
 
-    USDKATANA_API
     static UsdKatanaCache& GetInstance() {
         return TfSingleton<UsdKatanaCache>::GetInstance();
     }
 
     /// Clear all caches
-    USDKATANA_API
     void Flush();
 
     
     /// Get (or create) a cached usd stage with a sessionLayer containing
     /// variant selections and activations (so far)
-    USDKATANA_API
     UsdStageRefPtr GetStage(std::string const& fileName, 
                             FnAttribute::GroupAttribute sessionAttr,
                             const std::string & sessionRootLocation,
@@ -111,7 +96,6 @@ public:
                             bool forcePopulate);
     
     // Equivalent to GetStage above but without caching
-    USDKATANA_API
     UsdStageRefPtr GetUncachedStage(std::string const& fileName, 
                             FnAttribute::GroupAttribute sessionAttr,
                             const std::string & sessionRootLocation,
@@ -119,29 +103,26 @@ public:
                             bool forcePopulate);
 
     /// Flushes an individual stage if present in the cache
-    USDKATANA_API
     void FlushStage(const UsdStageRefPtr & stage);
 
 
 
 
     /// Get (or create) a cached renderer for a given prim path.
-    USDKATANA_API
     UsdImagingGLEngineSharedPtr const& GetRenderer(UsdStageRefPtr const& stage,
                                              UsdPrim const& root,
                                              std::string const& sessionKey);
 
     /// \brief Find a cached session layer if it exists.  Does NOT create.
-    USDKATANA_API
     SdfLayerRefPtr FindSessionLayer(
         FnAttribute::GroupAttribute sessionAttr, 
         const std::string& rootLocation);
 
-    USDKATANA_API
+
     SdfLayerRefPtr FindSessionLayer(
         const std::string& cacheKey) ;
     
-    USDKATANA_API
+    
     SdfLayerRefPtr FindOrCreateSessionLayer(
         const std::string& sessionAttrXML,
         const std::string& rootLocation);

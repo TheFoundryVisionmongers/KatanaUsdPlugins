@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -50,6 +44,7 @@ PxrUsdKatanaUsdInArgs::PxrUsdKatanaUsdInArgs(
         double shutterClose,
         const std::vector<double>& motionSampleTimes,
         const StringListMap& extraAttributesOrNamespaces,
+        const std::vector<TfToken>& materialBindingPurposes,
         bool prePopulate,
         bool verbose,
         const char * errorMessage) :
@@ -64,6 +59,7 @@ PxrUsdKatanaUsdInArgs::PxrUsdKatanaUsdInArgs(
     _shutterClose(shutterClose),
     _motionSampleTimes(motionSampleTimes),
     _extraAttributesOrNamespaces(extraAttributesOrNamespaces),
+    _materialBindingPurposes(materialBindingPurposes),
     _prePopulate(prePopulate),
     _verbose(verbose)
 {

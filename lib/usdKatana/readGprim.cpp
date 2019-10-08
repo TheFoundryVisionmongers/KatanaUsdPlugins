@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -39,6 +33,12 @@
 #include "pxr/usd/usdGeom/pointBased.h"
 
 #include "pxr/base/gf/gamma.h"
+
+#include <FnAPI/FnAPI.h>
+
+#if KATANA_VERSION_MAJOR >= 3
+#include "vtKatana/array.h"
+#endif // KATANA_VERSION_MAJOR >= 3
 
 #include <FnLogging/FnLogging.h>
 
@@ -122,6 +122,62 @@ PxrUsdKatanaGeomGetWindingOrderAttr(
 
 namespace {
 
+#if KATANA_VERSION_MAJOR >= 3
+
+template <typename T_USD, typename T_ATTR> FnKat::Attribute
+_ConvertGeomAttr(
+    const UsdAttribute& usdAttr,
+    const int tupleSize,
+    const PxrUsdKatanaUsdInPrivateData& data)
+{
+    if (!usdAttr.HasValue())
+    {
+        return FnKat::Attribute();
+    }
+
+    const double currentTime = data.GetCurrentTime();
+    const std::vector<double>& motionSampleTimes = data.GetMotionSampleTimes(usdAttr);
+
+    // Flag to check if we discovered the topology is varying, in
+    // which case we only output the sample at the curent frame.
+    bool varyingTopology = false;
+
+    const bool isMotionBackward = data.IsMotionBackward();
+
+    std::map<float, VtArray<T_USD>> timeToSampleMap;
+    for (double relSampleTime : motionSampleTimes) {
+        double time = currentTime + relSampleTime;
+
+        // Eval attr.
+        VtArray<T_USD> attrArray;
+        usdAttr.Get(&attrArray, time);
+
+        if (!timeToSampleMap.empty()) {
+            if (timeToSampleMap.begin()->second.size() != attrArray.size()) {
+                timeToSampleMap.clear();
+                varyingTopology = true;
+                break;
+            }
+        }
+        float correctedSampleTime =
+            isMotionBackward
+                ? PxrUsdKatanaUtils::ReverseTimeSample(relSampleTime)
+                : relSampleTime;
+        timeToSampleMap.insert({correctedSampleTime, attrArray});
+    }
+
+    // Varying topology was found, build for the current frame only.
+    if (varyingTopology) {
+        VtArray<T_USD> attrArray;
+        usdAttr.Get(&attrArray, currentTime);
+        return VtKatanaMapOrCopy<T_USD>(attrArray);
+    } else {
+        return VtKatanaMapOrCopy<T_USD>(timeToSampleMap);
+    }
+}
+
+#else
+
 template <typename T_USD, typename T_ATTR> FnKat::Attribute
 _ConvertGeomAttr(
     const UsdAttribute& usdAttr,
@@ -185,6 +241,8 @@ _ConvertGeomAttr(
 
     return attrBuilder.build();
 }
+
+#endif // KATANA_VERSION_MAJOR >= 3
 
 } // anon namespace
 

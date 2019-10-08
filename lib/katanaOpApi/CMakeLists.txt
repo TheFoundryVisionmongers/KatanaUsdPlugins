@@ -1,6 +1,7 @@
-set(LIB_NAME katanaOpApi)
+# This library builds source files from the Katana installation
+set(PXR_PACKAGE katanaOpApi)
 
-file(GLOB CPPFILES
+file(GLOB cppFiles
     ${KATANA_API_SOURCE_DIR}/FnAsset/client/*.cpp
     ${KATANA_API_SOURCE_DIR}/FnAsset/plugin/*.cpp
     ${KATANA_API_SOURCE_DIR}/FnAttribute/client/*.cpp
@@ -13,7 +14,11 @@ file(GLOB CPPFILES
     ${KATANA_API_SOURCE_DIR}/pystring/.cpp
 )
 
-add_library(${LIB_NAME} STATIC ${CPPFILES})
-target_include_directories(${LIB_NAME} PUBLIC ${KATANA_API_INCLUDE_DIRS})
-set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-install(TARGETS ${LIB_NAME} DESTINATION "${INSTALL_SUBDIR}/lib")
+pxr_static_library(${PXR_PACKAGE}
+    INCLUDE_DIRS
+        ${KATANA_API_INCLUDE_DIRS}
+
+    CPPFILES
+        ${cppFiles}
+)
+

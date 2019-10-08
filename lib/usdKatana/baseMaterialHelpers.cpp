@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -68,8 +62,7 @@ _NodeRepresentsLiveBaseMaterial(const PcpNodeRef &node)
             n; // 0, or false, means we are at the root node
             n = n.GetOriginNode()) {
         switch(n.GetArcType()) {
-        case PcpArcTypeLocalSpecializes:
-        case PcpArcTypeGlobalSpecializes:
+        case PcpArcTypeSpecialize:
             isLiveBaseMaterial = true;
             break;
         // dakrunch: specializes across references are actually still valid.

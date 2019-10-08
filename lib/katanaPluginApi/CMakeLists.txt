@@ -1,60 +1,43 @@
-set(LIB_NAME katanaPluginApi)
+# This library builds source files from the Katana installation
+set(PXR_PACKAGE katanaPluginApi)
 
-set(PUBLICHEADERS
-    FnAsset.h
-    FnAttributeModifier.h
-    FnScenegraphGenerator.h
-    FnViewerModifier.h
-    FnViewerModifierInput.h
-    ScenegraphLocationDelegate.h
+# Disable all warnings for this library, otherwise strict builds will fail
+# due to warnings from this code, which comes from the Katana installation and
+# which we have no control over.
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
+    "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    add_definitions("-Wno-error")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    add_definitions("/w")
+endif()
+
+file(GLOB cppFiles
+    ${KATANA_API_SOURCE_DIR}/FnAsset/client/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnAsset/plugin/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnAttribute/client/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnConfig/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnDefaultAttributeProducer/plugin/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnGeolibServices/client/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnGeolib/op/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnGeolib/util/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnLogging/client/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnPluginManager/client/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnPluginSystem/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnRender/plugin/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnRenderOutputLocation/client/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnRenderOutputLocation/plugin/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnRenderOutputUtils/client/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnScenegraphGenerator/plugin/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnScenegraphIterator/client/*.cpp
+    ${KATANA_API_SOURCE_DIR}/FnViewerModifier/plugin/*.cpp
+    ${KATANA_API_SOURCE_DIR}/pystring/*.cpp
 )
 
-set(CPPFILES
-    ${KATANA_API_SOURCE_DIR}/pystring/pystring.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAsset/client/FnDefaultAssetPlugin.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAsset/client/FnDefaultFileSequencePlugin.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAsset/plugin/FnAsset.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAsset/plugin/FnFileSequence.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAttribute/client/FnAttribute.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAttribute/client/FnAttributeUtils.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAttribute/client/FnDataBuilder.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAttributeModifier/plugin/FnAttributeModifier.cpp
-    ${KATANA_API_SOURCE_DIR}/FnAttributeModifier/plugin/FnAttributeModifierInput.cpp
-    ${KATANA_API_SOURCE_DIR}/FnConfig/FnConfig.cpp
-    ${KATANA_API_SOURCE_DIR}/FnDefaultAttributeProducer/plugin/FnDefaultAttributeProducerPlugin.cpp
-    ${KATANA_API_SOURCE_DIR}/FnDefaultAttributeProducer/plugin/FnDefaultAttributeProducerUtil.cpp
-    ${KATANA_API_SOURCE_DIR}/FnLogging/client/FnLogging.cpp
-    ${KATANA_API_SOURCE_DIR}/FnPluginSystem/FnPlugin.cpp
-    ${KATANA_API_SOURCE_DIR}/FnRenderOutputLocation/client/FnRenderOutputLocationPluginClient.cpp
-    ${KATANA_API_SOURCE_DIR}/FnRenderOutputLocation/plugin/FnRenderOutputLocationPlugin.cpp
-    ${KATANA_API_SOURCE_DIR}/FnScenegraphGenerator/plugin/FnScenegraphGenerator.cpp
-    ${KATANA_API_SOURCE_DIR}/FnScenegraphIterator/client/FnScenegraphIterator.cpp
-    ${KATANA_API_SOURCE_DIR}/FnViewerModifier/plugin/FnViewerModifier.cpp
-    ${KATANA_API_SOURCE_DIR}/FnViewerModifier/plugin/FnViewerModifierInput.cpp
+pxr_static_library(${PXR_PACKAGE}
+    INCLUDE_DIRS
+        ${KATANA_API_INCLUDE_DIRS}
+
+    CPPFILES
+        ${cppFiles}
 )
 
-add_definitions(
-    -DPYSTRING_STATIC=1
-    -DFNASSET_STATIC=1
-    -DFNATTRIBUTE_STATIC=1
-    -DFNATTRIBUTEMODIFIER_STATIC=1
-    -DFNCONFIG_STATIC=1
-    -DFNDEFAULTATTRIBUTEPRODUCER_STATIC=1
-    -DFNLOGGING_STATIC=1
-    -DFNPLUGINSYSTEM_STATIC=1
-    -DFNRENDEROUTPUTLOCATION_STATIC=1
-    -DFNSCENEGRAPHGENERATOR_STATIC=1
-    -DFNSCENEGRAPHITERATOR_STATIC=1
-    -DFNVIEWERMODIFIER_STATIC=1
-)
-
-add_library(${LIB_NAME} STATIC ${CPPFILES})
-target_include_directories(${LIB_NAME} PUBLIC ${KATANA_API_INCLUDE_DIRS})
-set_target_properties(${LIB_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-install(TARGETS ${LIB_NAME} DESTINATION "${INSTALL_SUBDIR}/lib")
-install(
-    FILES
-        ${PUBLICHEADERS}
-    DESTINATION
-        ${INSTALL_SUBDIR}/include/${LIB_NAME}
-)

@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -27,20 +21,6 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifdef _WIN32
-#include <windows.h>
-#include <winbase.h>
-#include <combaseapi.h>
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
-#ifdef interface
-#undef interface
-#endif
-#endif
-
-#include <ciso646>
-
 #include "pxr/pxr.h"
 #include "usdKatana/usdInPrivateData.h"
 #include "usdKatana/utils.h"
@@ -258,6 +238,26 @@ PxrUsdKatanaUsdInPrivateData::PxrUsdKatanaUsdInPrivateData(
     // they can vary per attribute, so store both the overridden and the
     // fallback motion sample times for use inside GetMotionSampleTimes.
     //
+    bool useDefaultMotionSamples = false;
+    if (!prim.IsPseudoRoot())
+    {
+        TfToken useDefaultMotionSamplesToken("katana:useDefaultMotionSamples");
+        UsdAttribute useDefaultMotionSamplesUsdAttr = 
+            prim.GetAttribute(useDefaultMotionSamplesToken);
+        if (useDefaultMotionSamplesUsdAttr)
+        {
+            // If there is no katana op override and there is a usd 
+            // attribute "katana:useDefaultMotionSamples" set to true,
+            // interpret this as "use usdInArgs defaults".
+            //
+            useDefaultMotionSamplesUsdAttr.Get(&useDefaultMotionSamples);
+            if (useDefaultMotionSamples)
+            {
+                _motionSampleTimesOverride = usdInArgs->GetMotionSampleTimes();
+            }
+        }
+    }
+
     for (size_t i = 0; i < pathsToCheck.size(); ++i)
     {
         FnKat::Attribute motionSampleTimesAttr =
@@ -280,6 +280,11 @@ PxrUsdKatanaUsdInPrivateData::PxrUsdKatanaUsdInPrivateData(
                 const auto& sampleTimes = attr.getNearestSample(0.0f);;
                 if (!sampleTimes.empty())
                 {
+                    if (useDefaultMotionSamples)
+                    {
+                        // Clear out default samples before adding overrides
+                        _motionSampleTimesOverride.clear();
+                    }
                     for (float sampleTime : sampleTimes)
                         _motionSampleTimesOverride.push_back(
                             (double)sampleTime);
@@ -287,7 +292,7 @@ PxrUsdKatanaUsdInPrivateData::PxrUsdKatanaUsdInPrivateData(
                 }
             }
         }
-        else if (parentData)
+        else if (parentData && !useDefaultMotionSamples)
         {
             _motionSampleTimesOverride =
                     parentData->_motionSampleTimesOverride;
@@ -314,6 +319,28 @@ PxrUsdKatanaUsdInPrivateData::PxrUsdKatanaUsdInPrivateData(
             }
         }
     }
+
+
+    if (parentData)
+    {
+        _collectionQueryCache = parentData->_collectionQueryCache;
+        _bindingsCache = parentData->_bindingsCache;
+        
+    }
+
+    if (!_collectionQueryCache)
+    {
+        _collectionQueryCache.reset(
+                new UsdShadeMaterialBindingAPI::CollectionQueryCache);
+    }
+
+    if (!_bindingsCache)
+    {
+        _bindingsCache.reset(
+            new UsdShadeMaterialBindingAPI::BindingsCache);
+    }
+
+
 }
 
 const bool
@@ -333,20 +360,20 @@ PxrUsdKatanaUsdInPrivateData::IsMotionBackward() const
     }
 }
 
-std::vector<std::pair<double, double> >
+std::vector<PxrUsdKatanaUsdInPrivateData::UsdKatanaTimePair>
 PxrUsdKatanaUsdInPrivateData::GetUsdAndKatanaTimes(
         const UsdAttribute& attr) const
 {
     const std::vector<double> motionSampleTimes = GetMotionSampleTimes(attr);
-    std::vector<std::pair<double, double> > result;
-    result.reserve(motionSampleTimes.size());
-    bool isMotionBackward = IsMotionBackward();
-    double u, k;
-    for(auto t : motionSampleTimes) 
-    {
-        u = _currentTime + t;
-        k = isMotionBackward ? PxrUsdKatanaUtils::ReverseTimeSample(t) : t;
-        result.emplace_back(u,k);
+    std::vector<UsdKatanaTimePair> result(motionSampleTimes.size());
+    const bool isMotionBackward = IsMotionBackward();
+    for (size_t i = 0; i < motionSampleTimes.size(); ++i) {
+        double t = motionSampleTimes[i];
+
+        UsdKatanaTimePair& pair = result[i];
+        pair.usdTime = _currentTime + t;
+        pair.katanaTime = isMotionBackward ?
+            PxrUsdKatanaUtils::ReverseTimeSample(t) : t;
     } 
     return result;
 }
@@ -354,7 +381,8 @@ PxrUsdKatanaUsdInPrivateData::GetUsdAndKatanaTimes(
 
 const std::vector<double>
 PxrUsdKatanaUsdInPrivateData::GetMotionSampleTimes(
-    const UsdAttribute& attr) const
+    const UsdAttribute& attr,
+    bool fallBackToShutterBoundary) const
 {
     static std::vector<double> noMotion = {0.0};
 
@@ -437,8 +465,15 @@ PxrUsdKatanaUsdInPrivateData::GetMotionSampleTimes(
             if (lower > shutterStartTime)
             {
                 // Did not find a sample ealier than the shutter start. 
-                // Return no motion.
-                return noMotion;
+                if (fallBackToShutterBoundary)
+                {
+                    lower = shutterStartTime;
+                }
+                else
+                {
+                    // Return no motion.
+                    return noMotion;
+                }
             }
 
             // Insert the first sample as long as it is different
@@ -463,8 +498,15 @@ PxrUsdKatanaUsdInPrivateData::GetMotionSampleTimes(
             if (upper < shutterCloseTime)
             {
                 // Did not find a sample later than the shutter close. 
-                // Return no motion.
-                return noMotion;
+                if (fallBackToShutterBoundary)
+                {
+                    upper = shutterCloseTime;
+                }
+                else
+                {
+                    // Return no motion.
+                    return noMotion;
+                }
             }
 
             // Append the last sample as long as it is different
@@ -524,6 +566,21 @@ PxrUsdKatanaUsdInPrivateData::updateExtensionOpArgs(
         .deepUpdate(_extGb->build())
         .build();
 }
+
+
+UsdShadeMaterialBindingAPI::CollectionQueryCache *
+PxrUsdKatanaUsdInPrivateData::GetCollectionQueryCache() const
+{
+    return _collectionQueryCache.get();
+   
+}
+
+UsdShadeMaterialBindingAPI::BindingsCache *
+PxrUsdKatanaUsdInPrivateData::GetBindingsCache() const
+{
+    return _bindingsCache.get();
+}
+
 
 PxrUsdKatanaUsdInPrivateData *
 PxrUsdKatanaUsdInPrivateData::GetPrivateData(

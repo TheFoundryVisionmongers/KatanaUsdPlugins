@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2017 Pixar
 //
@@ -32,7 +26,7 @@
 
 #include "pxr/base/arch/export.h"
 
-#if defined(USDKATANA_STATIC)
+#if defined(PXR_STATIC)
 #   define USDKATANA_API
 #   define USDKATANA_API_TEMPLATE_CLASS(...)
 #   define USDKATANA_API_TEMPLATE_STRUCT(...)

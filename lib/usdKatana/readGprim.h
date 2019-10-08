@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -30,8 +24,6 @@
 #ifndef PXRUSDKATANA_READGPRIM_H
 #define PXRUSDKATANA_READGPRIM_H
 
-#include "usdKatana/api.h"
-
 #include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -42,38 +34,32 @@ class UsdGeomGprim;
 class UsdGeomPointBased;
 
 /// \brief reads \p gprim into \p attrs.
-USDKATANA_API
 void
 PxrUsdKatanaReadGprim(
         const UsdGeomGprim& gprim,
         const PxrUsdKatanaUsdInPrivateData& data,
         PxrUsdKatanaAttrMap& attrs);
 
-USDKATANA_API
 Foundry::Katana::Attribute
 PxrUsdKatanaGeomGetDisplayColorAttr(
         const UsdGeomGprim& gprim,
         const PxrUsdKatanaUsdInPrivateData& data);
 
-USDKATANA_API
 Foundry::Katana::Attribute
 PxrUsdKatanaGeomGetPAttr(
         const UsdGeomPointBased& points,
         const PxrUsdKatanaUsdInPrivateData& data);
 
-USDKATANA_API
 Foundry::Katana::Attribute
 PxrUsdKatanaGeomGetWindingOrderAttr(
         const UsdGeomGprim& gprim,
         const PxrUsdKatanaUsdInPrivateData& data);
 
-USDKATANA_API
 Foundry::Katana::Attribute
 PxrUsdKatanaGeomGetNormalAttr(
     const UsdGeomPointBased& points,
     const PxrUsdKatanaUsdInPrivateData& data);
 
-USDKATANA_API
 Foundry::Katana::Attribute
 PxrUsdKatanaGeomGetVelocityAttr(
     const UsdGeomPointBased& points,

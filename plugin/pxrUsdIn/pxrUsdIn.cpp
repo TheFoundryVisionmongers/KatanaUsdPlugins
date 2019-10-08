@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -27,13 +21,10 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include <ciso646>
-
 #include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
 
 #include "pxr/pxr.h"
 #include "usdKatana/blindDataObject.h"
-#include "usdKatana/bootstrap.h"
 #include "usdKatana/cache.h"
 #include "usdKatana/locks.h"
 #include "usdKatana/readBlindData.h"
@@ -71,7 +62,7 @@ PXR_NAMESPACE_USING_DIRECTIVE
 namespace FnKat = Foundry::Katana;
 
 // convenience macro to report an error.
-#define SET_ERROR(...)\
+#define ERROR(...)\
     interface.setAttr("type", Foundry::Katana::StringAttribute("error"));\
     interface.setAttr("errorMessage", Foundry::Katana::StringAttribute(\
         TfStringPrintf(__VA_ARGS__)));
@@ -138,13 +129,13 @@ public:
         }
         // Validate usdInArgs.
         if (!usdInArgs) {
-            SET_ERROR("Could not initialize PxrUsdIn usdInArgs.");
+            ERROR("Could not initialize PxrUsdIn usdInArgs.");
             return;
         }
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            SET_ERROR(usdInArgs->GetErrorMessage().c_str());
+            ERROR(usdInArgs->GetErrorMessage().c_str());
             return;
         }
 
@@ -161,8 +152,8 @@ public:
         
         // Validate usd prim.
         if (!prim) {
-            SET_ERROR("No USD prim at %s",
-                      interface.getRelativeOutputLocationPath().c_str());
+            ERROR("No USD prim at %s",
+                  interface.getRelativeOutputLocationPath().c_str());
             return;
         }
 
@@ -254,15 +245,67 @@ public:
                 readerLock.unlock();
                 prim = _LoadPrim(stage, pathToLoad, verbose);
                 if (!prim) {
-                    SET_ERROR("load prim %s failed", pathToLoad.GetText());
+                    ERROR("load prim %s failed", pathToLoad.GetText());
                     return;
                 }
                 readerLock.lock();
             }
 
+            //
+            // If the staticScene attrs dictate that we should insert an empty
+            // group at this location, configure the interface to build out the
+            // current prim as if it were its own child and return before
+            // executing any registered ops.
+            //
+            // Note, the inserted group will have the same name as the current
+            // prim.
+            //
+            // Note, we assume that the staticScene contents are aware of the
+            // inserted group, i.e. that the current contents apply to the empty
+            // group and there is a child entry for the current prim.
+            //
+
+            FnKat::GroupAttribute staticScene =
+                    interface.getOpArg("staticScene");
+            if (FnKat::IntAttribute(staticScene.getChildByName(
+                    "a.insertEmptyGroup")).getValue(0, false) == 1)
+            {
+                // Execute any ops contained within the staticScene args
+                _ExecStaticSceneOps(interface, staticScene);
+
+                const std::string primName = prim.GetName();
+
+                // Same caveat as the one mentioned in BuildIntermediate...
+                //
+                // XXX In order for the prim's material hierarchy to get built
+                // out correctly via the PxrUsdInCore_LooksGroupOp, we'll need
+                // to override the original 'rootLocation' and 'isolatePath'
+                // UsdIn args.
+                //
+                ArgsBuilder ab;
+                ab.update(usdInArgs);
+                ab.rootLocation =
+                        interface.getOutputLocationPath() + "/" + primName;
+                ab.isolatePath = prim.GetPath().GetString();
+
+                interface.createChild(
+                        primName,
+                        "",
+                        FnKat::GroupBuilder()
+                            .update(opArgs)
+                            .set("staticScene", staticScene.getChildByName(
+                                "c." + primName))
+                            .build(),
+                        FnKat::GeolibCookInterface::ResetRootFalse,
+                        new PxrUsdKatanaUsdInPrivateData(prim, ab.build(),
+                                privateData),
+                        PxrUsdKatanaUsdInPrivateData::Delete);
+                return;
+            }
+
             // When in "as sources and instances" mode, scan for instances
             // and masters at each location that contains a payload.
-            if (prim.HasPayload() &&
+            if (prim.HasAuthoredPayloads() &&
                 !usdInArgs->GetPrePopulate() &&
                 FnAttribute::StringAttribute(
                     interface.getOpArg("instanceMode")
@@ -411,34 +454,9 @@ public:
             // Execute any ops contained within the staticScene args.
             //
 
-            FnKat::GroupAttribute opGroups = opArgs.getChildByName("staticScene.x");
-            if (opGroups.isValid())
-            {
-                for (int childindex = 0; childindex < opGroups.getNumberOfChildren();
-                        ++childindex)
-                {
-                    FnKat::GroupAttribute entry =
-                            opGroups.getChildByIndex(childindex);
-
-                    if (!entry.isValid())
-                    {
-                        continue;
-                    }
-
-                    FnKat::StringAttribute subOpType =
-                            entry.getChildByName("opType");
-
-                    FnKat::GroupAttribute subOpArgs =
-                            entry.getChildByName("opArgs");
-
-                    if (!subOpType.isValid() || !subOpArgs.isValid())
-                    {
-                        continue;
-                    }
-
-                    interface.execOp(subOpType.getValue("", false), subOpArgs);
-                }
-            }
+            // Re-get the latest staticScene in case anything changed
+            staticScene = interface.getOpArg("staticScene");
+            _ExecStaticSceneOps(interface, staticScene);
 
         }   // if (prim.GetPath() != SdfPath::AbsoluteRootPath())
         
@@ -544,7 +562,7 @@ public:
         // as each payload is loaded, and we emit them under the payload's
         // location.
         if (interface.atRoot() ||
-            (prim.HasPayload() && !usdInArgs->GetPrePopulate())) {
+            (prim.HasAuthoredPayloads() && !usdInArgs->GetPrePopulate())) {
             FnKat::GroupAttribute masterMapping =
                     opArgs.getChildByName("masterMapping");
             if (masterMapping.isValid() && masterMapping.getNumberOfChildren())
@@ -649,8 +667,8 @@ public:
                 const UsdPrim& masterPrim = prim.GetMaster();
                 if (!masterPrim)
                 {
-                    SET_ERROR("USD Prim is advertised as an instance "
-                              "but master prim cannot be found.");
+                    ERROR("USD Prim is advertised as an instance "
+                        "but master prim cannot be found.");
                 }
                 else
                 {
@@ -897,6 +915,20 @@ public:
             }
         }
         
+        FnKat::StringAttribute materialBindingPurposesAttr = 
+                opArgs.getChildByName("materialBindingPurposes");
+        if (materialBindingPurposesAttr.getNumberOfValues())
+        {
+            auto sample = materialBindingPurposesAttr.getNearestSample(0.0f);
+
+            for (const auto & v : sample)
+            {
+                ab.materialBindingPurposes.emplace_back(v);
+            }
+        }
+
+
+
         // always include userProperties if not explicitly included.
         if (ab.extraAttributesOrNamespaces.find("userProperties")
                 == ab.extraAttributesOrNamespaces.end())
@@ -969,6 +1001,41 @@ private:
         return boundsAttr;
     }
 
+    static void
+    _ExecStaticSceneOps(
+            FnKat::GeolibCookInterface& interface,
+            FnKat::GroupAttribute& staticScene)
+    {
+        FnKat::GroupAttribute opsGroup = staticScene.getChildByName("x");
+        if (opsGroup.isValid())
+        {
+            for (int childindex = 0; childindex < opsGroup.getNumberOfChildren();
+                    ++childindex)
+            {
+                FnKat::GroupAttribute entry =
+                        opsGroup.getChildByIndex(childindex);
+
+                if (!entry.isValid())
+                {
+                    continue;
+                }
+
+                FnKat::StringAttribute subOpType =
+                        entry.getChildByName("opType");
+
+                FnKat::GroupAttribute subOpArgs =
+                        entry.getChildByName("opArgs");
+
+                if (!subOpType.isValid() || !subOpArgs.isValid())
+                {
+                    continue;
+                }
+
+                interface.execOp(subOpType.getValue("", false), subOpArgs);
+            }
+        }
+    }
+
     static bool _hasSiteKinds;
 };
 
@@ -1008,13 +1075,13 @@ public:
                         additionalOpArgs, interface.getRootLocationPath());
         
         if (!usdInArgs) {
-            SET_ERROR("Could not initialize PxrUsdIn usdInArgs.");
+            ERROR("Could not initialize PxrUsdIn usdInArgs.");
             return;
         }
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            SET_ERROR(usdInArgs->GetErrorMessage().c_str());
+            ERROR(usdInArgs->GetErrorMessage().c_str());
             return;
         }
 
@@ -1033,8 +1100,8 @@ public:
 
         if (tokens.empty())
         {
-            SET_ERROR("Could not initialize PxrUsdIn op with "
-                      "PxrUsdIn.Bootstrap op.");
+            ERROR("Could not initialize PxrUsdIn op with "
+                "PxrUsdIn.Bootstrap op.");
             return;
         }
 
@@ -1088,13 +1155,13 @@ public:
                         additionalOpArgs, interface.getRootLocationPath());
         
         if (!usdInArgs) {
-            SET_ERROR("Could not initialize PxrUsdIn usdInArgs.");
+            ERROR("Could not initialize PxrUsdIn usdInArgs.");
             return;
         }
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            SET_ERROR(usdInArgs->GetErrorMessage().c_str());
+            ERROR(usdInArgs->GetErrorMessage().c_str());
             return;
         }
 
@@ -1215,7 +1282,7 @@ public:
             for (size_t i = 0; i < usdPrimPathValues.size(); ++i)
             {
                 std::string primPath(usdPrimPathValues[i]);
-                if (usdPrimPathValues.empty())
+                if (!SdfPath::IsValidPathString(primPath))
                 {
                     continue;
                 }
@@ -1410,5 +1477,5 @@ void registerPlugins()
     REGISTER_PLUGIN(FlushStageFnc,
         "PxrUsdIn.FlushStage", 0, 1);
     
-    PxrUsdKatanaBootstrap();
+    
 }

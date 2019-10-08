@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -72,7 +66,6 @@ public:
     /// Equivalent to UsdKatanaLookAPI::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
-    USDKATANA_API
     explicit UsdKatanaLookAPI(const UsdPrim& prim=UsdPrim())
         : UsdAPISchemaBase(prim)
     {
@@ -81,7 +74,6 @@ public:
     /// Construct a UsdKatanaLookAPI on the prim held by \p schemaObj .
     /// Should be preferred over UsdKatanaLookAPI(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
-    USDKATANA_API
     explicit UsdKatanaLookAPI(const UsdSchemaBase& schemaObj)
         : UsdAPISchemaBase(schemaObj)
     {
@@ -133,7 +125,7 @@ protected:
     ///
     /// \sa UsdSchemaType
     USDKATANA_API
-    virtual UsdSchemaType _GetSchemaType() const;
+    UsdSchemaType _GetSchemaType() const override;
 
 private:
     // needs to invoke _GetStaticTfType.
@@ -141,12 +133,11 @@ private:
     USDKATANA_API
     static const TfType &_GetStaticTfType();
 
-    USDKATANA_API
     static bool _IsTypedSchema();
 
     // override SchemaBase virtuals.
     USDKATANA_API
-    virtual const TfType &_GetTfType() const;
+    const TfType &_GetTfType() const override;
 
 public:
     // --------------------------------------------------------------------- //

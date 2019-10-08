@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -29,20 +23,6 @@
 //
 #ifndef PXRUSDKATANA_USDIN_PLUGINREGISTRY_H
 #define PXRUSDKATANA_USDIN_PLUGINREGISTRY_H
-
-#ifdef _WIN32
-#include <windows.h>
-#include <winbase.h>
-#include <combaseapi.h>
-#ifdef GetCurrentTime
-#undef GetCurrentTime
-#endif
-#ifdef interface
-#undef interface
-#endif
-#endif
-
-#include "usdKatana/api.h"
 
 #include "pxr/pxr.h"
 #include "usdKatana/usdInPrivateData.h"
@@ -87,7 +67,6 @@ public:
     }
 
     /// \brief Register \p opName to handle the prims with an unknown usd type \T.
-    USDKATANA_API
     static void RegisterUnknownUsdType(const std::string& opName)
     {
         _RegisterUsdType(TfType::GetUnknownType().GetTypeName(), opName);
@@ -95,7 +74,6 @@ public:
 
     /// \brief Registers \p opName to handle \p kind (and possibly other kinds
     /// that are descendents of \p kind in the kind hierarchy).
-    USDKATANA_API
     static void RegisterKind(
             const TfToken& kind,
             const std::string& opName);
@@ -103,14 +81,12 @@ public:
     /// \brief Registers \p opName to extend or override \p the core op for 
     /// kind (and possibly other kinds that are descendents of \p 
     /// kind in the kind hierarchy).
-    USDKATANA_API
     static void RegisterKindForSite(
             const TfToken& kind,
             const std::string& opName);
 
     /// \brief Returns true if there are any site-specific ops registered
     /// for at least one \p kind.
-    USDKATANA_API
     static bool HasKindsForSite();
 
     /// \brief Finds a reader if one exists for \p usdTypeName.
@@ -119,7 +95,6 @@ public:
     /// \code
     /// usdPrim.GetTypeName()
     /// \endcode
-    USDKATANA_API
     static bool FindUsdType(
             const TfToken& usdTypeName,
             std::string* opName);
@@ -130,14 +105,12 @@ public:
     /// \code
     /// usdPrim.GetTypeName()
     /// \endcode
-    USDKATANA_API
     static bool FindUsdTypeForSite(
             const TfToken& usdTypeName,
             std::string* opName);
 
     /// \brief Finds a reader if one exists for \p kind.  This will walk up the
     /// kind hierarchy and find the nearest applicable one.
-    USDKATANA_API
     static bool FindKind(
             const TfToken& kind,
             std::string* opName);
@@ -145,7 +118,6 @@ public:
     /// \brief Finds a reader that extends or overrides the core op, if one 
     /// exists, for \p kind.  This will walk up the kind hierarchy and find the 
     /// nearest applicable one.
-    USDKATANA_API
     static bool FindKindForSite(
             const TfToken& kind,
             std::string* opName);
@@ -162,12 +134,10 @@ public:
     /// resolver does not necessarily run at the location where this
     /// function is run so the function needs to establish the initial
     /// enabled status correctly.)
-    USDKATANA_API
     static void RegisterLightListFnc(LightListFnc);
 
     /// \brief Run the registered plug-in light list functions at a light
     /// path. This allows for modifying the Katana light list.
-    USDKATANA_API
     static void ExecuteLightListFncs(
                     PxrUsdKatanaUtilsLightListAccess& access);
     
@@ -189,7 +159,6 @@ public:
     ///        NOTE: This is normally not necessary to call directly as it's
     ///              handled as part of the USD_OP_REGISTER_PLUGIN used to
     ///              define the op.
-    USDKATANA_API
     static void RegisterOpDirectExecFnc(
            const std::string& opName,
            OpDirectExecFnc fnc);
@@ -199,7 +168,6 @@ public:
     ///        and private data not from the interface but from their function
     ///        parameters. This is to allow either to be locally overriden
     ///        without the overhead or limitations (in 2.x) of execOp
-    USDKATANA_API
     static void ExecuteOpDirectExecFnc(
             const std::string& opName,
             const PxrUsdKatanaUsdInPrivateData& privateData,
@@ -215,14 +183,12 @@ public:
     /// previously registered with RegisterOpDirectExecFnc -- which will
     /// happen automatically for any op defined with one of the PXRUSDKATANA_*
     /// macros and registered via USD_OP_REGISTER_PLUGIN.
-    USDKATANA_API
     static void RegisterLocationDecoratorOp(const std::string& opName);
     
     
     // \brief Run the registered plug-in ops at a katana location
     /// and UsdPrim. It returns opArgs -- which may be altered by the executed
     /// ops.
-    USDKATANA_API
     static FnKat::GroupAttribute ExecuteLocationDecoratorOps(
             const PxrUsdKatanaUsdInPrivateData& privateData,
             FnKat::GroupAttribute opArgs,
@@ -230,17 +196,14 @@ public:
 
 
 private:
-    USDKATANA_API
     static void _RegisterUsdType(
             const std::string& tfTypeName, 
             const std::string& opName);
 
-    USDKATANA_API
     static void _RegisterUsdTypeForSite(
             const std::string& tfTypeName, 
             const std::string& opName);
 
-    USDKATANA_API
     static bool _DoFindKind(
         const TfToken& kind,
         std::string* opName,

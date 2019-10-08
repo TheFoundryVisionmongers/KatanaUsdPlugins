@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -30,8 +24,6 @@
 #ifndef PXRUSDKATANA_READMATERIAL_H
 #define PXRUSDKATANA_READMATERIAL_H
 
-#include "usdKatana/api.h"
-
 #include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -43,7 +35,6 @@ class UsdShadeMaterial;
 /// \brief read \p Material into \p attrs.  If \p flatten is specified, we treat it
 /// as if it is a "standalone" material (i.e. no "material" inheritance in the
 /// katana sense).
-USDKATANA_API
 void
 PxrUsdKatanaReadMaterial(
         const UsdShadeMaterial& material,
