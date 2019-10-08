@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -29,6 +35,8 @@
 #include "usdKatana/locks.h"
 #include "usdKatana/readBlindData.h"
 #include "usdKatana/usdInPluginRegistry.h"
+#include "usdKatana/bootstrap.h"
+#include "vtKatana/bootstrap.h"
 
 #include "pxr/usd/usd/modelAPI.h"
 #include "pxr/usd/usd/prim.h"
@@ -55,7 +63,7 @@
 
 #include <FnAPI/FnAPI.h>
 
-FnLogSetup("PxrUsdIn")
+FnLogSetup("UsdIn")
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -622,7 +630,7 @@ public:
                 {
                     interface.createChild(
                         childAttrs.getChildName(i),
-                        "PxrUsdIn.BuildIntermediate",
+                        "UsdIn.BuildIntermediate",
                         FnKat::GroupBuilder()
                             .update(opArgs)
                             .set("staticScene", childAttrs.getChildByIndex(i))
@@ -738,7 +746,7 @@ public:
         
         FnKat::StringAttribute usdFileAttr = opArgs.getChildByName("fileName");
         if (!usdFileAttr.isValid()) {
-            return ab.buildWithError("PxrUsdIn: USD fileName not specified.");
+            return ab.buildWithError("UsdIn: USD fileName not specified.");
         }
 
         std::string fileName = usdFileAttr.getValue();
@@ -787,7 +795,7 @@ public:
             }
             
             return ab.buildWithError(
-                    TfStringPrintf("PxrUsdIn: Bad variant selection \"%s\"",
+                    TfStringPrintf("UsdIn: Bad variant selection \"%s\"",
                             selString->c_str()).c_str());
         }
         
@@ -810,6 +818,24 @@ public:
 
         ab.verbose = FnKat::IntAttribute(
                 opArgs.getChildByName("verbose")).getValue(0, false);
+
+        ab.outputTargets;
+
+        typedef FnAttribute::StringAttribute::array_type StringArrayType;
+        FnAttribute::StringAttribute outputTargetArgStr = FnAttribute::StringAttribute(opArgs.getChildByName(
+            "outputTargets"));
+        if (outputTargetArgStr.isValid())
+        {
+            StringArrayType outputTargetVector = outputTargetArgStr.getNearestSample(0);
+            int i = 0;
+            for(StringArrayType::const_iterator it = outputTargetVector.begin() ; 
+                it != outputTargetVector.end() ; 
+                ++it)
+            {
+                ab.outputTargets.insert(*it);
+            }
+        }
+
 
         FnKat::GroupAttribute systemArgs(opArgs.getChildByName("system"));
 
@@ -863,7 +889,7 @@ public:
                 ab.prePopulate);
 
         if (!ab.stage) {
-            return ab.buildWithError("PxrUsdIn: USD Stage cannot be loaded.");
+            return ab.buildWithError("UsdIn: USD Stage cannot be loaded.");
         }
 
         if (FnAttribute::StringAttribute(
@@ -884,7 +910,7 @@ public:
             SdfPath(ab.isolatePath)))
         {
             std::ostringstream errorBuffer;
-            errorBuffer << "PxrUsdIn: Invalid isolatePath: " << 
+            errorBuffer << "UsdIn: Invalid isolatePath: " << 
                 ab.isolatePath << ".";
             return ab.buildWithError(errorBuffer.str());
         }
@@ -1101,7 +1127,7 @@ public:
         if (tokens.empty())
         {
             ERROR("Could not initialize PxrUsdIn op with "
-                "PxrUsdIn.Bootstrap op.");
+                "UsdIn.Bootstrap op.");
             return;
         }
 
@@ -1109,7 +1135,7 @@ public:
 
         interface.createChild(
                         rootName,
-                        "PxrUsdIn",
+                        "UsdIn",
                         opArgs,
                         FnKat::GeolibCookInterface::ResetRootTrue,
                         new PxrUsdKatanaUsdInPrivateData(
@@ -1330,7 +1356,7 @@ public:
                 //
                 interface.createChild(
                         nameToUse,
-                        "PxrUsdIn",
+                        "UsdIn",
                         FnKat::GroupBuilder()
                             .update(interface.getOpArg())
                             .set("childOfIntermediate", FnKat::IntAttribute(1))
@@ -1466,16 +1492,17 @@ DEFINE_ATTRIBUTEFUNCTION_PLUGIN(FlushStageFnc);
 
 void registerPlugins()
 {
-    REGISTER_PLUGIN(PxrUsdInOp, "PxrUsdIn", 0, 1);
-    REGISTER_PLUGIN(PxrUsdInBootstrapOp, "PxrUsdIn.Bootstrap", 0, 1);
+    REGISTER_PLUGIN(PxrUsdInOp, "UsdIn", 0, 1);
+    REGISTER_PLUGIN(PxrUsdInBootstrapOp, "UsdIn.Bootstrap", 0, 1);
     REGISTER_PLUGIN(PxrUsdInMaterialGroupBootstrapOp, 
-        "PxrUsdIn.BootstrapMaterialGroup", 0, 1);
+        "UsdIn.BootstrapMaterialGroup", 0, 1);
     REGISTER_PLUGIN(PxrUsdInBuildIntermediateOp,
-        "PxrUsdIn.BuildIntermediate", 0, 1);    
+        "UsdIn.BuildIntermediate", 0, 1);    
     REGISTER_PLUGIN(PxrUsdInAddViewerProxyOp,
-        "PxrUsdIn.AddViewerProxy", 0, 1);    
+        "UsdIn.AddViewerProxy", 0, 1);    
     REGISTER_PLUGIN(FlushStageFnc,
-        "PxrUsdIn.FlushStage", 0, 1);
+        "UsdIn.FlushStage", 0, 1);
     
-    
+    PxrUsdKatanaBootstrap();
+    PxrVtKatanaBootstrap();
 }

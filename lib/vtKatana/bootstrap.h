@@ -1,3 +1,18 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
+//
+// Copyright 2016 Pixar
+//
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -21,18 +36,19 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
-#include "pxr/base/tf/debug.h"
-#include "pxr/base/tf/registryManager.h"
+#ifndef VTKATANA_BOOTSTRAP_H
+#define VTKATANA_BOOTSTRAP_H
 
-#include "debugCodes.h"
+#include "vtKatana/api.h"
+
+#include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-TF_REGISTRY_FUNCTION(TfDebug)
-{
-    TF_DEBUG_ENVIRONMENT_SYMBOL(KATANA_DEBUG_VMP_USD,
-                "Katanaplug USD Viewport Modifier plugin.");
-}
+/// \brief bootstrap Geolib.
+VTKATANA_API
+void PxrVtKatanaBootstrap();
 
 PXR_NAMESPACE_CLOSE_SCOPE
+
+#endif // VTKATANA_BOOTSTRAP_H

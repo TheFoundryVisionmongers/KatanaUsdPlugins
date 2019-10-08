@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -26,6 +32,8 @@
 
 #include "pxr/pxr.h"
 #include "usdKatana/usdInArgs.h"
+
+#include "api.h"
 
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usdShade/materialBindingAPI.h"
@@ -63,7 +71,7 @@ public:
         double katanaTime;
     };
 
-    PxrUsdKatanaUsdInPrivateData(
+    USDKATANA_API PxrUsdKatanaUsdInPrivateData(
             const UsdPrim& prim,
             PxrUsdKatanaUsdInArgsRefPtr usdInArgs,
             const PxrUsdKatanaUsdInPrivateData* parentData = NULL);
@@ -101,6 +109,15 @@ public:
         return _shutterClose;
     }
 
+
+    const bool hasOutputTarget(const std::string& renderer) const {
+        return _outputTargets.find(renderer) != _outputTargets.end();
+    }
+
+    const std::set<std::string>& GetOutputTargets(std::string renderer) const {
+        return _outputTargets;
+    }
+
     /// \brief Return true if motion blur is backward.
     ///
     /// PxrUsdIn supports both forward and backward motion blur. Motion
@@ -125,7 +142,7 @@ public:
     /// as specified in the usdInArgs' session data. Motion sample times
     /// overrides take precedence over any of the aforementioned logic.
     ///
-    const std::vector<double> GetMotionSampleTimes(
+    USDKATANA_API const std::vector<double> GetMotionSampleTimes(
         const UsdAttribute& attr = UsdAttribute(),
         bool fallBackToShutterBoundary = false) const;
 
@@ -152,7 +169,7 @@ public:
     ///        setExtensionOpArg and apply back onto the provided opArgs.
     ///        NOTE: This should not be called by an executed op or function as
     ///              it's intended for use the callers of those. 
-    FnAttribute::GroupAttribute updateExtensionOpArgs(
+    USDKATANA_API FnAttribute::GroupAttribute updateExtensionOpArgs(
             FnAttribute::GroupAttribute opArgs) const;
     
     
@@ -167,7 +184,7 @@ public:
 
     /// \brief extract private data from either the interface (its natural
     ///        location) with room for future growth
-    static PxrUsdKatanaUsdInPrivateData * GetPrivateData(
+    USDKATANA_API static PxrUsdKatanaUsdInPrivateData * GetPrivateData(
             const FnKat::GeolibCookInterface& interface);
 
 private:
@@ -185,7 +202,8 @@ private:
 
     std::vector<double> _motionSampleTimesOverride;
     std::vector<double> _motionSampleTimesFallback;
-    
+
+    std::set<std::string> _outputTargets;
     
     mutable FnAttribute::GroupBuilder * _extGb;
 

@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -231,6 +237,12 @@ PxrUsdKatanaReadMesh(
     bool isSubd = (scheme != UsdGeomTokens->none);
 
     attrs.set("type", FnKat::StringAttribute(isSubd ? "subdmesh" : "polymesh"));
+
+    if (isSubd)
+    {
+        attrs.set("usd.subdivisionScheme",
+            FnKat::StringAttribute(scheme.GetText()));
+    }
 
     //
     // Construct the 'geometry' attribute.

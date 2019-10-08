@@ -1,3 +1,9 @@
+# These files began life as part of the main USD distribution
+# https://github.com/PixarAnimationStudios/USD.
+# In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+# these plug-ins, and they moved to
+# https://github.com/TheFoundryVisionmongers/katana-USD
+# under the same Modified Apache 2.0 license, as shown below.
 #
 # Copyright 2016 Pixar
 #
@@ -64,45 +70,6 @@ if(KATANA_API_INCLUDE_DIR AND EXISTS "${KATANA_API_INCLUDE_DIR}/${KATANA_API_HEA
         string(REGEX MATCHALL "[0-9]+" KATANA_API_${comp}_VERSION ${TMP})
     endforeach()
     set(KATANA_API_VERSION ${KATANA_API_MAJOR_VERSION}.${KATANA_API_MINOR_VERSION}.${KATANA_API_RELEASE_VERSION})
-endif()
-
-# Sub-system API versions
-if(KATANA_API_INCLUDE_DIR)
-    if (EXISTS "${KATANA_API_INCLUDE_DIR}/FnAsset/plugin")
-        set(KATANA_API_ASSET_API_VERSION 2)
-    else()
-        set(KATANA_API_ASSET_API_VERSION 1)
-    endif()
-    if (EXISTS "${KATANA_API_INCLUDE_DIR}/FnAttributeModifier/plugin")
-        set(KATANA_API_AMP_API_VERSION 2)
-    else()
-        set(KATANA_API_AMP_API_VERSION 1)
-    endif()
-    if (EXISTS "${KATANA_API_INCLUDE_DIR}/FnSceneGraphGenerator/plugin")
-        set(KATANA_API_SGG_API_VERSION 2)
-    else()
-        set(KATANA_API_SGG_API_VERSION 1)
-    endif()
-    if (EXISTS "${KATANA_API_INCLUDE_DIR}/FnRender/plugin")
-        set(KATANA_API_RENDER_API_VERSION 2)
-    else()
-        set(KATANA_API_RENDER_API_VERSION 1)
-    endif()
-    if (EXISTS "${KATANA_API_INCLUDE_DIR}/FnViewerModifier/plugin")
-        set(KATANA_API_VMP_API_VERSION 2)
-    else()
-        set(KATANA_API_VMP_API_VERSION 1)
-    endif()
-    if (EXISTS "${KATANA_API_INCLUDE_DIR}/FnGeolib")
-        set(KATANA_API_OP_API_VERSION 2)
-    else()
-        set(KATANA_API_OP_API_VERSION 1)
-    endif()
-    if (EXISTS "${KATANA_API_INCLUDE_DIR}/FnAttributeFunction")
-        set(KATANA_API_ATTRFNC_API_VERSION 2)
-    else()
-        set(KATANA_API_ATTRFNC_API_VERSION 1)
-    endif()
 endif()
 
 find_path(KATANA_API_SOURCE_DIR 

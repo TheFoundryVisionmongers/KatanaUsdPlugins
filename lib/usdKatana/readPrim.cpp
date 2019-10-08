@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -289,7 +295,8 @@ void
 PxrUsdKatanaReadPrimPrmanStatements(
         const UsdPrim& prim,
         double currentTime,
-        FnKat::GroupBuilder& statements)
+        FnKat::GroupBuilder& statements,
+        const bool prmanOutputTarget)
 {
     if (prim.GetPath() == SdfPath::AbsoluteRootPath()) {
         // Special-case to pre-empt coding errors.
@@ -298,9 +305,11 @@ PxrUsdKatanaReadPrimPrmanStatements(
 
     FnKat::GroupBuilder attrsBuilder;
 
-    // Rib attributes -> attributes.*
-    _GatherRibAttributes(prim, currentTime, attrsBuilder);
-
+    if (prmanOutputTarget)
+    {
+        // Rib attributes -> attributes.*
+        _GatherRibAttributes(prim, currentTime, attrsBuilder);
+    }
     //
     // Add gprim-specific prmanStatements.
     //
@@ -327,10 +336,12 @@ PxrUsdKatanaReadPrimPrmanStatements(
     //
     // Take care of Pixar's conventional model-level shader space.
     //
-
-    if (UsdModelAPI(prim).IsModel()) {
-        statements.set("scopedCoordinateSystem",
-            FnKat::StringAttribute("ModelSpace"));
+    if (prmanOutputTarget)
+    {
+        if (UsdModelAPI(prim).IsModel()) {
+            statements.set("scopedCoordinateSystem",
+                FnKat::StringAttribute("ModelSpace"));
+        }
     }
 
     // XXX:
@@ -881,6 +892,8 @@ PxrUsdKatanaReadPrim(
 {
     const double currentTime = data.GetCurrentTime();
 
+    const bool prmanOutputTarget = data.hasOutputTarget("prman");
+
     //
     // Set the 'kind' attribute to match the model kind.
     //
@@ -916,11 +929,16 @@ PxrUsdKatanaReadPrim(
     //
 
     FnKat::GroupBuilder statementsBuilder;
-    PxrUsdKatanaReadPrimPrmanStatements(prim, data.GetCurrentTime(), statementsBuilder);
+    PxrUsdKatanaReadPrimPrmanStatements(prim, data.GetCurrentTime(), 
+        statementsBuilder, prmanOutputTarget);
     FnKat::GroupAttribute statements = statementsBuilder.build();
     if (statements.getNumberOfChildren() > 0)
     {
-        attrs.set("prmanStatements", statements);
+        if (prmanOutputTarget)
+        {
+            attrs.set("prmanStatements", statements);
+        }
+        attrs.set("usd", statements);
     }
 
     //

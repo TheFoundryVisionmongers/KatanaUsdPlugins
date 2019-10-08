@@ -7,30 +7,19 @@ endif()
 
 pxr_shared_library(${PXR_PACKAGE}
     LIBRARIES
-        plug
-        gf
-        tf
-        trace
         vt
-        ar
         sdf
-        usd
         usdHydra
-        usdImaging
         usdImagingGL
-        usdShade
         usdSkel
         usdGeom
-        usdLux
         usdRi
         usdUI
         usdUtils
-        cameraUtil
         hio
-        glf
-        katanaAttrfncApi
+        katanaPluginApi
         ${vtKatana_LIBRARY}
-        ${Boost_THREAD_LIBRARY} 
+        Boost::system
 
     PUBLIC_CLASSES
         attrMap
@@ -64,6 +53,8 @@ pxr_shared_library(${PXR_PACKAGE}
         readPrim
         readXformable
 
+        bootstrap
+
     PUBLIC_HEADERS
         api.h
 
@@ -82,3 +73,7 @@ pxr_shared_library(${PXR_PACKAGE}
         schema.usda:usdKatana/schema.usda
 )
 
+# Hack to work around https://github.com/PixarAnimationStudios/USD/issues/738
+if(CMAKE_SYSTEM_NAME MATCHES Windows)
+set_source_files_properties(cache.cpp PROPERTIES COMPILE_FLAGS "/Od")
+endif()

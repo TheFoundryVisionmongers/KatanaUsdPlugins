@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -28,6 +34,8 @@
 #include "pxr/usd/usdGeom/bboxCache.h"
 #include "pxr/usd/usdSkel/cache.h"
 #include "pxr/base/tf/refPtr.h"
+
+#include "api.h"
 
 #include <tbb/enumerable_thread_specific.h>
 
@@ -85,7 +93,7 @@ public:
 
     typedef std::map<std::string, std::vector<std::string> > StringListMap;
 
-    static PxrUsdKatanaUsdInArgsRefPtr New(
+    USDKATANA_API static PxrUsdKatanaUsdInArgsRefPtr New(
             UsdStageRefPtr stage,
             const std::string& rootLocation,
             const std::string& isolatePath,
@@ -100,6 +108,7 @@ public:
             const std::vector<TfToken>& materialBindingPurposes,
             bool prePopulate,
             bool verbose,
+            const std::set<std::string>& outputTargets,
             const char * errorMessage = 0) {
         return TfCreateRefPtr(new PxrUsdKatanaUsdInArgs(
                     stage, 
@@ -116,16 +125,17 @@ public:
                     materialBindingPurposes,
                     prePopulate,
                     verbose,
+                    outputTargets,
                     errorMessage));
     }
 
     // bounds computation is kind of important, so we centralize it here.
-    std::vector<GfBBox3d> ComputeBounds(
+    USDKATANA_API std::vector<GfBBox3d> ComputeBounds(
         const UsdPrim& prim,
         const std::vector<double>& motionSampleTimes,
         bool applyLocalTransform = false);
 
-    UsdPrim GetRootPrim() const;
+    USDKATANA_API UsdPrim GetRootPrim() const;
 
     UsdStageRefPtr GetStage() const {
         return _stage;
@@ -194,6 +204,10 @@ public:
     UsdSkelCache& GetUsdSkelCache() {
         return _usdSkelCache;
     }
+    
+    const std::set<std::string> & GetOutputTargets() {
+        return _outputTargets;
+    }
 
     const std::string & GetErrorMessage() {
         return _errorMessage;
@@ -215,6 +229,7 @@ private:
             const std::vector<TfToken>& materialBindingPurposes,
             bool prePopulate,
             bool verbose,
+            const std::set<std::string>& outputTargets,
             const char * errorMessage = 0);
 
     ~PxrUsdKatanaUsdInArgs();
@@ -240,6 +255,8 @@ private:
     
     bool _prePopulate;
     bool _verbose;
+
+    std::set<std::string> _outputTargets;
 
     typedef tbb::enumerable_thread_specific< std::map<double, UsdGeomBBoxCache> > _ThreadLocalBBoxCaches;
     _ThreadLocalBBoxCaches _bboxCaches;
@@ -269,6 +286,7 @@ struct ArgsBuilder
     std::vector<TfToken> materialBindingPurposes;
     bool prePopulate;
     bool verbose;
+    std::set<std::string> outputTargets;
     const char * errorMessage;
     
     
@@ -300,6 +318,7 @@ struct ArgsBuilder
             materialBindingPurposes,
             prePopulate,
             verbose,
+            outputTargets,
             errorMessage);
     }
 
@@ -319,6 +338,7 @@ struct ArgsBuilder
         materialBindingPurposes = other->GetMaterialBindingPurposes();
         prePopulate = other->GetPrePopulate();
         verbose = other->IsVerbose();
+        outputTargets = other->GetOutputTargets();
         errorMessage = other->GetErrorMessage().c_str();
     }
 

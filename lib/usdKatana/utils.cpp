@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -62,6 +68,7 @@
 FnLogSetup("PxrUsdKatanaUtils");
 
 #include <sstream>
+#include <cmath>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -1472,8 +1479,8 @@ PxrUsdKatanaUtils::ConvertBoundsToAttribute(
             return FnKat::DoubleAttribute();
         }
 
-        if ( isinf(min[0]) || isinf(min[1]) || isinf(min[2]) ||
-            isinf(max[0]) || isinf(max[1]) || isinf(max[2]) ) {
+        if ( std::isinf(min[0]) || std::isinf(min[1]) || std::isinf(min[2]) ||
+            std::isinf(max[0]) || std::isinf(max[1]) || std::isinf(max[2]) ) {
             *hasInfiniteBounds = true;
         }
 

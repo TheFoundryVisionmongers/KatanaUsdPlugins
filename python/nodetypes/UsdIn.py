@@ -1,3 +1,9 @@
+# These files began life as part of the main USD distribution
+# https://github.com/PixarAnimationStudios/USD.
+# In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+# these plug-ins, and they moved to
+# https://github.com/TheFoundryVisionmongers/katana-USD
+# under the same Modified Apache 2.0 license, as shown below.
 #
 # Copyright 2016 Pixar
 #
@@ -24,6 +30,7 @@
 from Katana import (
     Nodes3DAPI,
     NodegraphAPI,
+    RenderingAPI,
     FnAttribute,
     FnGeolibServices,
 )
@@ -32,7 +39,7 @@ def getScenegraphLocation(self, frameTime):
     return self.getParameter('location').getValue(frameTime)
 
 # node type builder for a our new node type
-nb = Nodes3DAPI.NodeTypeBuilder('PxrUsdIn')
+nb = Nodes3DAPI.NodeTypeBuilder('UsdIn')
 
 # group builder for the node parameters
 gb = FnAttribute.GroupBuilder()
@@ -41,7 +48,7 @@ gb.set('fileName', '')
 nb.setHintsForParameter('fileName', {
     'help' : 'The USD file to read.',
     'widget':'assetIdInput',
-    'fileTypes':'usd|usda|usdb|usdc',
+    'fileTypes':'usd|usda|usdb|usdc|usdz',
 })
 
 gb.set('location', '/root/world/geo')
@@ -69,7 +76,7 @@ nb.setHintsForParameter('variants', {
     # 'conditionalVisPath': '../variants', # can't really point to self... :(
     # 'conditionalVisValue': '',
     'helpAlert': 'warning',
-    'help' : 'DEPRECATED! Use PxrUsdInVariantSelect instead.'\
+    'help' : 'DEPRECATED! Use UsdInVariantSelect instead.'\
         ' Specify variant '\
         'selections. Variant selections are specified via whitespace-separated'\
         ' variant selection paths. Example: /Foo{X=Y} /Bar{Z=w}',
@@ -172,8 +179,6 @@ nb.setHintsForParameter('includeProxyForArchive', {
 
 })
 
-
-
 nb.setParametersTemplateAttr(gb.build())
 
 #-----------------------------------------------------------------------------
@@ -211,7 +216,11 @@ def buildPxrUsdInOpArgsAtGraphState(self, graphState):
     
     gb.set('prePopulate',
             int(self.getParameter('prePopulate').getValue(frameTime)))
-    
+
+    loadedRenderers = RenderingAPI.RenderPlugins.GetRendererPluginNames()
+    gb.set('outputTargets',
+        FnAttribute.StringAttribute(loadedRenderers)
+    )
 
     if self.getParameter('usePurposeBasedMaterialBinding').getValue(frameTime):
         purposes = ["",]
@@ -255,11 +264,11 @@ nb.setCustomMethod('buildPxrUsdInOpArgsAtGraphState',
 
 #-----------------------------------------------------------------------------
 
-kArgsCookTmpKeyToken = 'pxrUsdIn_argsCookTmpKey'
+kArgsCookTmpKeyToken = 'UsdIn_argsCookTmpKey'
 
 # While it's possible to call buildPxrUsdInOpArgsAtGraphState directly, it's
 # usually more meaningful to call it with a graphState relative to a
-# downstream node as PxrUsdInVariantSelect (and its sibling) contribute to
+# downstream node as UsdInVariantSelect (and its sibling) contribute to
 # the graphState and resulting opArgs. This wraps up the inconvenience of
 # tracking the graphState by injecting an extra entry into starting graphState
 # which triggers buildOpChain to record its opArgs.
@@ -305,7 +314,7 @@ def flushStage(self, viewNode, graphState, portIndex=0):
             portIndex=portIndex)
     
     if isinstance(opArgs, FnAttribute.GroupAttribute):
-        FnGeolibServices.AttributeFunctionUtil.Run("PxrUsdIn.FlushStage",
+        FnGeolibServices.AttributeFunctionUtil.Run("UsdIn.FlushStage",
                 opArgs)
 
 nb.setCustomMethod('flushStage', flushStage)
@@ -340,7 +349,7 @@ def buildOpChain(self, interface):
         
         if self.getParameter('includeProxyForArchive').getValue(frameTime):
             sscb.addSubOpAtLocation(location,
-                    'PxrUsdIn.AddViewerProxy', attrs)
+                    'UsdIn.AddViewerProxy', attrs)
         
         
         interface.appendOp('StaticSceneCreate', sscb.build())
@@ -364,9 +373,9 @@ def buildOpChain(self, interface):
     sscb = FnGeolibServices.OpArgsBuilders.StaticSceneCreate(True)
 
     sscb.addSubOpAtLocation(self.getScenegraphLocation(
-        interface.getFrameTime()), 'PxrUsdIn', pxrUsdInArgs)
+        interface.getFrameTime()), 'UsdIn', pxrUsdInArgs)
 
-    sscb.setAttrAtLocation('/root', 'info.usdLoader', FnAttribute.StringAttribute('PxrUsdIn'))
+    sscb.setAttrAtLocation('/root', 'info.usdLoader', FnAttribute.StringAttribute('UsdIn'))
 
     interface.appendOp('StaticSceneCreate', sscb.build())
 
@@ -399,7 +408,7 @@ nb.build()
 
 #-----------------------------------------------------------------------------
 
-nb = Nodes3DAPI.NodeTypeBuilder('PxrUsdInVariantSelect')
+nb = Nodes3DAPI.NodeTypeBuilder('UsdInVariantSelect')
 nb.setInputPortNames(("in",))
 
 nb.setParametersTemplateAttr(FnAttribute.GroupBuilder()
@@ -546,7 +555,7 @@ nb.build()
 
 #-----------------------------------------------------------------------------
 
-nb = Nodes3DAPI.NodeTypeBuilder('PxrUsdInDefaultMotionSamples')
+nb = Nodes3DAPI.NodeTypeBuilder('UsdInDefaultMotionSamples')
 nb.setInputPortNames(("in",))
 
 nb.setParametersTemplateAttr(FnAttribute.GroupBuilder()
@@ -592,7 +601,7 @@ nb.build()
 
 #-----------------------------------------------------------------------------
 
-nb = Nodes3DAPI.NodeTypeBuilder('PxrUsdInMotionOverrides')
+nb = Nodes3DAPI.NodeTypeBuilder('UsdInMotionOverrides')
 nb.setInputPortNames(('in',))
 
 nb.setParametersTemplateAttr(FnAttribute.GroupBuilder()
@@ -675,7 +684,7 @@ nb.build()
 
 #-----------------------------------------------------------------------------
 
-nb = Nodes3DAPI.NodeTypeBuilder('PxrUsdInActivationSet')
+nb = Nodes3DAPI.NodeTypeBuilder('UsdInActivationSet')
 nb.setInputPortNames(("in",))
 
 nb.setParametersTemplateAttr(FnAttribute.GroupBuilder()
@@ -729,7 +738,7 @@ nb.build()
 
 #-----------------------------------------------------------------------------
 
-nb = Nodes3DAPI.NodeTypeBuilder('PxrUsdInAttributeSet')
+nb = Nodes3DAPI.NodeTypeBuilder('UsdInAttributeSet')
 
 nb.setInputPortNames(("in",))
 
@@ -890,7 +899,7 @@ nb.build()
 
 #-----------------------------------------------------------------------------
 
-nb = Nodes3DAPI.NodeTypeBuilder('PxrUsdInIsolate')
+nb = Nodes3DAPI.NodeTypeBuilder('UsdInIsolate')
 
 nb.setInputPortNames(("in",))
 

@@ -4,8 +4,6 @@
 // these plug-ins, and they moved to
 // https://github.com/TheFoundryVisionmongers/katana-USD
 // under the same Modified Apache 2.0 license, as shown below.
-
-
 //
 // Copyright 2016 Pixar
 //
@@ -31,23 +29,21 @@
 //
 #include "usdKatana/bootstrap.h"
 
-#include <mutex>
-#include <string>
+#include "pxr/base/arch/systemInfo.h"
+#include "pxr/base/tf/stringUtils.h"
+#include "pxr/base/arch/fileSystem.h"
+#include "pxr/base/tf/dl.h"
+
+#include <FnPluginManager/FnPluginManager.h>
+#include <FnLogging/FnLogging.h>
+#include <FnConfig/FnConfig.h>
+#include <FnAttribute/FnAttribute.h>
 
 #if defined(ARCH_OS_WINDOWS)
 #include "Windows.h"
 #endif
 
-#include "pxr/base/arch/fileSystem.h"
-#include "pxr/base/arch/systemInfo.h"
-#include "pxr/base/tf/dl.h"
-#include "pxr/base/tf/stringUtils.h"
-
-#include <FnAttribute/FnAttribute.h>
-#include <FnAttribute/FnGroupBuilder.h>
-#include <FnLogging/FnLogging.h>
-#include <FnPluginManager/FnPluginManager.h>
-
+#include <mutex> // for std::call_once
 
 typedef FnPluginManagerHostSuite_v1 const* (*GetFnPluginManagerHostSuite)(
     char const* apiName, unsigned int apiVersion);
@@ -81,10 +77,18 @@ void PxrUsdKatanaBootstrap()
         }
 
         // Boostrap FnAttribute.
-        FnAttribute::Bootstrap(path);
+        if (!FnAttribute::Bootstrap(path))
+        {
+            FnLogError("Failed to bootstrap FnAttribute from Katana at " << path);
+            return;
+        }
 
         // Load Katana's Plugin Manager dynamic library.
+        #if defined(ARCH_OS_WINDOWS)
         path += binPrefix + "FnPluginSystem" ARCH_LIBRARY_SUFFIX;
+        #else
+        path += binPrefix + "libFnPluginSystem" ARCH_LIBRARY_SUFFIX;
+        #endif 
         std::string dlError;
         void* handle = TfDlopen(path, ARCH_LIBRARY_NOW, &dlError);
         if (!handle)
@@ -111,9 +115,8 @@ void PxrUsdKatanaBootstrap()
         if (hostSuite)
         {
             FnPluginHost* host = hostSuite->getHost();
+            FnConfig::Config::setHost(host);
 
-            FnAttribute::Attribute::setHost(host);
-            FnAttribute::GroupBuilder::setHost(host);
             Foundry::Katana::PluginManager::setHost(host);
         }
 

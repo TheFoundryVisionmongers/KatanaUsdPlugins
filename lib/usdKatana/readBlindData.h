@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -25,6 +31,7 @@
 #define PXRUSDKATANA_BLINDDATAREADER_H
 
 #include "pxr/pxr.h"
+#include "api.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -37,7 +44,7 @@ class UsdKatanaBlindDataObject;
 /// otherwise expressable with the available usd schemas.  
 ///
 /// Usage of this is not recommended.
-void
+USDKATANA_API void
 PxrUsdKatanaReadBlindData(
         const UsdKatanaBlindDataObject& kbd,
         PxrUsdKatanaAttrMap& attrs);

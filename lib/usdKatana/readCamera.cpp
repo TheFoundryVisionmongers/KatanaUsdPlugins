@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -48,6 +54,7 @@ PxrUsdKatanaReadCamera(
         PxrUsdKatanaAttrMap& attrs)
 {
     const double currentTime = data.GetCurrentTime();
+    const bool prmanOutputTarget = data.hasOutputTarget("prman");
 
     //
     // Set all general attributes for a xformable type.
@@ -101,7 +108,11 @@ PxrUsdKatanaReadCamera(
     cameraBuilder.set("depthOfField", dofBuilder.build());
     pgsBuilder.set("camera", cameraBuilder.build());
 
-    attrs.set("prmanGlobalStatements", pgsBuilder.build());
+    if (prmanOutputTarget)
+    {
+        attrs.set("prmanGlobalStatements", pgsBuilder.build());
+    }
+    
 
     //
     // Set the 'geometry' attribute.

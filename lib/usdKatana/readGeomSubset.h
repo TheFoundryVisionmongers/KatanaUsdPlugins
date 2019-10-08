@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -28,12 +34,15 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+
+#include "api.h"
+
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdGeomSubset;
 
 /// \brief read \p GeomSubset into \p attrs.
-void
+USDKATANA_API void
 PxrUsdKatanaReadGeomSubset(
         const UsdGeomSubset& mesh,
         const PxrUsdKatanaUsdInPrivateData& data,

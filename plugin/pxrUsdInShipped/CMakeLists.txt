@@ -1,18 +1,19 @@
 set(PXR_PACKAGE pxrUsdInShipped)
 
+set(vtKatana_LIBRARY "")
+if (NOT ${KATANA_API_VERSION} VERSION_LESS "3.0.0")
+    set(vtKatana_LIBRARY "vtKatana")
+endif()
+
 pxr_plugin(${PXR_PACKAGE}
     KATANA_PLUGIN
     LIBRARIES
-        katanaAttrfncApi
-        katanaOpApi
         katanaPluginApi
-        kind
-        usd
-        usdGeom
         usdKatana
         usdShade
         usdLux
-        usdRi
+        ${vtKatana_LIBRARY}
+        Boost::system
 
     PRIVATE_CLASSES
         attrfnc_materialReference

@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -27,6 +33,8 @@
 
 #include "pxr/pxr.h"
 #include "usdKatana/usdInPluginRegistry.h"
+#include "usdKatana/bootstrap.h"
+#include "vtKatana/bootstrap.h"
 
 #include "pxr/usd/kind/registry.h"
 #include "pxr/usd/usdGeom/basisCurves.h"
@@ -145,4 +153,7 @@ void registerPlugins()
     
     REGISTER_PLUGIN(MaterialReferenceAttrFnc, "PxrUsdInMaterialReference", 0, 1);
     REGISTER_PLUGIN(LibraryMaterialNamesAttrFnc, "PxrUsdInLibraryMaterialNames", 0, 1);
+
+    PxrUsdKatanaBootstrap();
+    PxrVtKatanaBootstrap();
 }

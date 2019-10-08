@@ -34,27 +34,31 @@ PXR_NAMESPACE_USING_DIRECTIVE
 PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInPrman_LocationDecorator,
         privateData, opArgs, interface)
 {
+    if (privateData.hasOutputTarget("prman"))
+    {
+        return;
+    }
     std::string locationType =
             FnKat::StringAttribute(interface.getOutputAttr("type")
                     ).getValue("", false);
-    
+
     if (locationType == "subdmesh")
     {
         UsdGeomMesh mesh(privateData.GetUsdPrim());
         if (mesh)
         {
             TfToken scheme;
-            if (mesh.GetSubdivisionSchemeAttr().Get(&scheme) && 
+            if (mesh.GetSubdivisionSchemeAttr().Get(&scheme) &&
                     scheme != UsdGeomTokens->none)
             {
-                // USD deviates from Katana only in the 'catmullClark' token.
+                // USD deviates from Katana only in the 'catmullClark'
+                // token.
                 static char const *catclark("catmull-clark");
-                char const *katScheme = 
+                char const *katScheme =
                     (scheme == UsdGeomTokens->catmullClark
                             ? catclark : scheme.GetText());
-                
                 interface.setAttr("prmanStatements.subdivisionMesh.scheme",
-                         FnKat::StringAttribute(katScheme));
+                        FnKat::StringAttribute(katScheme));
             }
         }
     }

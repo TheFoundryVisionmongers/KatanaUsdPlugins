@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -359,7 +365,6 @@ PxrUsdKatanaReadPointInstancer(
     std::map<SdfPath, std::string> protoPathsToKatPaths;
     std::map<std::string, std::vector<std::string>> usdPrimPathsTracker;
 
-    
 
     for (size_t i = 0; i < numInstances; ++i)
     {
@@ -474,8 +479,8 @@ PxrUsdKatanaReadPointInstancer(
 
             // XXX Unhandled case.
             // We'll use the first common ancestor even if there is more than
-            // one (which shouldn't happen if the prototype prim and its bindings
-            // are under the same parent).
+            // one (which shouldn't happen if the prototype prim and its
+            // bindings are under the same parent).
             //
             SdfPath::RemoveDescendentPaths(&commonPrefixes);
             const std::string buildPath = commonPrefixes[0].GetString();

@@ -5,7 +5,7 @@
 // https://github.com/TheFoundryVisionmongers/katana-USD
 // under the same Modified Apache 2.0 license, as shown below.
 //
-// Copyright 2016 Pixar
+// Copyright 2017 Pixar
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -27,15 +27,27 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef _KATANAPLUG_SCENEGRAPHLOCATIONDELEGATE_H_
-#define _KATANAPLUG_SCENEGRAPHLOCATIONDELEGATE_H_
+#ifndef VTKATANA_API_H
+#define VTKATANA_API_H
 
-#if PX_KATANA_RENDER_API_VER < 2
-#include <Render/ScenegraphLocationDelegate.h>
-#define SLD_CONST
+#include "pxr/base/arch/export.h"
+
+#if defined(PXR_STATIC)
+#   define VTKATANA_API
+#   define VTKATANA_API_TEMPLATE_CLASS(...)
+#   define VTKATANA_API_TEMPLATE_STRUCT(...)
+#   define USDKATANA_LOCAL
 #else
-#include <FnRender/plugin/ScenegraphLocationDelegate.h>
-#define SLD_CONST const
+#   if defined(VTKATANA_EXPORTS)
+#       define VTKATANA_API ARCH_EXPORT
+#       define VTKATANA_API_TEMPLATE_CLASS(...) ARCH_EXPORT_TEMPLATE(class, __VA_ARGS__)
+#       define VTKATANA_API_TEMPLATE_STRUCT(...) ARCH_EXPORT_TEMPLATE(struct, __VA_ARGS__)
+#   else
+#       define VTKATANA_API ARCH_IMPORT
+#       define VTKATANA_API_TEMPLATE_CLASS(...) ARCH_IMPORT_TEMPLATE(class, __VA_ARGS__)
+#       define VTKATANA_API_TEMPLATE_STRUCT(...) ARCH_IMPORT_TEMPLATE(struct, __VA_ARGS__)
+#   endif
+#   define VTKATANA_LOCAL ARCH_HIDDEN
 #endif
 
-#endif 
+#endif

@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -43,6 +49,7 @@
 #include "pxr/usd/usdRi/rslShader.h"
 #include "pxr/usd/usdUI/nodeGraphNodeAPI.h"
 
+#include <FnConfig/FnConfig.h>
 #include <FnGeolibServices/FnAttributeFunctionUtil.h>
 #include <FnLogging/FnLogging.h>
 #include <pystring/pystring.h>
@@ -60,7 +67,7 @@ using std::string;
 using std::vector;
 using FnKat::GroupBuilder;
 
-static std::string 
+static std::string
 _CreateShadingNode(
         UsdPrim shadingNode,
         double currentTime,
@@ -69,15 +76,17 @@ _CreateShadingNode(
         const std::string & targetName,
         bool flatten);
 
-FnKat::Attribute 
+FnKat::Attribute
 _GetMaterialAttr(
         const UsdShadeMaterial& materialSchema,
         double currentTime,
+        const std::string& targetName,
+        const bool prmanOutputTarget,
         bool flatten);
 
 void
 _UnrollInterfaceFromPrim(
-        const UsdPrim& prim, 
+        const UsdPrim& prim,
         const std::string& paramPrefix,
         GroupBuilder& materialBuilder,
         GroupBuilder& interfaceBuilder);
@@ -96,14 +105,27 @@ PxrUsdKatanaReadMaterial(
     SdfPath primPath = prim.GetPath();
     std::string katanaPath = prim.GetName();
 
-    // we do this before ReadPrim because ReadPrim calls ReadBlindData 
+    const bool prmanOutputTarget = data.hasOutputTarget("prman");
+    std::string targetName = FnConfig::Config::get("DEFAULT_RENDERER");
+    // To ensure that the target field on a material node is set to work
+    // with the current renderer, we use the config.  In the future we would
+    // like to be able to load in multiple supported output shaders for generic
+    // materials, but for now we keep it simple and retain the default of prman
+    // We may need more info from the USD file to determine which renderer the
+    // material was designed for, and therefore what attributes to set.
+    if (targetName.empty())
+    {
+        targetName = "prman";
+    }
+
+    // we do this before ReadPrim because ReadPrim calls ReadBlindData
     // (primvars only) which we don't want to stomp here.
-    attrs.set("material", _GetMaterialAttr(
-        material, data.GetCurrentTime(), flatten));
+    attrs.set("material", _GetMaterialAttr(material, data.GetCurrentTime(), 
+        targetName, prmanOutputTarget, flatten));
 
     const std::string& parentPrefix = (looksGroupLocation.empty()) ?
         data.GetUsdInArgs()->GetRootLocationPath() : looksGroupLocation;
-    
+
     std::string fullKatanaPath = !materialDestinationLocation.empty()
             ? materialDestinationLocation
             : PxrUsdKatanaUtils::ConvertUsdMaterialPathToKatLocation(
@@ -135,9 +157,9 @@ PxrUsdKatanaReadMaterial(
 ////////////////////////////////////////////////////////////////////////
 // Protected methods
 
-void 
+void
 _GatherShadingParameters(
-    const UsdShadeShader &shaderSchema, 
+    const UsdShadeShader &shaderSchema,
     const string &handle,
     double currentTime,
     GroupBuilder& nodesBuilder,
@@ -245,25 +267,25 @@ _GatherShadingParameters(
 
         // If the attribute value comes from a base material, leave it
         // empty -- we will inherit it from the parent katana material.
-        if (flatten || 
+        if (flatten ||
             !PxrUsdKatana_IsAttrValFromBaseMaterial(attr)) {
             paramsBuilder.set(inputId,
                     PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
         }
     }
-    
+
     // XXX check for info attrs as they're not strictly parameters but
     //     necessary for hydra shading (currently)
     if (targetName == "display")
     {
-        std::vector<UsdProperty> props = 
+        std::vector<UsdProperty> props =
                 prim.GetPropertiesInNamespace("info");
-        
+
         for (std::vector<UsdProperty>::const_iterator I =
                 props.begin(), E = props.end(); I != E; ++I)
         {
             const UsdProperty & prop = (*I);
-            
+
             if (UsdAttribute attr = prop.As<UsdAttribute>())
             {
                 VtValue vtValue;
@@ -271,7 +293,7 @@ _GatherShadingParameters(
                 {
                     continue;
                 }
-                
+
                 paramsBuilder.set(attr.GetName().GetString(),
                         PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
             }
@@ -281,7 +303,7 @@ _GatherShadingParameters(
 
 
 // NOTE: the Ris codepath doesn't use the interfaceBuilder
-std::string 
+std::string
 _CreateShadingNode(
         UsdPrim shadingNode,
         double currentTime,
@@ -321,19 +343,19 @@ _CreateShadingNode(
             TfToken id;
             shaderSchema.GetIdAttr().Get(&id, currentTime);
             std::string oslIdString = id.GetString();
-            
+
             if (!pystring::endswith(oslIdString, ".oso"))
             {
                 oslIdString = "osl:" + oslIdString;
             }
-            
+
             FnKat::StringAttribute oslIdAttr = FnKat::StringAttribute(oslIdString);
-            FnAttribute::GroupAttribute shaderInfoAttr = 
+            FnAttribute::GroupAttribute shaderInfoAttr =
                         FnGeolibServices::FnAttributeFunctionUtil::run(
                                 "PRManGetShaderParameterInfo", oslIdAttr);
-            if (shaderInfoAttr.isValid()) 
+            if (shaderInfoAttr.isValid())
                 shdNodeAttr.set("type", oslIdAttr);
-            else 
+            else
                 shdNodeAttr.set(
                     "type", FnKat::StringAttribute(id.GetString()));
         }
@@ -349,7 +371,7 @@ _CreateShadingNode(
         GroupBuilder connectionsBuilder;
 
         _GatherShadingParameters(shaderSchema, handle, currentTime,
-            nodesBuilder, paramsBuilder, 
+            nodesBuilder, paramsBuilder,
             interfaceBuilder, connectionsBuilder, targetName, flatten);
 
 
@@ -381,14 +403,14 @@ _CreateShadingNode(
                 float displayColorArray[3] = {
                     displayColor[0], displayColor[1], displayColor[2]};
                 shdNodeAttr.set(
-                    "hints.displayColor", 
+                    "hints.displayColor",
                     FnKat::FloatAttribute(displayColorArray, 3, 3));
             }
         }
     }
 
     if (validData) {
-        if (flatten || 
+        if (flatten ||
             !PxrUsdKatana_IsPrimDefFromBaseMaterial(shadingNode)) {
             shdNodeAttr.set("name", FnKat::StringAttribute(handle));
             shdNodeAttr.set("srcName", FnKat::StringAttribute(handle));
@@ -401,14 +423,16 @@ _CreateShadingNode(
 }
 
 
-FnKat::Attribute 
+FnKat::Attribute
 _GetMaterialAttr(
         const UsdShadeMaterial& materialSchema,
         double currentTime,
+        const std::string& targetName,
+        const bool prmanOutputTarget,
         bool flatten)
 {
     UsdPrim materialPrim = materialSchema.GetPrim();
-    
+
     // TODO: we need a hasA schema
     UsdRiMaterialAPI riMaterialAPI(materialPrim);
     UsdStageWeakPtr stage = materialPrim.GetStage();
@@ -430,9 +454,9 @@ _GetMaterialAttr(
         std::string handle = _CreateShadingNode(
             surfaceShader.GetPrim(), currentTime,
             nodesBuilder, interfaceBuilder, "prman", flatten);
-    
-        // If the source shader type is an RslShader, then publish it 
-        // as a prmanSurface terminal. If not, fallback to the 
+
+        // If the source shader type is an RslShader, then publish it
+        // as a prmanSurface terminal. If not, fallback to the
         // prmanBxdf terminal.
         UsdRiRslShader rslShader(surfaceShader.GetPrim());
         if (rslShader) {
@@ -455,40 +479,6 @@ _GetMaterialAttr(
                              FnKat::StringAttribute(handle));
     }
 
-    // look for coshaders
-    // XXX: Can we simply delete this section?
-    // coshaders should not be used anywhere.
-    if (UsdRelationship coshadersRel = 
-            materialPrim.GetRelationship(TfToken("riLook:coshaders"))) {
-        if (flatten ||
-                !PxrUsdKatana_AreRelTargetsFromBaseMaterial(coshadersRel)) {
-            SdfPathVector targetPaths;
-            coshadersRel.GetForwardedTargets(&targetPaths);
-            if (targetPaths.size() > 0) {
-                SdfPath targetPath;
-                for (size_t i = 0; i<targetPaths.size(); ++i){
-                    targetPath = targetPaths[i];
-
-                    if (UsdPrim shadingNodePrim =
-                        stage->GetPrimAtPath(targetPath)) {
-
-                        string shortHandle = shadingNodePrim.GetName();
-                        
-                        std::string handle = _CreateShadingNode(
-                            shadingNodePrim, currentTime,
-                            nodesBuilder, interfaceBuilder, "prman", flatten);
-
-                        terminalsBuilder.set("prmanCoshaders."+shortHandle,
-                                             FnKat::StringAttribute(handle));
-                    } else {
-                        FnLogWarn("Coshader does not exist at:" << 
-                                  targetPath.GetString());
-                    }
-                }
-            }
-        }
-    }
-
     /////////////////
     // RIS SECTION
     /////////////////
@@ -496,9 +486,9 @@ _GetMaterialAttr(
 
     // XXX BEGIN This code is in support of Subgraph workflows
     //           and is currently necessary to match equivalent SGG behavior
-     
+
     // Look for labeled patterns - TODO: replace with UsdShade::ShadingSubgraph
-    vector<UsdProperty> properties = 
+    vector<UsdProperty> properties =
         materialPrim.GetPropertiesInNamespace("patternTerminal");
     if (properties.size()) {
         TF_FOR_ALL(propIter, properties) {
@@ -515,7 +505,7 @@ _GetMaterialAttr(
             }
             if (targetPaths.size() > 1) {
                 FnLogWarn(
-                    "Multiple targets for one output port detected on look:" << 
+                    "Multiple targets for one output port detected on look:" <<
                     materialPrim.GetPath());
             }
 
@@ -525,9 +515,9 @@ _GetMaterialAttr(
                     << targetPath.GetString());
                 continue;
             }
-            
+
             SdfPath nodePath = targetPath.GetPrimPath();
-    
+
             if (UsdPrim patternPrim =
                     stage->GetPrimAtPath(nodePath)) {
 
@@ -537,7 +527,7 @@ _GetMaterialAttr(
 
                 string terminalName = rel.GetName();
                 terminalName = terminalName.substr(terminalName.find(':')+1);
-    
+
                 string handle = _CreateShadingNode(
                     patternPrim, currentTime, nodesBuilder,
                             interfaceBuilder, "prman", flatten);
@@ -545,7 +535,7 @@ _GetMaterialAttr(
                     FnKat::StringAttribute(handle));
                 terminalsBuilder.set("prmanCustom_"+terminalName+"Port",
                     FnKat::StringAttribute(patternPort));
-            } 
+            }
             else {
                 FnLogWarn("Pattern does not exist at "
                             << targetPath.GetString());
@@ -553,17 +543,17 @@ _GetMaterialAttr(
         }
     }
     // XXX END
-    
+
     bool foundGlslfxTerminal = false;
     if (UsdShadeOutput glslfxOut = materialSchema.GetSurfaceOutput(
                 HioGlslfxTokens->glslfx)) {
-        if (flatten || 
-            !glslfxOut.IsSourceConnectionFromBaseMaterial()) 
+        if (flatten ||
+            !glslfxOut.IsSourceConnectionFromBaseMaterial())
         {
             UsdShadeConnectableAPI source;
             TfToken sourceName;
             UsdShadeAttributeType sourceType;
-            if (glslfxOut.GetConnectedSource(&source, &sourceName, 
+            if (glslfxOut.GetConnectedSource(&source, &sourceName,
                                                 &sourceType)) {
                 foundGlslfxTerminal = true;
                 string handle = _CreateShadingNode(
@@ -572,13 +562,13 @@ _GetMaterialAttr(
 
                 terminalsBuilder.set("displayBxdf",
                                         FnKat::StringAttribute(handle));
-            }                                    
+            }
         }
     }
 
-    // XXX: This code is deprecated and should be removed soon, along with all 
+    // XXX: This code is deprecated and should be removed soon, along with all
     // other uses of the deprecated usdHydra API.
-    // 
+    //
     // XXX, Because of relationship forwarding, there are possible name
     //      clashes with the standard prman shading.
     if (!foundGlslfxTerminal) {
@@ -588,16 +578,16 @@ _GetMaterialAttr(
                     !PxrUsdKatana_AreRelTargetsFromBaseMaterial(bxdfRel)) {
                 SdfPathVector targetPaths;
                 bxdfRel.GetForwardedTargets(&targetPaths);
-                
+
                 if (targetPaths.size() > 1) {
-                    FnLogWarn("Multiple displayLook bxdf detected on look:" << 
+                    FnLogWarn("Multiple displayLook bxdf detected on look:" <<
                         materialPrim.GetPath());
                 }
                 if (targetPaths.size() > 0) {
                     const SdfPath targetPath = targetPaths[0];
                     if (UsdPrim bxdfPrim =
                         stage->GetPrimAtPath(targetPath)) {
-                        
+
                         string handle = _CreateShadingNode(
                             bxdfPrim, currentTime,
                             nodesBuilder, interfaceBuilder, "display", flatten);
@@ -638,8 +628,15 @@ _GetMaterialAttr(
                 // relying on traversing the bxdf.
                 // We can remove this once the "derives" usd composition
                 // works, along with partial composition
-                _CreateShadingNode(curr, currentTime,
-                        nodesBuilder, interfaceBuilder, "prman", flatten);
+                std::string handle = _CreateShadingNode(curr, currentTime,
+                        nodesBuilder, interfaceBuilder, targetName, flatten);
+
+                // set the name of the preview shader for Katana to pick up
+                // TODO
+                // preview surfaces seem to come last, so are always the final string attribute set here
+                // but ideally, this should detect if the current UsdShadeShader prim (curr) is actually
+                // representative of a preview surface (don't know how to do that)
+                terminalsBuilder.set("usdPreviewSurface", FnKat::StringAttribute(handle));
             }
 
             if (!curr.IsA<UsdGeomScope>()) {
@@ -649,7 +646,7 @@ _GetMaterialAttr(
             paramPrefix = PxrUsdKatanaUtils::GenerateShadingNodeHandle(curr);
         }
 
-        _UnrollInterfaceFromPrim(curr, 
+        _UnrollInterfaceFromPrim(curr,
                 paramPrefix,
                 materialBuilder,
                 interfaceBuilder);
@@ -658,18 +655,23 @@ _GetMaterialAttr(
             dfs.push(*childIter);
         }
     }
-    
-    // Gather prman statements
-    FnKat::GroupBuilder statementsBuilder;
-    PxrUsdKatanaReadPrimPrmanStatements(materialPrim, currentTime, statementsBuilder);
 
     materialBuilder.set("nodes", nodesBuilder.build());
     materialBuilder.set("terminals", terminalsBuilder.build());
     materialBuilder.set("interface", interfaceBuilder.build());
+    FnKat::GroupBuilder statementsBuilder;
+    PxrUsdKatanaReadPrimPrmanStatements(materialPrim, currentTime,
+        statementsBuilder, prmanOutputTarget);
+    // Gather prman statements
     FnKat::GroupAttribute statements = statementsBuilder.build();
     if (statements.getNumberOfChildren()) {
-        materialBuilder.set("underlayAttrs.prmanStatements", statements);
+        if (prmanOutputTarget)
+        {
+            materialBuilder.set("underlayAttrs.prmanStatements", statements);
+        }
+        materialBuilder.set("usd", statements);
     }
+    
 
     FnAttribute::GroupAttribute localMaterialAttr = materialBuilder.build();
 
@@ -687,12 +689,14 @@ _GetMaterialAttr(
         // the tree structure that the non-op the SGG creates
         // See _ConvertUsdMAterialPathToKatLocation in
         // katanapkg/plugin/sgg/usd/utils.cpp
-        
+
         if (materialSchema.HasBaseMaterial()) {
             SdfPath baseMaterialPath = materialSchema.GetBaseMaterialPath();
             if (UsdShadeMaterial baseMaterial = UsdShadeMaterial::Get(stage, baseMaterialPath)) {
                 // Make a fake context to grab parent data, and recurse on that
-                FnKat::GroupAttribute parentMaterial = _GetMaterialAttr(baseMaterial, currentTime, true);
+                FnKat::GroupAttribute parentMaterial = _GetMaterialAttr(
+                    baseMaterial, currentTime, targetName, 
+                    prmanOutputTarget, true);
                 FnAttribute::GroupBuilder flatMaterialBuilder;
                 flatMaterialBuilder.update(parentMaterial);
                 flatMaterialBuilder.deepUpdate(localMaterialAttr);
@@ -707,9 +711,9 @@ _GetMaterialAttr(
     return localMaterialAttr;
 }
 
-/* static */ 
+/* static */
 void
-_UnrollInterfaceFromPrim(const UsdPrim& prim, 
+_UnrollInterfaceFromPrim(const UsdPrim& prim,
         const std::string& paramPrefix,
         GroupBuilder& materialBuilder,
         GroupBuilder& interfaceBuilder)
@@ -726,9 +730,9 @@ _UnrollInterfaceFromPrim(const UsdPrim& prim,
     // that should really be on
     // /PaintedMetal_Material/Paint_.Base_Color  which does have that
     // connection.
-    // 
+    //
     UsdShadeMaterial materialSchema(prim);
-    std::vector<UsdShadeInput> interfaceInputs = 
+    std::vector<UsdShadeInput> interfaceInputs =
         materialSchema.GetInterfaceInputs();
     UsdShadeNodeGraph::InterfaceInputConsumersMap interfaceInputConsumers =
         materialSchema.ComputeInterfaceInputConsumersMap(
@@ -738,14 +742,14 @@ _UnrollInterfaceFromPrim(const UsdPrim& prim,
         UsdShadeInput interfaceInput = *interfaceInputIter;
 
         // Skip invalid interface inputs.
-        if (!interfaceInput.GetAttr()) { 
+        if (!interfaceInput.GetAttr()) {
             continue;
         }
 
         const TfToken& paramName = interfaceInput.GetBaseName();
         const std::string renamedParam = paramPrefix + paramName.GetString();
 
-        // handle parameters with values 
+        // handle parameters with values
         VtValue attrVal;
         if (interfaceInput.GetAttr().Get(&attrVal) && !attrVal.IsEmpty()) {
             materialBuilder.set(
@@ -756,13 +760,13 @@ _UnrollInterfaceFromPrim(const UsdPrim& prim,
         if (interfaceInputConsumers.count(interfaceInput) == 0) {
             continue;
         }
-            
-        const std::vector<UsdShadeInput> &consumers = 
+
+        const std::vector<UsdShadeInput> &consumers =
             interfaceInputConsumers.at(interfaceInput);
 
         for (const UsdShadeInput &consumer : consumers) {
             UsdPrim consumerPrim = consumer.GetPrim();
-            
+
             TfToken inputName = consumer.GetBaseName();
 
             std::string handle = PxrUsdKatanaUtils::GenerateShadingNodeHandle(

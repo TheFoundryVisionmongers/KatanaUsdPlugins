@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -232,7 +238,7 @@ public:
     /// \p katanaFullName should be the full attribute name from katana, i.e. 
     /// "materials.interface.foo".   \p usdType is the typename for the
     /// attribute and will be passed directly to \p UsdPrim::CreateAttribute().
-    UsdAttribute
+    USDKATANA_API UsdAttribute
     CreateKbdAttribute(
         const std::string &katanaFullName,
         const SdfValueTypeName &usdType);
@@ -246,14 +252,14 @@ public:
     /// As noed above, rib attributes can be either UsdAttribute or 
     /// UsdRelationship, and like all UsdProperties, need not have a defined 
     /// value.
-    std::vector<UsdProperty>
+    USDKATANA_API std::vector<UsdProperty>
     GetKbdAttributes(const std::string &nameSpace = "") const;
 
     // --------------------------------------------------------------------- //
     // GetKbdAttribute
     // --------------------------------------------------------------------- //
     /// Return a specific KBD attribute
-    UsdAttribute
+    USDKATANA_API UsdAttribute
     GetKbdAttribute(const std::string &katanaFullName);
 
     // --------------------------------------------------------------------- //
@@ -263,7 +269,7 @@ public:
     /// "geometry" or "materials").  Can be used with
     /// GetGroupBuilderKeyForProperty()
     ///
-    static TfToken GetKbdAttributeNameSpace(const UsdProperty &prop);
+    USDKATANA_API static TfToken GetKbdAttributeNameSpace(const UsdProperty &prop);
 
     // --------------------------------------------------------------------- //
     // GetGroupBuilderKeyForProperty
@@ -284,14 +290,14 @@ public:
     /// "interface.foo"
     ///
     /// To get "materials", use GetKbdAttributeNameSpace()
-    static std::string GetGroupBuilderKeyForProperty(const UsdProperty& prop);
+    USDKATANA_API static std::string GetGroupBuilderKeyForProperty(const UsdProperty& prop);
 
     // --------------------------------------------------------------------- //
     // IsKbdAttribute
     // --------------------------------------------------------------------- //
     /// Return true if the property is in the "ri:attributes" namespace.
     ///
-    static bool IsKbdAttribute(const UsdProperty &prop);
+    USDKATANA_API static bool IsKbdAttribute(const UsdProperty &prop);
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

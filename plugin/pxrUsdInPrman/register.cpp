@@ -26,6 +26,8 @@
 
 #include "pxrUsdInPrman/declarePackageOps.h"
 
+#include "usdKatana/bootstrap.h"
+#include "vtKatana/bootstrap.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -35,10 +37,13 @@ DEFINE_GEOLIBOP_PLUGIN(PxrUsdInPrman_LocationDecorator);
 void registerPlugins()
 {
     USD_OP_REGISTER_PLUGIN(PxrUsdInPrman_LocationDecorator, 
-                       "PxrUsdInPrman_LocationDecorator", 
+                       "UsdInPrman_LocationDecorator", 
                        0, 
                        1);
     
     PxrUsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(
-            "PxrUsdInPrman_LocationDecorator");
+            "UsdInPrman_LocationDecorator");
+
+    PxrUsdKatanaBootstrap();
+    PxrVtKatanaBootstrap();
 }

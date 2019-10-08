@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -80,7 +86,7 @@ PxrUsdKatanaReadLight(
     const UsdPrim lightPrim = light.GetPrim();
     const SdfPath primPath = lightPrim.GetPath();
     const UsdTimeCode currentTimeCode = data.GetCurrentTime();
-
+    const bool prmanOutputTarget = data.hasOutputTarget("prman");
     attrs.SetUSDTimeCode(currentTimeCode);
     PxrUsdKatanaAttrMap lightBuilder;
     lightBuilder.SetUSDTimeCode(currentTimeCode);
@@ -133,31 +139,50 @@ PxrUsdKatanaReadLight(
             .Set("lightGroup", riLightAPI.GetRiLightGroupAttr())
             ;
     }
-
     if (UsdLuxSphereLight l = UsdLuxSphereLight(lightPrim)) {
         _SetLightSizeFromRadius(geomBuilder, l.GetRadiusAttr(),
                                 currentTimeCode);
-        materialBuilder.set("prmanLightShader",
-                            FnKat::StringAttribute("PxrSphereLight"));
+        if (prmanOutputTarget)
+        {
+            materialBuilder.set("prmanLightShader",
+                                FnKat::StringAttribute("PxrSphereLight"));
+        }
+        materialBuilder.set("usdLightShader",
+                        FnKat::StringAttribute("UsdLuxSphereLight"));
     }
     if (UsdLuxDiskLight l = UsdLuxDiskLight(lightPrim)) {
         _SetLightSizeFromRadius(geomBuilder, l.GetRadiusAttr(),
                                 currentTimeCode);
-        materialBuilder.set("prmanLightShader",
+        if (prmanOutputTarget)
+        {
+            materialBuilder.set("prmanLightShader",
                             FnKat::StringAttribute("PxrDiskLight"));
+        }
+        materialBuilder.set("usdLightShader",
+                        FnKat::StringAttribute("UsdLuxDiskLight"));
     }
     if (UsdLuxCylinderLight l = UsdLuxCylinderLight(lightPrim)) {
         _SetLightSizeFromRadius(geomBuilder, l.GetRadiusAttr(),
                                 currentTimeCode);
         geomBuilder.Set("light.width", l.GetLengthAttr());
-        materialBuilder.set("prmanLightShader",
+        if (prmanOutputTarget)
+        {
+            materialBuilder.set("prmanLightShader",
                             FnKat::StringAttribute("PxrCylinderLight"));
+        }
+        materialBuilder.set("usdLightShader",
+                        FnKat::StringAttribute("UsdLuxCylinderLight"));
     }
     if (UsdLuxRectLight l = UsdLuxRectLight(lightPrim)) {
         geomBuilder.Set("light.width", l.GetWidthAttr());
         geomBuilder.Set("light.height", l.GetHeightAttr());
-        materialBuilder.set("prmanLightShader",
+        if (prmanOutputTarget)
+        {
+            materialBuilder.set("prmanLightShader",
                             FnKat::StringAttribute("PxrRectLight"));
+        }
+        materialBuilder.set("usdLightShader",
+                        FnKat::StringAttribute("UsdLuxRectLight"));
         lightBuilder.Set("lightColorMap", l.GetTextureFileAttr());
         UsdRiTextureAPI textureAPI(lightPrim);
         lightBuilder
@@ -166,13 +191,24 @@ PxrUsdKatanaReadLight(
             ;
     }
     if (UsdLuxDistantLight l = UsdLuxDistantLight(lightPrim)) {
-        materialBuilder.set("prmanLightShader",
+        if (prmanOutputTarget)
+        {
+            materialBuilder.set("prmanLightShader",
                             FnKat::StringAttribute("PxrDistantLight"));
+        }
+        materialBuilder.set("usdLightShader",
+                        FnKat::StringAttribute("UsdLuxDistantLight"));
+        
         lightBuilder.Set("angleExtent", l.GetAngleAttr());
     }
     if (UsdLuxGeometryLight l = UsdLuxGeometryLight(lightPrim)) {
-        materialBuilder.set("prmanLightShader",
+        if (prmanOutputTarget)
+        {
+            materialBuilder.set("prmanLightShader",
                             FnKat::StringAttribute("PxrMeshLight"));
+        }
+        materialBuilder.set("usdLightShader",
+                        FnKat::StringAttribute("UsdLuxMeshLight"));
         SdfPathVector geo;
         if (l.GetGeometryRel().GetForwardedTargets(&geo) && !geo.empty()) {
             if (geo.size() > 1) {
@@ -187,8 +223,13 @@ PxrUsdKatanaReadLight(
         }
     }
     if (UsdLuxDomeLight l = UsdLuxDomeLight(lightPrim)) {
-        materialBuilder.set("prmanLightShader",
+        if (prmanOutputTarget)
+        {
+            materialBuilder.set("prmanLightShader",
                             FnKat::StringAttribute("PxrDomeLight"));
+        }
+        materialBuilder.set("usdLightShader",
+                        FnKat::StringAttribute("UsdLuxDomeLight"));
         lightBuilder.Set("lightColorMap", l.GetTextureFileAttr());
         // Note: The prman backend ignores texture:format since that is
         // specified inside the renderman texture file format.
@@ -198,6 +239,7 @@ PxrUsdKatanaReadLight(
             .Set("colorMapSaturation", textureAPI.GetRiTextureSaturationAttr())
             ;
     }
+    //Prman specific light
     if (UsdRiPxrEnvDayLight l = UsdRiPxrEnvDayLight(lightPrim)) {
         materialBuilder.set("prmanLightShader",
                             FnKat::StringAttribute("PxrEnvDayLight"));
@@ -216,6 +258,7 @@ PxrUsdKatanaReadLight(
             .Set("zone", l.GetZoneAttr())
             ;
     }
+    //Prman specific light
     if (UsdRiPxrAovLight l = UsdRiPxrAovLight(lightPrim)) {
         materialBuilder.set("prmanLightShader",
                             FnKat::StringAttribute("PxrAovLight"));
@@ -237,14 +280,21 @@ PxrUsdKatanaReadLight(
 
     // TODO portals
     // TODO UsdRi extensions
-    
-    // Gather prman statements
-    FnKat::GroupBuilder prmanBuilder;
-    PxrUsdKatanaReadPrimPrmanStatements(lightPrim, currentTimeCode.GetValue(),
-                                        prmanBuilder);
-    attrs.set("prmanStatements", prmanBuilder.build());
 
-    materialBuilder.set("prmanLightParams", lightBuilder.build());
+    FnKat::GroupBuilder primStatements;
+    PxrUsdKatanaReadPrimPrmanStatements(lightPrim, currentTimeCode.GetValue(),
+        primStatements, prmanOutputTarget);
+    if (prmanOutputTarget)
+    {
+    // Gather prman statements
+        attrs.set("prmanStatements", primStatements.build());
+
+        materialBuilder.set("prmanLightParams", lightBuilder.build());
+    }
+    attrs.set("usd", primStatements.build());
+    materialBuilder.set("usdLightParams", lightBuilder.build());
+
+    
     attrs.set("material", materialBuilder.build());
     attrs.set("geometry", geomBuilder.build());
 

@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -28,13 +34,16 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+
+#include "api.h"
+
 class PxrUsdKatanaAttrMap;
 class PxrUsdKatanaUsdInPrivateData;
 class UsdPrim;
 class UsdGeomImageable;
 
 /// \brief read \p prim into \p attrs.
-void
+USDKATANA_API void
 PxrUsdKatanaReadPrim(
         const UsdPrim& prim,
         const PxrUsdKatanaUsdInPrivateData& data,
@@ -44,7 +53,8 @@ void
 PxrUsdKatanaReadPrimPrmanStatements(
         const UsdPrim& prim,
         double currentTime,
-        Foundry::Katana::GroupBuilder& statementBuilder);
+        Foundry::Katana::GroupBuilder& statementBuilder,
+        const bool prmanOutputTarget);
 
 Foundry::Katana::Attribute
 PxrUsdKatanaGeomGetPrimvarGroup(

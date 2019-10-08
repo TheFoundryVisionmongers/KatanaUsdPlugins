@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2018 Pixar
 //
@@ -29,6 +35,10 @@
 
 #include "pxr/base/vt/array.h"
 #include "vtKatana/traits.h"
+
+#if defined(ARCH_OS_WINDOWS)
+#include "api.h"
+#endif
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -151,6 +161,80 @@ template <typename T>
 const VtArray<T> VtKatanaCopy(
     const typename VtKatana_GetKatanaAttrType<T>::type& attr,
     float sample = 0.0f);
+
+#if defined(ARCH_OS_WINDOWS)
+#define VTKATANA_EXPORT_MAP_AND_COPY(T)                                    \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+        VtKatanaMapOrCopy<T>(                                              \
+            const VtArray<T>& value);                                      \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+        VtKatanaMapOrCopy<T>(                                              \
+            const std::vector<float>& times,                               \
+            const typename std::vector<VtArray<T>>& values);               \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+        VtKatanaMapOrCopy<T>(                                              \
+            const typename std::map<float, VtArray<T>>&);                  \
+    template VTKATANA_API const VtArray<T> VtKatanaMapOrCopy<T>(                        \
+        const typename VtKatana_GetKatanaAttrType<T>::type&, float);       \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+        VtKatanaCopy<T>(                                                   \
+            const VtArray<T>& value);                                      \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+        VtKatanaCopy<T>(                                                   \
+            const std::vector<float>& times,                               \
+            const typename std::vector<VtArray<T>>& values);               \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+        VtKatanaCopy<T>(                                                   \
+            const typename std::map<float, VtArray<T>>&);                  \
+    template VTKATANA_API const VtArray<T> VtKatanaCopy<T>(                             \
+        const typename VtKatana_GetKatanaAttrType<T>::type&, float);       \
+
+// Defines for copy
+// Integral Types
+VTKATANA_EXPORT_MAP_AND_COPY(bool)
+VTKATANA_EXPORT_MAP_AND_COPY(char)
+VTKATANA_EXPORT_MAP_AND_COPY(unsigned char)
+VTKATANA_EXPORT_MAP_AND_COPY(short)
+VTKATANA_EXPORT_MAP_AND_COPY(unsigned short)
+VTKATANA_EXPORT_MAP_AND_COPY(int)
+VTKATANA_EXPORT_MAP_AND_COPY(unsigned int)
+VTKATANA_EXPORT_MAP_AND_COPY(uint64_t)
+VTKATANA_EXPORT_MAP_AND_COPY(int64_t)
+VTKATANA_EXPORT_MAP_AND_COPY(long)
+
+// Floating point types
+VTKATANA_EXPORT_MAP_AND_COPY(float)
+VTKATANA_EXPORT_MAP_AND_COPY(double)
+VTKATANA_EXPORT_MAP_AND_COPY(GfHalf)
+
+// Vec Types
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec2i)
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec2f)
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec2h)
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec2d)
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec3i)
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec3f)
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec3h)
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec3d)
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec4i)
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec4f)
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec4h)
+VTKATANA_EXPORT_MAP_AND_COPY(GfVec4d)
+
+// Matrix Types
+VTKATANA_EXPORT_MAP_AND_COPY(GfMatrix3f)
+VTKATANA_EXPORT_MAP_AND_COPY(GfMatrix3d)
+VTKATANA_EXPORT_MAP_AND_COPY(GfMatrix4f)
+VTKATANA_EXPORT_MAP_AND_COPY(GfMatrix4d)
+
+// String types
+VTKATANA_EXPORT_MAP_AND_COPY(std::string)
+VTKATANA_EXPORT_MAP_AND_COPY(SdfAssetPath)
+VTKATANA_EXPORT_MAP_AND_COPY(SdfPath)
+VTKATANA_EXPORT_MAP_AND_COPY(TfToken)
+
+#undef VTKATANA_EXPORT_MAP_AND_COPY
+#endif // defined(ARCH_OS_WINDOWS)
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -29,6 +35,8 @@
 #include <FnGeolib/op/FnGeolibOp.h>
 #include "pxr/usd/usd/attribute.h"
 
+#include "api.h"
+
 #include <boost/thread/shared_mutex.hpp>
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -55,21 +63,21 @@ public:
     PxrUsdKatanaAttrMap& Set(const std::string& path, const UsdAttribute& attr);
 
     /// \brief set \p attr at \p path.
-    void set(const std::string& path, const Foundry::Katana::Attribute& attr);
+    USDKATANA_API void set(const std::string& path, const Foundry::Katana::Attribute& attr);
 
     /// \brief delete attribute at \p path
-    void del(const std::string& path);
+    USDKATANA_API void del(const std::string& path);
 
     /// \brief build a group attribute
-    FnAttribute::GroupAttribute build();
+    USDKATANA_API FnAttribute::GroupAttribute build();
 
     /// \brief sets attrs in \p attrs onto the \p interface.
-    void toInterface(Foundry::Katana::GeolibCookInterface& interface);
+    USDKATANA_API void toInterface(Foundry::Katana::GeolibCookInterface& interface);
 
 
     /// \brief returns true if a call to build has been made prior to any
     ///        subsequent calls to set or del.
-    bool isBuilt();
+    USDKATANA_API bool isBuilt();
     
 
     typedef boost::upgrade_mutex Mutex;

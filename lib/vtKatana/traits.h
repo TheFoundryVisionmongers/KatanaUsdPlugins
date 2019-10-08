@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2018 Pixar
 //
@@ -145,12 +151,29 @@ struct VtKatana_IsNumeric
                     std::is_arithmetic<typename VtKatana_GetNumericScalarType<
                         T>::type>::value> {};
 
+#if defined(ARCH_OS_WINDOWS)
+// Introduced because FnAttribute::NullAttribute does not have a value_type or array_type
+// typedef, and VtKatana_GetKatanaAttrValueType will attempt to use it (VS2017+ gives a better error message)
+struct NullAttribute
+{
+    typedef void value_type;
+    typedef intptr_t array_type;
+};
+
+/// Every Numeric and String type can be mapped to a single Katana Attribute
+/// Type
+template <typename T, typename = void>
+struct VtKatana_GetKatanaAttrType {
+    typedef NullAttribute type;
+};
+#else
 /// Every Numeric and String type can be mapped to a single Katana Attribute
 /// Type
 template <typename T, typename = void>
 struct VtKatana_GetKatanaAttrType {
     typedef FnAttribute::NullAttribute type;
 };
+#endif
 
 /// Strings and String Holders map to Katana StringAttributes
 /// (ie. SdfAssetPath => StringAttribute)

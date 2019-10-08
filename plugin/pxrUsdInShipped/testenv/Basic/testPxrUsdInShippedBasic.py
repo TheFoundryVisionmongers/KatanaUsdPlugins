@@ -58,7 +58,7 @@ class TestPxrOpUsdInShippedBasic(unittest.TestCase):
         return baselineAttrs
 
     def getLocationData(self, usdPath):
-        client = Nodes3DAPI.CreateClient(NodegraphAPI.GetNode('PxrUsdIn'))
+        client = Nodes3DAPI.CreateClient(NodegraphAPI.GetNode('UsdIn'))
         return client.cookLocation('/root/world/geo%s' % usdPath)
 
     def test_mesh(self):

@@ -1,3 +1,9 @@
+// These files began life as part of the main USD distribution
+// https://github.com/PixarAnimationStudios/USD.
+// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
+// these plug-ins, and they moved to
+// https://github.com/TheFoundryVisionmongers/katana-USD
+// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -95,6 +101,7 @@ PxrUsdKatanaReadBasisCurves(
         const PxrUsdKatanaUsdInPrivateData& data,
         PxrUsdKatanaAttrMap& attrs)
 {
+    const bool prmanOutputTarget = data.hasOutputTarget("prman");
     //
     // Set all general attributes for a gprim type.
     //
@@ -110,47 +117,70 @@ PxrUsdKatanaReadBasisCurves(
     //
     // Set 'prmanStatements' attribute.
     //
+    // The curves geometry.basis values are defined in the Katana attribute
+    // conventions which can be found here: 
+    // https://learn.foundry.com/katana/dev-guide/AttributeConventions/GeometryTypes.html#curves
 
     TfToken basis;
     basisCurves.GetBasisAttr().Get(&basis);
     if (basis == UsdGeomTokens->bezier)
     {
-        attrs.set("prmanStatements.basis.u",
-                        FnKat::StringAttribute("bezier"));
-        attrs.set("prmanStatements.basis.v",
-                        FnKat::StringAttribute("bezier"));
+        if (prmanOutputTarget)
+        {
+            attrs.set("prmanStatements.basis.u",
+                            FnKat::StringAttribute("bezier"));
+            attrs.set("prmanStatements.basis.v",
+                            FnKat::StringAttribute("bezier"));
+        }
+        attrs.set("geometry.basis", FnKat::IntAttribute(1));
     }
     else if (basis == UsdGeomTokens->bspline)
     {
-        attrs.set("prmanStatements.basis.u",
-                        FnKat::StringAttribute("b-spline"));
-        attrs.set("prmanStatements.basis.v",
-                        FnKat::StringAttribute("b-spline"));
+        if(prmanOutputTarget)
+        {
+            attrs.set("prmanStatements.basis.u",
+                            FnKat::StringAttribute("b-spline"));
+            attrs.set("prmanStatements.basis.v",
+                            FnKat::StringAttribute("b-spline"));
+        }
+        attrs.set("geometry.basis", FnKat::IntAttribute(2));
     }
     else if (basis == UsdGeomTokens->catmullRom)
     {
-        attrs.set("prmanStatements.basis.u",
-                        FnKat::StringAttribute("catmull-rom"));
-        attrs.set("prmanStatements.basis.v",
-                        FnKat::StringAttribute("catmull-rom"));
+        if(prmanOutputTarget)
+        {
+            attrs.set("prmanStatements.basis.u",
+                            FnKat::StringAttribute("catmull-rom"));
+            attrs.set("prmanStatements.basis.v",
+                            FnKat::StringAttribute("catmull-rom"));
+        }
+        attrs.set("geometry.basis", FnKat::IntAttribute(3));
     }
     else if (basis == UsdGeomTokens->hermite)
     {
-        attrs.set("prmanStatements.basis.u",
-                        FnKat::StringAttribute("hermite"));
-        attrs.set("prmanStatements.basis.v",
-                        FnKat::StringAttribute("hermite"));
+        if(prmanOutputTarget)
+        {
+            attrs.set("prmanStatements.basis.u",
+                            FnKat::StringAttribute("hermite"));
+            attrs.set("prmanStatements.basis.v",
+                            FnKat::StringAttribute("hermite"));
+        }
+        attrs.set("geometry.basis", FnKat::IntAttribute(4));
     }
     else if (basis == UsdGeomTokens->power)
     {
-        attrs.set("prmanStatements.basis.u",
-                        FnKat::StringAttribute("power"));
-        attrs.set("prmanStatements.basis.v",
-                        FnKat::StringAttribute("power"));
+        if(prmanOutputTarget)
+        {
+            attrs.set("prmanStatements.basis.u",
+                            FnKat::StringAttribute("power"));
+            attrs.set("prmanStatements.basis.v",
+                            FnKat::StringAttribute("power"));
+        }
+        attrs.set("geometry.basis", FnKat::IntAttribute(5));
     }
     else {
         FnLogWarn("Ignoring unsupported curve basis, " << basis.GetString()
-                  << ", in " << basisCurves.GetPath().GetString());
+                << ", in " << basisCurves.GetPath().GetString());
     }
 
     //
