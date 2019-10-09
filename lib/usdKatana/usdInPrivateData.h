@@ -2,7 +2,7 @@
 // https://github.com/PixarAnimationStudios/USD.
 // In 2019, Foundry and Pixar agreed Foundry should maintain and curate
 // these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/katana-USD
+// https://github.com/TheFoundryVisionmongers/KatanaUsdPlugins
 // under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
@@ -129,7 +129,7 @@ public:
     ///        retrieve state accumulated during traversal. Arguments set via
     ///        previous consumer's calls to setExtensionOpArg are visible as
     ///        part of the opArgs sent in the op or function.
-    FnAttribute::Attribute getExtensionOpArg(const std::string & name,
+    const FnAttribute::Attribute getExtensionOpArg(const std::string & name,
                 FnAttribute::GroupAttribute opArgs) const;
 
     /// \brief Called by the hosting op to flush the results of
