@@ -162,7 +162,7 @@ public:
     ///        retrieve state accumulated during traversal. Arguments set via
     ///        previous consumer's calls to setExtensionOpArg are visible as
     ///        part of the opArgs sent in the op or function.
-    const FnAttribute::Attribute getExtensionOpArg(const std::string & name,
+    FnAttribute::Attribute getExtensionOpArg(const std::string & name,
                 FnAttribute::GroupAttribute opArgs) const;
 
     /// \brief Called by the hosting op to flush the results of
