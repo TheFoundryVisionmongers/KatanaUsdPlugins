@@ -2,7 +2,7 @@
 # https://github.com/PixarAnimationStudios/USD.
 # In 2019, Foundry and Pixar agreed Foundry should maintain and curate
 # these plug-ins, and they moved to
-# https://github.com/TheFoundryVisionmongers/katana-USD
+# https://github.com/TheFoundryVisionmongers/KatanaUsdPlugins
 # under the same Modified Apache 2.0 license, as shown below.
 #
 # Copyright 2016 Pixar
