@@ -67,27 +67,7 @@ function(pxr_library NAME)
     elseif (args_TYPE STREQUAL "SHARED")
         add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
-            # Output location for internal Katana build steps
-            set_target_properties("${NAME}"
-                PROPERTIES
-                LIBRARY_OUTPUT_DIRECTORY
-                ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
-                LIBRARY_OUTPUT_DIRECTORY_DEBUG
-                ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
-                LIBRARY_OUTPUT_DIRECTORY_RELEASE
-                ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
-            )
-            if(WIN32)
-                set_target_properties(${NAME}
-                                      PROPERTIES
-                                      RUNTIME_OUTPUT_DIRECTORY
-                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
-                                      RUNTIME_OUTPUT_DIRECTORY_DEBUG
-                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
-                                      RUNTIME_OUTPUT_DIRECTORY_RELEASE
-                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib
-                )
-            endif()
+            _katana_build_install(${NAME} Usd/lib)
         endif()
         set_target_properties(${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
@@ -95,27 +75,7 @@ function(pxr_library NAME)
     elseif (args_TYPE STREQUAL "PLUGIN")
         add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
-            # Output location for internal Katana build steps
-            set_target_properties("${NAME}"
-                PROPERTIES
-                LIBRARY_OUTPUT_DIRECTORY
-                ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
-                LIBRARY_OUTPUT_DIRECTORY_DEBUG
-                ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
-                LIBRARY_OUTPUT_DIRECTORY_RELEASE
-                ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
-            )
-            if(WIN32)
-                set_target_properties(${NAME}
-                                      PROPERTIES
-                                      RUNTIME_OUTPUT_DIRECTORY
-                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
-                                      RUNTIME_OUTPUT_DIRECTORY_DEBUG
-                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
-                                      RUNTIME_OUTPUT_DIRECTORY_RELEASE
-                                      ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Libs
-                )
-            endif()
+            _katana_build_install(${NAME} Usd/plugin/Libs)
         endif()
         set_target_properties(${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
@@ -123,7 +83,15 @@ function(pxr_library NAME)
     else()
         message(FATAL_ERROR "Unsupported library type: " args_TYPE)
     endif()
+
     set(pluginToLibraryPath "")
+    if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
+        if(WIN32)
+            set(pluginToLibraryPath "Fn${NAME}.dll")
+        else()
+            set(pluginToLibraryPath "Fn${NAME}.so")
+        endif()
+    endif()
 
     if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
         set_target_properties(${NAME} PROPERTIES CXX_VISIBILITY_PRESET default)
@@ -192,10 +160,13 @@ function(pxr_library NAME)
 
     # make a separate shared library for the Python wrapper
     if(args_PYMODULE_CPPFILES)
-        add_library(_${NAME} SHARED ${args_PYMODULE_CPPFILES})
+        set(pythonWrapperModuleName "_${NAME}")
+        _get_python_module_name(${NAME} pyModuleName)
+
+        add_library(${pythonWrapperModuleName} SHARED ${args_PYMODULE_CPPFILES})
 
         target_include_directories(
-            _${NAME}
+            ${pythonWrapperModuleName}
             PRIVATE
             ${KATANA_USD_PLUGINS_SRC_ROOT}/lib
             ${KATANA_USD_PLUGINS_SRC_ROOT}/plugin
@@ -204,40 +175,46 @@ function(pxr_library NAME)
             ${KATANA_SRC_API_INCLUDE_DIR}
         )
         target_compile_definitions(
-            _${NAME}
+            ${pythonWrapperModuleName}
             PRIVATE
             -DBOOST_ALL_NO_LIB
             MFB_PACKAGE_NAME=${NAME}
             MFB_ALT_PACKAGE_NAME=${NAME}
             MFB_PACKAGE_MODULE="${pyModuleName}"
         )
+        if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
+            _katana_build_install(
+                ${pythonWrapperModuleName}
+                Usd/lib/python/${pyModuleName}
+            )
+        endif()
         target_compile_options(
-            _${NAME}
+            ${pythonWrapperModuleName}
             PRIVATE
             $<$<CXX_COMPILER_ID:GNU>:-Wall -std=c++11 -Wno-deprecated -Wno-unused-local-typedefs>
             $<$<CXX_COMPILER_ID:MSVC>:/W4 /wd4244 /wd4305 /wd4100 /wd4459 /wd4996 /DWIN32_LEAN_AND_MEAN /DNOMINMAX>
             $<$<CONFIG:Debug>:-DBOOST_DEBUG_PYTHON> # needed on Windows to help with the autolink library name (even though adding BOOST_ALL_NO_LIB doesn't seem to disable this)
         )
         target_link_libraries(
-            _${NAME}
+            ${pythonWrapperModuleName}
             PRIVATE
             ${args_LIBRARIES}
             ${NAME}
         )
-        _get_python_module_name(_${NAME} pyModuleName)
-        install(TARGETS _${NAME} DESTINATION "${PXR_INSTALL_SUBDIR}/lib/python/pxr/${pyModuleName}")
+        install(TARGETS ${pythonWrapperModuleName} DESTINATION "${PXR_INSTALL_SUBDIR}/lib/python/${PXR_PY_PACKAGE_NAME}/${pyModuleName}")
 
         if(args_PYMODULE_FILES)
             _install_python(
-                _${NAME}
+                ${pythonWrapperModuleName}
                 FILES ${args_PYMODULE_FILES}
             )
         endif()
 
+        set_target_properties(${pythonWrapperModuleName} PROPERTIES PREFIX "")
         if(WIN32)
             # Python modules must be suffixed with .pyd on Windows.
             set_target_properties(
-                _${NAME}
+                ${pythonWrapperModuleName}
                 PROPERTIES
                 SUFFIX ".pyd"
             )

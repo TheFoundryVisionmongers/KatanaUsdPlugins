@@ -20,7 +20,7 @@ function(pxr_katana_nodetypes NODE_TYPES)
          "${importLines}")
     if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
         bundle_files(
-            TARGET 
+            TARGET
             USD.NodeTypes.bundle
             DESTINATION_FOLDER
             ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Plugins/${pyModuleName}
@@ -51,9 +51,19 @@ function(_get_python_module_name LIBRARY_FILENAME MODULE_NAME)
     )
 endfunction() # _get_python_module_name
 
+# Function to replace the root module name for the python bindings of USD
+# Provided an input and an output file path,  we check if the input file is
+# newer than the output file.  If it is, we run the replace method.
+function(_replace_root_python_module INPUT_FILE OUTPUT_FILE)
+    configure_file(${INPUT_FILE} ${OUTPUT_FILE} COPYONLY)
+    file(READ ${OUTPUT_FILE} filedata)
+    string(REPLACE "\@PXR_PY_PACKAGE_NAME\@" "${PXR_PY_PACKAGE_NAME}" filedata "${filedata}")
+    file(WRITE ${OUTPUT_FILE} "${filedata}")
+endfunction()
+
 # from USD/cmake/macros/Private.cmake
 # Install compiled python files alongside the python object,
-# e.g. lib/python/pxr/Ar/__init__.pyc
+# e.g. lib/python/${PXR_PY_PACKAGE_NAME}/Ar/__init__.pyc
 function(_install_python LIBRARY_NAME)
     set(options  "")
     set(oneValueArgs "")
@@ -66,13 +76,21 @@ function(_install_python LIBRARY_NAME)
     )
 
     set(libPythonPrefix ${PXR_INSTALL_SUBDIR}/lib/python)
+    if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
+        set(libPythonPrefix ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib/python)
+    endif()
     _get_python_module_name(${LIBRARY_NAME} LIBRARY_INSTALLNAME)
 
     set(files_copied "")
     foreach(file ${ip_FILES})
         set(filesToInstall "")
+
         set(installDest
-            "${libPythonPrefix}/pxr/${LIBRARY_INSTALLNAME}")
+            "${libPythonPrefix}/${PXR_PY_PACKAGE_NAME}/${LIBRARY_INSTALLNAME}")
+        if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
+            set(installDest
+                "${libPythonPrefix}/${LIBRARY_INSTALLNAME}")
+        endif()
 
         # Only attempt to compile .py files. Files like plugInfo.json may also
         # be in this list
@@ -101,15 +119,19 @@ function(_install_python LIBRARY_NAME)
             else()
               set(pythonexe ${PYTHON_EXECUTABLE})
             endif()
+            _replace_root_python_module(
+                ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+                ${CMAKE_CURRENT_BINARY_DIR}/${file}
+            )
             add_custom_command(OUTPUT ${outfile}
                 COMMAND
                 ${pythonexe}
                 ${KATANA_USD_PLUGINS_SRC_ROOT}/cmake/macros/compilePython.py
-                ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-                ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+                ${CMAKE_CURRENT_BINARY_DIR}/${file}
+                ${CMAKE_CURRENT_BINARY_DIR}/${file}
                 ${CMAKE_CURRENT_BINARY_DIR}/${file_we}.pyc
             )
-            list(APPEND filesToInstall ${CMAKE_CURRENT_SOURCE_DIR}/${file})
+            list(APPEND filesToInstall ${CMAKE_CURRENT_BINARY_DIR}/${file})
             list(APPEND filesToInstall ${CMAKE_CURRENT_BINARY_DIR}/${file_we}.pyc)
         elseif (${file} MATCHES ".qss$")
             # XXX -- Allow anything or allow nothing?
@@ -118,10 +140,21 @@ function(_install_python LIBRARY_NAME)
             message(FATAL_ERROR "Cannot have non-Python file ${file} in PYTHON_FILES.")
         endif()
 
-        # Note that we always install under lib/python/pxr, even if we are in
-        # the third_party project. This means the import will always look like
-        # 'from pxr import X'. We need to do this per-loop iteration because
-        # the installDest may be different due to the presence of subdirs.
+        if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
+            foreach(current_file ${filesToInstall})
+                get_filename_component(filename ${current_file} NAME)
+                add_custom_command(TARGET ${LIBRARY_NAME}
+                    COMMAND ${CMAKE_COMMAND} -E copy ${current_file}
+                        ${installDest}/${filename}
+                )
+            endforeach()
+        endif()
+
+        # Note that we always install under lib/python/${PXR_PY_PACKAGE_NAME},
+        # even if we are in the third_party project. This means the import will
+        # always look like 'from ${PXR_PY_PACKAGE_NAME} import X'. We need to
+        # do this per-loop iteration because the installDest may be different
+        # due to the presence of subdirs.
         install(
             FILES
                 ${filesToInstall}
@@ -213,6 +246,23 @@ function(_install_resource_files NAME pluginInstallPrefix pluginToLibraryPath)
             set(resourceFile "${CMAKE_CURRENT_BINARY_DIR}/${resourceFile}")
         endif()
 
+        if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
+            set(resourcesDestPath ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib/resources)
+            if (${destFileName} STREQUAL "plugInfo.json")
+                configure_file(
+                    ${resourceFile}
+                    ${resourcesDestPath}/${dirPath}/${destFileName}
+                    COPYONLY
+                )
+            else()
+                configure_file(
+                    ${CMAKE_CURRENT_SOURCE_DIR}/${resourceFile}
+                    ${resourcesDestPath}/${dirPath}/${destFileName}
+                    COPYONLY
+                )
+            endif()
+        endif()
+
         install(
             FILES ${resourceFile}
             DESTINATION ${resourcesPath}/${dirPath}
@@ -237,7 +287,7 @@ endfunction() # _get_resources_dir
 function(_plugInfo_subst libTarget pluginToLibraryPath plugInfoPath)
     _get_resources_dir_name(PLUG_INFO_RESOURCE_PATH)
     set(PLUG_INFO_ROOT "..")
-    set(PLUG_INFO_PLUGIN_NAME "pxr.${libTarget}")
+    set(PLUG_INFO_PLUGIN_NAME "${PXR_PY_PACKAGE_NAME}.${libTarget}")
     set(PLUG_INFO_LIBRARY_PATH "${pluginToLibraryPath}")
 
     configure_file(
@@ -246,3 +296,26 @@ function(_plugInfo_subst libTarget pluginToLibraryPath plugInfoPath)
     )
 endfunction() # _plugInfo_subst
 
+function(_katana_build_install libTarget installPathSuffix)
+    # Output location for internal Katana build steps
+    set_target_properties("${libTarget}"
+        PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY
+        ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+        LIBRARY_OUTPUT_DIRECTORY_DEBUG
+        ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+        LIBRARY_OUTPUT_DIRECTORY_RELEASE
+        ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+    )
+    if(WIN32)
+        set_target_properties(${libTarget}
+                                PROPERTIES
+                                RUNTIME_OUTPUT_DIRECTORY
+                                ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                                RUNTIME_OUTPUT_DIRECTORY_DEBUG
+                                ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                                RUNTIME_OUTPUT_DIRECTORY_RELEASE
+                                ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+        )
+    endif()
+endfunction() # _katana_build_install

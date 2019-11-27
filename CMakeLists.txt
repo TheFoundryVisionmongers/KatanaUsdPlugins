@@ -2,6 +2,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
                       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules
                       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/macros)
 
+#Set default option value in case PXR_PY_PACKAGE_NAME is not defined
+set(PXR_PY_PACKAGE_NAME "pxr"
+    CACHE
+    STRING
+    "Name for the root python bindings package"
+)
+
 # Ensure we can get the root of this project at all times.
 set(KATANA_USD_PLUGINS_SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 include(Support)
