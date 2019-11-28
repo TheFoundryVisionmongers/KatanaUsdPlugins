@@ -91,6 +91,11 @@ public:
         _hasSiteKinds = PxrUsdKatanaUsdInPluginRegistry::HasKindsForSite();
     }
 
+    static void flush()
+    {
+        UsdKatanaCache::GetInstance().Flush();
+    }
+
     static void cook(FnKat::GeolibCookInterface &interface)
     {
         boost::shared_lock<boost::upgrade_mutex> 
