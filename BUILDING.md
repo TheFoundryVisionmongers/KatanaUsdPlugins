@@ -4,7 +4,7 @@ Advanced Build Configuration
 ## Table of Contents
 - [Dependencies](#dependencies)
 - [Building With CMake](#building-with-cmake)
-- [Tests](#tests)
+- [Building with CMake and the FindUSD.cmake helper script](#Building-with-CMake-and-the-FindUSD.cmake-helper-script)
 - [Setting Up Katana](#setting-up-katana)
 
 ## Dependencies
@@ -185,7 +185,7 @@ In the provided examples, the plug-in will be effectively installed in
 `/path/to/usd_for_katana/third_party/katana/` in Linux, or
 `C:/path/to/usd_for_katana/third_party/katana/` in Windows.
 
-## Building with CMake and our FindUSD.cmake helper script.
+## Building with CMake and the FindUSD.cmake helper script
 
 Due to the way the USD pxrConfig.cmake file works, it adds all the libraries
 which were built in that USD package. This has the adverse affect of requiring
@@ -212,6 +212,7 @@ Below we have included examples of using this for Linux and Windows.
 
 Example Linux CMake:
 
+```
 cmake .. \
     -DKATANA_API_LOCATION=<KATANA_ROOT> \
     -DUSD_ROOT=/path/to/USD/ \
@@ -227,9 +228,11 @@ cmake .. \
     -DBoost_NAMESPACE=Fnboost \
     -DUSE_BOOST_NAMESPACE_ENABLED=1 \
     -DBoost_USE_STATIC_LIBS=OFF \
-    -DCMAKE_INSTALL_PREFIX="C:/path/to/usd_for_katana/install"
+    -DCMAKE_INSTALL_PREFIX="/path/to/usd_for_katana/install"
+```
 
 Example Windows CMake:
+```
     cmake .. -G "Visual Studio 14 2015 Win64"^
         -DCMAKE_BUILD_TYPE="Release"^
         -DKATANA_API_LOCATION="<KATANA_ROOT>"^
@@ -247,23 +250,7 @@ Example Windows CMake:
         -DBoost_NAMESPACE=Fnboost^
         -DBoost_USE_STATIC_LIBS=OFF^
         -DCMAKE_INSTALL_PREFIX="C:/path/to/usd_for_katana/install"
-
-## Tests
-
-To optionally build the tests, turn `BUILD_TESTS` on when invoking CMake. After
-building, execute the following to run the tests:
-
-```bash
-ctest
 ```
-
-Or, in Windows, if built the optimized configuration:
-
-```cmd.exe
-ctest -C Release
-```
-
-A valid Katana license will be required to execute the tests.
 
 ## Setting Up Katana
 
