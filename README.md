@@ -1,7 +1,7 @@
 
 # KatanaUsdPlugins
 
-The Katana Plugins originally authored by Pixar and this repository was
+The Katana Plugins were originally authored by Pixar and this repository was
 originally based on the 19.11 version of the USD library.
 https://github.com/PixarAnimationStudios/USD/releases/tag/v19.11
 
