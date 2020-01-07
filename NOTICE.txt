@@ -1,0 +1,10 @@
+Universal Scene Description (Katana Plug-ins).
+Copyright 2016 Pixar
+   
+All rights reserved.
+
+   
+
+This product includes software developed at:
+       
+Pixar (http://www.pixar.com/).
