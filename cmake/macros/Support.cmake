@@ -21,30 +21,32 @@
 # language governing permissions and limitations under the Apache License.
 
 include(PxrUsdUtils)
+# Sets up interfaces for required thirdparty libraries, defines functions
+# to keep this logic separate
+include(SetupInterfaces)
 
-find_package(KatanaAPI REQUIRED)
-find_package(Boost COMPONENTS python thread system regex REQUIRED)
-find_package(TBB CONFIG REQUIRED)
-find_package(Python CONFIG REQUIRED)
-if(DEFINED USE_FOUNDRY_FIND_USD)
-    find_package(USD REQUIRED)
-else()
-    if(NOT TARGET GLEW::GLEW)
-        find_package(GLEW CONFIG REQUIRED)
-    endif()
-    find_package(OpenEXR CONFIG REQUIRED)
-    find_package(OpenImageIO CONFIG REQUIRED)
-    find_package(JPEG REQUIRED)
-    find_package(PNG REQUIRED)
-    find_package(TIFF REQUIRED)
-    find_package(ZLIB REQUIRED)
-    find_package(OpenSubdiv REQUIRED)
-    find_package(PTex REQUIRED)
-    if(NOT DEFINED USD_ROOT)
-        message(FATAL_ERROR "Build option USD_ROOT is not defined")
-    endif()
-    include(${USD_ROOT}/pxrConfig.cmake)
+
+if(USE_KATANA_THIRDPARTY_LIBS)
+    set(USE_KATANA_BOOST ON)
+    set(USE_KATANA_TBB  ON)
+    set(USE_KATANA_PYTHON ON)
+    set(USE_KATANA_USD ON)
 endif()
+
+
+# KatanaAPI
+find_package(KatanaAPI REQUIRED)
+
+# Python
+add_python_interface()
+# Boost
+add_boost_interface()
+# TBB
+add_tbb_interface()
+# USD Core
+add_usd_interface()
+
+
 
 function(pxr_library NAME)
     set(options
