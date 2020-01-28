@@ -117,7 +117,7 @@ function(_install_python LIBRARY_NAME)
                 set(pythonexe ${BIN_BUNDLE_PATH}/python2.7/bin/python)
               endif()
             else()
-              set(pythonexe ${PYTHON_EXECUTABLE})
+              set(pythonexe ${Python_EXECUTABLE})
             endif()
             _replace_root_python_module(
                 ${CMAKE_CURRENT_SOURCE_DIR}/${file}

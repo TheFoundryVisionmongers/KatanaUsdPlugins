@@ -20,10 +20,6 @@
 # KIND, either express or implied. See the Apache License for the specific
 # language governing permissions and limitations under the Apache License.
 
-find_library(TBB REQUIRED)
-find_package(Python CONFIG REQUIRED)
-find_package(Boost COMPONENTS python thread system regex REQUIRED)
-
 
 #The USD libraries required by the Katana USD Plug-ins
 set(USD_LIBRARIES
@@ -51,7 +47,6 @@ if(NOT DEFINED USD_LIBRARY_DIR)
     set(USD_LIBRARY_DIR ${USD_ROOT}/lib)
 endif()
 
-message("USD_INCLUDE_DIR = ${USD_INCLUDE_DIR}")
 if(NOT DEFINED USD_INCLUDE_DIR)
     if(NOT DEFINED USD_ROOT)
         message(FATAL_ERROR "Unable to find USD libraries USD_ROOT must be"
@@ -60,7 +55,6 @@ if(NOT DEFINED USD_INCLUDE_DIR)
     set(USD_INCLUDE_DIR ${USD_ROOT}/include)
 endif()
 
-message("USD_INCLUDE_DIR = ${USD_INCLUDE_DIR}")
 
 set(LIB_EXTENSION "")
 if(UNIX AND NOT APPLE)
@@ -97,8 +91,6 @@ foreach(lib ${USD_LIBRARIES})
             INTERFACE_INCLUDE_DIRECTORIES "${USD_INCLUDE_DIR}"
         )
     else()
-        message(STATUS "Unable to add library ${lib}, could not be found in location ${USD_${lib}_PATH}")
+        message(FATAL-ERROR "Unable to add library ${lib}, could not be found in location ${USD_${lib}_PATH}")
     endif()
 endforeach()
-
-message("")

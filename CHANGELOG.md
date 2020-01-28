@@ -1,8 +1,19 @@
 # Change List
 
+## v19.11_fn2
+
+- Changed variable requirement from `PYTHON_EXECUTABLE` to `Python_EXECUTABLE`
+to be inline with the `findPython` provided by CMake.
+- Changed the build process to make the use of CMake config files as optional.
+- Added a new set of options for building which simplify the build_script to
+use the libraries and headers shipped with Katana, ensuring compatibility with
+our USD. See the new `USE_KATANA_THIRDPARTY_LIBS` section in the `Building.md`
+- Updated `Building.md` to document new build options.
+- Added new `SetupInterfaces.cmake` to cover new build interface options.
+- Fixed issue where headers defined under the PUBLIC_HEADERS argument were not
+installed into an include folder in the install folder.
 
 ## v19.11_fn1
-
 
 - Removed the :kat:node:`Pxr` prefix from the node type names to make them
     match Katana naming conventions, eg. :kat:node:`UsdIn` instead of
