@@ -93,13 +93,27 @@ function(pxr_library NAME)
         _get_install_dir("lib/usd" pluginInstallPrefix)
     elseif (args_TYPE STREQUAL "SHARED")
         add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
+        if(args_PUBLIC_HEADERS)
+            set_target_properties(${NAME} PROPERTIES
+                PUBLIC_HEADER ${args_PUBLIC_HEADERS}
+            )
+        endif()
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
             _katana_build_install(${NAME} Usd/lib)
+            if(args_PUBLIC_HEADERS)
+                file(COPY ${args_PUBLIC_HEADERS}
+                    DESTINATION
+                        ${PLUGINS_RES_BUNDLE_PATH}/Usd/include
+                    )
+            endif()
         endif()
         set_target_properties(${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
         _get_install_dir("lib/usd" pluginInstallPrefix)
-        install(TARGETS ${NAME} DESTINATION ${pluginInstallPrefix}/libs)
+        install(TARGETS ${NAME}
+            LIBRARY DESTINATION ${pluginInstallPrefix}/libs
+            PUBLIC_HEADER DESTINATION ${pluginInstallPrefix}/include
+        )
     elseif (args_TYPE STREQUAL "PLUGIN")
         add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
