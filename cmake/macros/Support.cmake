@@ -110,10 +110,13 @@ function(pxr_library NAME)
         set_target_properties(${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
         _get_install_dir("lib/usd" pluginInstallPrefix)
-        install(TARGETS ${NAME}
-            LIBRARY DESTINATION ${pluginInstallPrefix}/libs
-            PUBLIC_HEADER DESTINATION ${pluginInstallPrefix}/include
-        )
+        
+        if(NOT BUILD_KATANA_INTERNAL_USD_PLUGINS)
+            install(TARGETS ${NAME}
+                LIBRARY DESTINATION ${pluginInstallPrefix}/libs
+                PUBLIC_HEADER DESTINATION ${pluginInstallPrefix}/include
+            )
+        endif()
     elseif (args_TYPE STREQUAL "PLUGIN")
         add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
