@@ -1,5 +1,11 @@
 # Change List
 
+## v19.11_fn3
+
+- TP 420782 - Fixing issues when building inside the Katana build pipeline
+- TP 427390(Issue #3) - Fixed incorrect lib prefix during USD linking using the 
+USE_KATANA_THIRDPARTY_LIBS option
+
 ## v19.11_fn2
 
 - Changed variable requirement from `PYTHON_EXECUTABLE` to `Python_EXECUTABLE`
