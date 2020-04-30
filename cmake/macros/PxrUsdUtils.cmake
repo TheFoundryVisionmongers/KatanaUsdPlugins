@@ -36,6 +36,42 @@ function(pxr_katana_nodetypes NODE_TYPES)
     endif()
 endfunction() # pxr_katana_nodetypes
 
+
+# from USD/cmake/macros/Public.cmake
+function(pxr_katana_lookFileBake)
+    set(options
+    )
+    set(oneValueArgs
+        MODULE_NAME
+    )
+    set(multiValueArgs
+        PYTHON_FILES
+    )
+    cmake_parse_arguments(args
+        "${options}"
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+        ${ARGN}
+    )
+    set(installDir ${PXR_INSTALL_SUBDIR}/plugin/Plugins)
+
+    install(
+        PROGRAMS ${args_PYTHON_FILES}
+        DESTINATION ${installDir}
+    )
+
+    if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
+        bundle_files(
+            TARGET
+            USD.LookFileBakePlugins.bundle
+            DESTINATION_FOLDER
+            ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Plugins/${pyModuleName}
+            FILES
+            ${args_PYTHON_FILES}
+        )
+    endif()
+endfunction() # pxr_katana_lookFileBake
+
 # from USD/cmake/macros/Private.cmake
 function(_get_python_module_name LIBRARY_FILENAME MODULE_NAME)
     # Library names are either something like tf.so for shared libraries

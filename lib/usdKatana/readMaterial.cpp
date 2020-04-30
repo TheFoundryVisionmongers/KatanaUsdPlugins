@@ -120,7 +120,7 @@ PxrUsdKatanaReadMaterial(
 
     // we do this before ReadPrim because ReadPrim calls ReadBlindData
     // (primvars only) which we don't want to stomp here.
-    attrs.set("material", _GetMaterialAttr(material, data.GetCurrentTime(), 
+    attrs.set("material", _GetMaterialAttr(material, data.GetCurrentTime(),
         targetName, prmanOutputTarget, flatten));
 
     const std::string& parentPrefix = (looksGroupLocation.empty()) ?
@@ -701,7 +701,7 @@ _GetMaterialAttr(
         }
         materialBuilder.set("usd", statements);
     }
-    
+
 
     FnAttribute::GroupAttribute localMaterialAttr = materialBuilder.build();
 
@@ -725,7 +725,7 @@ _GetMaterialAttr(
             if (UsdShadeMaterial baseMaterial = UsdShadeMaterial::Get(stage, baseMaterialPath)) {
                 // Make a fake context to grab parent data, and recurse on that
                 FnKat::GroupAttribute parentMaterial = _GetMaterialAttr(
-                    baseMaterial, currentTime, targetName, 
+                    baseMaterial, currentTime, targetName,
                     prmanOutputTarget, true);
                 FnAttribute::GroupBuilder flatMaterialBuilder;
                 flatMaterialBuilder.update(parentMaterial);
