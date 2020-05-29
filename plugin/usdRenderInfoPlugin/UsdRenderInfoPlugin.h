@@ -80,6 +80,7 @@ public:
     void fillShaderOutputTags(std::vector<std::string>& shaderOutputTags,
                               const std::string& shaderName,
                               const std::string& outputName) const;
+    bool isNodeTypeSupported(const std::string& nodeType) const;
 
 private:
     void fillShaderTagsFromUsdShaderProperty(
