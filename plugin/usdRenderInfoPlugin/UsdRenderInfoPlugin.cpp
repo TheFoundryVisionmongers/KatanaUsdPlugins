@@ -37,6 +37,75 @@ bool startsWith(const std::string& str, const std::string& startsWithStr)
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+const std::string GetParameterKey(const std::string& shader,
+                                  const std::string& input)
+{
+    return shader + "." + input;
+}
+
+void ApplyCustomFloatHints(
+    std::string shader, std::string input, FnAttribute::GroupBuilder& gb)
+{
+    const auto inputKey = GetParameterKey(shader, input);
+    if (inputKey == "UsdPreviewSurface.ior")
+        gb.set("slidermax", FnAttribute::FloatAttribute(5.0f));
+}
+
+void ApplyCustomStringHints(
+    std::string shader, std::string input, FnAttribute::GroupBuilder& gb)
+{
+    const auto inputKey = GetParameterKey(shader, input);
+    if (inputKey == "UsdUVTexture.wrapS" || inputKey == "UsdUVTexture.wrapT")
+        gb.set("options", FnAttribute::StringAttribute(
+            {"black", "clamp", "mirror", "repeat", "useMetadata"}));
+}
+
+std::string GetWidgetTypeFromShaderInputProperty(
+    std::string shaderName,
+    SdrShaderPropertyConstPtr shaderInput)
+{
+    if (!shaderInput)
+    {
+        return std::string();
+    }
+
+    static const std::map<std::string, std::string> widgetTypes = {
+        {"std::string", "string"},
+        {"SdfAssetPath", "assetIdInput"},
+        {"float", "number"},
+        {"int", "number"}
+    };
+
+    const auto inputName = shaderInput->GetImplementationName();
+    const auto key = GetParameterKey(shaderName, inputName);
+
+    // check for a custom widget definition for this particular input
+    if (key == "UsdPreviewSurface.useSpecularWorkflow")
+        {
+            return "checkBox";
+        }
+    else if (key == "UsdUVTexture.wrapS" || key == "UsdUVTexture.wrapT")
+    {
+        return "popup";
+    }
+
+    // color needs to be handled specifically
+    if (shaderInput->GetType().GetString() == "color")
+    {
+        return "color";
+    }
+
+    SdfTypeIndicator sdfTypePair = shaderInput->GetTypeAsSdfType();
+    const std::string shaderInputType = sdfTypePair.first.GetCPPTypeName();
+    auto element = widgetTypes.find(shaderInputType);
+    if (element != widgetTypes.end())
+    {
+        return element->second;
+    }
+
+    return std::string();
+}
+
 UsdRenderInfoPlugin::UsdRenderInfoPlugin()
     : m_sdrRegistry(SdrRegistry::GetInstance())
 {
@@ -285,6 +354,33 @@ bool UsdRenderInfoPlugin::buildRendererObjectInfo(
                 PxrUsdKatanaUtils::ConvertVtValueToKatAttr(defaultValue);
             EnumPairVector enumValues;
             FnAttribute::GroupBuilder hintsGroupBuilder;
+
+            const std::string shaderName = shader->GetImplementationName();
+            const std::string widgetType = GetWidgetTypeFromShaderInputProperty(
+                shaderName, shaderInput);
+            if (!widgetType.empty())
+            {
+                hintsGroupBuilder.set(
+                    "widget", FnAttribute::StringAttribute(widgetType));
+                if (widgetType == "number")  // candidate for a slider
+                {
+                    hintsGroupBuilder.set(
+                        "slider", FnAttribute::FloatAttribute(1.0f));
+                    hintsGroupBuilder.set(
+                        "min", FnAttribute::FloatAttribute(0.0f));
+                    hintsGroupBuilder.set(
+                        "max", FnAttribute::FloatAttribute(1.0f));
+                    hintsGroupBuilder.set(
+                        "slidermin", FnAttribute::FloatAttribute(0.0f));
+                    hintsGroupBuilder.set(
+                        "slidermax", FnAttribute::FloatAttribute(1.0f));
+                }
+            }
+
+            // add any addtional custom hints
+            ApplyCustomFloatHints(shaderName, inputName, hintsGroupBuilder);
+            ApplyCustomStringHints(shaderName, inputName, hintsGroupBuilder);
+
             addRenderObjectParam(rendererObjectInfo, std::string(inputName),
                                  kFnRendererObjectValueTypeUnknown, 0,
                                  defaultAttr, hintsGroupBuilder.build(),
