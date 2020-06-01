@@ -247,21 +247,28 @@ void UsdRenderInfoPlugin::fillShaderTagsFromUsdShaderProperty(
             sdfType = shaderProperty->GetName();
         }
     }
-
-    if (isOutput)
+    
+    if (sdfType != shaderType)
     {
-        shaderTags.push_back(std::move(shaderType));
-        if (sdfType != shaderType)
+        if (isOutput)
         {
-            shaderTags.push_back(std::move(sdfType));
+            shaderTags.push_back(std::move(shaderType));
+            if (sdfType != shaderType)
+            {
+                shaderTags.push_back(std::move(sdfType));
+            }
+        }
+        else
+        {
+            // an output tag must match ALL input tag expressions, therefore 
+            // we cannot add these as multiple entries, we must build a single
+            // expression.
+            shaderTags.push_back(shaderType + " or " + sdfType);
         }
     }
     else
     {
-        // an output tag must match ALL input tag expressions, therefore 
-        // we cannot add these as multiple entries, we must build a single
-        // expression.
-        shaderTags.push_back(shaderType + " or " + sdfType);
+        shaderTags.push_back(shaderType);
     }
 }
 
