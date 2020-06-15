@@ -39,6 +39,7 @@ valueTypeCastMethods = {
     Sdf.ValueTypeNames.Double2: Gf.Vec2d,
     Sdf.ValueTypeNames.String: str,
     Sdf.ValueTypeNames.Asset: str,
+    Sdf.ValueTypeNames.Token: str,
     Sdf.ValueTypeNames.Int4: Gf.Vec4i,
     Sdf.ValueTypeNames.Int3: Gf.Vec3i,
     Sdf.ValueTypeNames.Int2: Gf.Vec2i,

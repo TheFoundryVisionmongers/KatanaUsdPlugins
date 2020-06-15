@@ -127,7 +127,11 @@ def WriteMaterialParameters(parametersAttr, shaderId, shader):
         # types in USD.  This is if we want some backup type conversion.
         if paramName == "file":
             sdfType = Sdf.ValueTypeNames.Asset
-        gfCast = valueTypeCastMethods.get(sdfType)
+        if paramName == "varname":
+            # used in properties such as the texcoordreader inputs,
+            # but the sdftype of 'string' does not work, so force to a token
+            sdfType = Sdf.ValueTypeNames.Token
+        gfCast = valueTypeCastMethods[sdfType]
         if sdfType:
             exposedPort = shader.CreateInput(paramName, sdfType)
             if gfCast:
