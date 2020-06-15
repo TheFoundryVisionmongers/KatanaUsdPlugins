@@ -134,8 +134,9 @@ def WriteMaterialParameters(parametersAttr, shaderId, shader):
                 if not isinstance(paramValue,  list):
                     # Convert from Most likely
                     # PyFnAttribute.ConstVector
-                    paramValueList = [v for v in paramValue]
-                    paramValue = gfCast(paramValueList)
+                    paramValue = [v for v in paramValue]
+                if len(paramValue) == 1:
+                    paramValue = gfCast(paramValue[0])
                 else:
                     paramValue = gfCast(paramValue)
             exposedPort.Set(paramValue)
