@@ -152,6 +152,8 @@ def WriteShaderConnections(stage, connectionsAttr, materialPath, shader):
         Registry (Sdr).
     """
 
+    reg = Sdr.Registry()
+    shaderNode = reg.GetNodeByName(shader.GetShaderId())
     for connectionIndex in xrange(connectionsAttr.getNumberOfChildren()):
         connectionName = connectionsAttr.getChildName(connectionIndex)
         connectionAttr = connectionsAttr.getChildByIndex(connectionIndex)
@@ -164,12 +166,21 @@ def WriteShaderConnections(stage, connectionsAttr, materialPath, shader):
         connectionshaderPath = materialPath.AppendChild(inputShaderName)
         inputShader = UsdShade.Shader.Get(stage, connectionshaderPath)
         inputShaderType = inputShader.GetShaderId()
-        portConnectionSdfType = GetShaderAttrSdfType(inputShaderType,
-                                                     inputShaderPortName, 
-                                                     isOutput=True)
+        sourceSdfType = GetShaderAttrSdfType(inputShaderType,
+                                             inputShaderPortName,
+                                             isOutput=True)
+
+        # the input type is more specific than the type it connects to
+        # i.e. the connection may deliver POD but the semantics of its use
+        # are in the input type
+        portConnectionSdfType = shaderNode.GetInput(connectionName).GetTypeAsSdfType()[0]
 
         inputPort = shader.CreateInput(connectionName, portConnectionSdfType)
-        inputPort.ConnectToSource(inputShader, str(inputShaderPortName))
+
+        # need to specify the output type of the source, or it inherits the input type
+        inputPort.ConnectToSource(
+            inputShader, str(inputShaderPortName),
+            UsdShade.AttributeType.Output, sourceSdfType)
 
 
 def WriteMaterialOverride(stage, sdfLocationPath, overridePrim,
