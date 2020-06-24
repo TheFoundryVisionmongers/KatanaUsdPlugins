@@ -43,25 +43,28 @@ const std::string GetParameterKey(const std::string& shader,
     return shader + "." + input;
 }
 
-void ApplyCustomFloatHints(
-    std::string shader, std::string input, FnAttribute::GroupBuilder& gb)
+void ApplyCustomFloatHints(const std::string& shader,
+                           const std::string& input,
+                           FnAttribute::GroupBuilder& gb)
 {
     const auto inputKey = GetParameterKey(shader, input);
     if (inputKey == "UsdPreviewSurface.ior")
         gb.set("slidermax", FnAttribute::FloatAttribute(5.0f));
 }
 
-void ApplyCustomStringHints(
-    std::string shader, std::string input, FnAttribute::GroupBuilder& gb)
+void ApplyCustomStringHints(const std::string& shader,
+                            const std::string& input,
+                            FnAttribute::GroupBuilder& gb)
 {
     const auto inputKey = GetParameterKey(shader, input);
     if (inputKey == "UsdUVTexture.wrapS" || inputKey == "UsdUVTexture.wrapT")
-        gb.set("options", FnAttribute::StringAttribute(
-            {"black", "clamp", "mirror", "repeat", "useMetadata"}));
+        gb.set("options",
+               FnAttribute::StringAttribute(
+                   {"black", "clamp", "mirror", "repeat", "useMetadata"}));
 }
 
 std::string GetWidgetTypeFromShaderInputProperty(
-    std::string shaderName,
+    const std::string& shaderName,
     SdrShaderPropertyConstPtr shaderInput)
 {
     if (!shaderInput)
@@ -73,17 +76,16 @@ std::string GetWidgetTypeFromShaderInputProperty(
         {"std::string", "string"},
         {"SdfAssetPath", "assetIdInput"},
         {"float", "number"},
-        {"int", "number"}
-    };
+        {"int", "number"}};
 
     const auto inputName = shaderInput->GetImplementationName();
     const auto key = GetParameterKey(shaderName, inputName);
 
     // check for a custom widget definition for this particular input
     if (key == "UsdPreviewSurface.useSpecularWorkflow")
-        {
-            return "checkBox";
-        }
+    {
+        return "checkBox";
+    }
     else if (key == "UsdUVTexture.wrapS" || key == "UsdUVTexture.wrapT")
     {
         return "popup";
@@ -168,8 +170,7 @@ void UsdRenderInfoPlugin::fillRendererObjectNames(
         {
             if (startsWith(name, "Usd"))
             {
-                std::string shaderName = getSafeShaderName(name);
-                rendererObjectNames.push_back(shaderName);
+                rendererObjectNames.push_back(name);
             }
         }
     }
@@ -178,8 +179,8 @@ void UsdRenderInfoPlugin::fillShaderInputNames(
     std::vector<std::string>& shaderInputNames,
     const std::string& shaderName) const
 {
-    const std::string name = getShaderNamefromSafeName(shaderName);
-    SdrShaderNodeConstPtr shader = m_sdrRegistry.GetShaderNodeByName(name);
+    SdrShaderNodeConstPtr shader =
+        m_sdrRegistry.GetShaderNodeByName(shaderName);
     if (!shader)
     {
         return;
@@ -197,8 +198,8 @@ void UsdRenderInfoPlugin::fillShaderInputTags(
     const std::string& shaderName,
     const std::string& inputName) const
 {
-    const std::string name = getShaderNamefromSafeName(shaderName);
-    SdrShaderNodeConstPtr shader = m_sdrRegistry.GetShaderNodeByName(name);
+    SdrShaderNodeConstPtr shader =
+        m_sdrRegistry.GetShaderNodeByName(shaderName);
     if (!shader)
     {
         return;
@@ -247,7 +248,7 @@ void UsdRenderInfoPlugin::fillShaderTagsFromUsdShaderProperty(
             sdfType = shaderProperty->GetName();
         }
     }
-    
+
     if (sdfType != shaderType)
     {
         if (isOutput)
@@ -260,7 +261,7 @@ void UsdRenderInfoPlugin::fillShaderTagsFromUsdShaderProperty(
         }
         else
         {
-            // an output tag must match ALL input tag expressions, therefore 
+            // an output tag must match ALL input tag expressions, therefore
             // we cannot add these as multiple entries, we must build a single
             // expression.
             shaderTags.push_back(shaderType + " or " + sdfType);
@@ -276,8 +277,8 @@ void UsdRenderInfoPlugin::fillShaderOutputNames(
     std::vector<std::string>& shaderOutputNames,
     const std::string& shaderName) const
 {
-    const std::string name = getShaderNamefromSafeName(shaderName);
-    SdrShaderNodeConstPtr shader = m_sdrRegistry.GetShaderNodeByName(name);
+    SdrShaderNodeConstPtr shader =
+        m_sdrRegistry.GetShaderNodeByName(shaderName);
     if (!shader)
     {
         return;
@@ -295,8 +296,8 @@ void UsdRenderInfoPlugin::fillShaderOutputTags(
     const std::string& shaderName,
     const std::string& outputName) const
 {
-    const std::string name = getShaderNamefromSafeName(shaderName);
-    SdrShaderNodeConstPtr shader = m_sdrRegistry.GetShaderNodeByName(name);
+    SdrShaderNodeConstPtr shader =
+        m_sdrRegistry.GetShaderNodeByName(shaderName);
     if (!shader)
     {
         return;
@@ -329,7 +330,6 @@ bool UsdRenderInfoPlugin::buildRendererObjectInfo(
     const std::string& type,
     const FnAttribute::GroupAttribute inputAttr) const
 {
-    std::string shaderName = getShaderNamefromSafeName(name);
     if (type == kFnRendererObjectTypeShader)
     {
         std::set<std::string> typeTags;
@@ -337,12 +337,10 @@ bool UsdRenderInfoPlugin::buildRendererObjectInfo(
         FnKat::Attribute containerHintsAttr;
         configureBasicRenderObjectInfo(
             rendererObjectInfo, type,
-            std::vector<std::string>(typeTags.begin(), typeTags.end()),
-            shaderName, shaderName, kFnRendererObjectValueTypeUnknown,
-            containerHintsAttr);
+            std::vector<std::string>(typeTags.begin(), typeTags.end()), name,
+            name, kFnRendererObjectValueTypeUnknown, containerHintsAttr);
 
-        SdrShaderNodeConstPtr shader =
-            m_sdrRegistry.GetShaderNodeByName(shaderName);
+        SdrShaderNodeConstPtr shader = m_sdrRegistry.GetShaderNodeByName(name);
         if (!shader)
         {
             return false;
@@ -362,31 +360,30 @@ bool UsdRenderInfoPlugin::buildRendererObjectInfo(
             EnumPairVector enumValues;
             FnAttribute::GroupBuilder hintsGroupBuilder;
 
-            const std::string shaderName = shader->GetImplementationName();
-            const std::string widgetType = GetWidgetTypeFromShaderInputProperty(
-                shaderName, shaderInput);
+            const std::string widgetType =
+                GetWidgetTypeFromShaderInputProperty(name, shaderInput);
             if (!widgetType.empty())
             {
-                hintsGroupBuilder.set(
-                    "widget", FnAttribute::StringAttribute(widgetType));
+                hintsGroupBuilder.set("widget",
+                                      FnAttribute::StringAttribute(widgetType));
                 if (widgetType == "number")  // candidate for a slider
                 {
-                    hintsGroupBuilder.set(
-                        "slider", FnAttribute::FloatAttribute(1.0f));
-                    hintsGroupBuilder.set(
-                        "min", FnAttribute::FloatAttribute(0.0f));
-                    hintsGroupBuilder.set(
-                        "max", FnAttribute::FloatAttribute(1.0f));
-                    hintsGroupBuilder.set(
-                        "slidermin", FnAttribute::FloatAttribute(0.0f));
-                    hintsGroupBuilder.set(
-                        "slidermax", FnAttribute::FloatAttribute(1.0f));
+                    hintsGroupBuilder.set("slider",
+                                          FnAttribute::FloatAttribute(1.0f));
+                    hintsGroupBuilder.set("min",
+                                          FnAttribute::FloatAttribute(0.0f));
+                    hintsGroupBuilder.set("max",
+                                          FnAttribute::FloatAttribute(1.0f));
+                    hintsGroupBuilder.set("slidermin",
+                                          FnAttribute::FloatAttribute(0.0f));
+                    hintsGroupBuilder.set("slidermax",
+                                          FnAttribute::FloatAttribute(1.0f));
                 }
             }
 
             // add any addtional custom hints
-            ApplyCustomFloatHints(shaderName, inputName, hintsGroupBuilder);
-            ApplyCustomStringHints(shaderName, inputName, hintsGroupBuilder);
+            ApplyCustomFloatHints(name, inputName, hintsGroupBuilder);
+            ApplyCustomStringHints(name, inputName, hintsGroupBuilder);
 
             addRenderObjectParam(rendererObjectInfo, std::string(inputName),
                                  kFnRendererObjectValueTypeUnknown, 0,
@@ -396,28 +393,4 @@ bool UsdRenderInfoPlugin::buildRendererObjectInfo(
         return true;
     }
     return false;
-}
-
-std::string UsdRenderInfoPlugin::getSafeShaderName(
-    const std::string& shaderName) const
-{
-    if (isdigit(shaderName.back()))
-    {
-        return shaderName + s_safeChar;
-    }
-    else
-    {
-        return shaderName;
-    }
-}
-
-std::string UsdRenderInfoPlugin::getShaderNamefromSafeName(
-    const std::string& safeShaderName) const
-{
-    std::string shaderName = safeShaderName;
-    if (safeShaderName.back() == s_safeChar)
-    {
-        shaderName.pop_back();
-    }
-    return shaderName;
 }

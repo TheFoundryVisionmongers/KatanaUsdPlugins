@@ -87,19 +87,7 @@ private:
         std::vector<std::string>& shaderTags,
         SdrShaderPropertyConstPtr shaderProperty) const;
 
-    // Gets a shader name that does not end in a numerical value, such that
-    // it does not cause issues when dropping multiple nodes down in an NMC
-    // e.g `UsdPrimvarReader_float2` becomes `UsdPrimvarReader_float2_`
-    std::string getSafeShaderName(const std::string& shaderName) const;
-
-    // Reverse the operation done by getSafeShaderName, returns the name
-    // which USD uses internally.
-    std::string getShaderNamefromSafeName(
-        const std::string& safeShaderName) const;
-
     SdrRegistry& m_sdrRegistry;
-
-    static const char s_safeChar = '_';
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
