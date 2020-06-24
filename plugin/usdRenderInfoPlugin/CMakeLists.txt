@@ -1,27 +1,6 @@
+set(PXR_PACKAGE UsdRenderInfo)
 
-# add_library(UsdRenderInfo MODULE
-#     main.cpp
-#     UsdRenderInfoPlugin.cpp
-# )
-
-# add_definitions(-DFNLOGGING_STATIC)
-
-# target_include_directories(UsdRenderInfo
-#     PRIVATE
-#     C:/k_3.6_r/kb_Release/Dist/plugin_apis/include
-# )
-
-# target_link_libraries(UsdRenderInfo
-#     PRIVATE
-#         C:/k_3.6_r/kb_Release/Dist/plugin_apis/lib/FnGeolibPluginApis.lib
-#         # katanaPluginApi
-# )
-
-# set_target_properties(UsdRenderInfo PROPERTIES PREFIX "")
-# install(TARGETS UsdRenderInfo DESTINATION Libs)
-
-
-pxr_plugin(UsdRenderInfo
+pxr_plugin(${PXR_PACKAGE}
     KATANA_PLUGIN
     LIBRARIES
         usdShade
@@ -30,10 +9,13 @@ pxr_plugin(UsdRenderInfo
         sdf
         gf
         tf
-        katanaPluginApi
         usdKatana
+        katanaPluginApi
         vtKatana
         Boost::system
+
+    PRIVATE_HEADERS
+        UsdRenderInfoPlugin.h
 
     CPPFILES
         main.cpp
