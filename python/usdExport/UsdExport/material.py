@@ -72,8 +72,6 @@ def CreateEmptyShaders(stage, materialNodes, materialPath):
         shader = UsdShade.Shader.Define(stage, shaderPath)
         shaderIdAttr = materialNode.getChildByName("type")
         shaderId = str(shaderIdAttr.getValue())
-        if shaderId and shaderId[-1] == "_":
-            shaderId = shaderId[:-1]
         shader.SetShaderId(shaderId)
 
 
