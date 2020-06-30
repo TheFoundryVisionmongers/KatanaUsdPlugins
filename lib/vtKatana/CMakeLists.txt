@@ -21,5 +21,7 @@ pxr_shared_library(${PXR_PACKAGE}
     PRIVATE_HEADERS
         internalToVt.h
         internalFromVt.h
-)
 
+    PUBLIC_HEADERS
+        api.h
+)

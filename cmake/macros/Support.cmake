@@ -81,6 +81,7 @@ function(pxr_library NAME)
     )
     foreach(cls ${args_PUBLIC_CLASSES})
         list(APPEND ${NAME}_CPPFILES ${cls}.cpp)
+        list(APPEND args_PUBLIC_HEADERS ${cls}.h)
     endforeach()
     foreach(cls ${args_PRIVATE_CLASSES})
         list(APPEND ${NAME}_CPPFILES ${cls}.cpp)
@@ -95,7 +96,7 @@ function(pxr_library NAME)
         add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         if(args_PUBLIC_HEADERS)
             set_target_properties(${NAME} PROPERTIES
-                PUBLIC_HEADER ${args_PUBLIC_HEADERS}
+                PUBLIC_HEADER "${args_PUBLIC_HEADERS}"
             )
         endif()
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
@@ -103,7 +104,7 @@ function(pxr_library NAME)
             if(args_PUBLIC_HEADERS)
                 file(COPY ${args_PUBLIC_HEADERS}
                     DESTINATION
-                        ${PLUGINS_RES_BUNDLE_PATH}/Usd/include
+                        ${PLUGINS_RES_BUNDLE_PATH}/Usd/include/${NAME}
                     )
             endif()
         endif()
@@ -114,7 +115,7 @@ function(pxr_library NAME)
         if(NOT BUILD_KATANA_INTERNAL_USD_PLUGINS)
             install(TARGETS ${NAME}
                 LIBRARY DESTINATION ${pluginInstallPrefix}/libs
-                PUBLIC_HEADER DESTINATION ${pluginInstallPrefix}/include
+                PUBLIC_HEADER DESTINATION ${pluginInstallPrefix}/include/${NAME}
             )
         endif()
     elseif (args_TYPE STREQUAL "PLUGIN")
