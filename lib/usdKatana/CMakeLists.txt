@@ -7,8 +7,18 @@ endif()
 
 pxr_shared_library(${PXR_PACKAGE}
     LIBRARIES
+        ar
+        arch
+        cameraUtil
+        gf
+        kind
+        pcp
+        plug
+        tf
+        trace
         vt
         sdf
+        usd
         usdHydra
         usdImagingGL
         usdSkel
@@ -16,7 +26,10 @@ pxr_shared_library(${PXR_PACKAGE}
         usdRi
         usdUI
         usdUtils
+        usdLux
+        usdShade
         hio
+        work
         katanaPluginApi
         ${vtKatana_LIBRARY}
         Boost::system

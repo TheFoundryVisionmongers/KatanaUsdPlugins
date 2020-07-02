@@ -199,7 +199,7 @@ function(pxr_library NAME)
     )
     target_link_libraries(
         ${NAME}
-        PRIVATE
+        PUBLIC
         ${args_LIBRARIES}
         $<$<CXX_COMPILER_ID:MSVC>:OPENGL32.lib>
     )

@@ -23,10 +23,18 @@
 
 #The USD libraries required by the Katana USD Plug-ins
 set(USD_LIBRARIES
+    ar
+    arch
+    cameraUtil
     gf
+    kind
     hio
+    pcp
+    plug
     sdf
     tf
+    trace
+    usd
     usdGeom
     usdHydra
     usdImagingGL
@@ -37,6 +45,7 @@ set(USD_LIBRARIES
     usdUI
     usdUtils
     vt
+    work
 )
 
 if(NOT DEFINED USD_LIBRARY_DIR)
