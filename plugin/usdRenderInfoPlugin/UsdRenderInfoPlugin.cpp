@@ -6,16 +6,22 @@
 #include <string>
 #include <vector>
 
+#include "pxr/base/tf/fileUtils.h"
+#include "pxr/base/tf/pathUtils.h"
 #include "pxr/base/tf/token.h"
 #include "pxr/base/tf/type.h"
+#include "pxr/usd/ndr/registry.h"
 #include "pxr/usd/sdr/registry.h"
 #include "pxr/usd/sdr/shaderProperty.h"
 #include "pxr/usd/usdShade/connectableAPI.h"
 #include "pxr/usd/usdShade/material.h"
 #include "pxr/usd/usdShade/utils.h"
 
+#include "FnGeolibServices/FnArgsFile.h"
+
 namespace
 {
+
 bool startsWith(const std::string& str, const std::string& startsWithStr)
 {
     const size_t startsWithLength = startsWithStr.length();
@@ -32,6 +38,46 @@ bool startsWith(const std::string& str, const std::string& startsWithStr)
     {
         return str.compare(0, startsWithLength, startsWithStr) == 0;
     }
+}
+
+static inline constexpr auto hash(char const* s, uint64_t h = 0) -> uint64_t
+{
+    return !*s ? h : hash(s + 1, 1ULL * (h ^ *s) * 33ULL);
+}
+
+/// Hash a string.
+static inline uint64_t hash(std::string const& str)
+{
+    return hash(str.c_str());
+}
+
+int GetParameterType(const FnAttribute::StringAttribute& attr)
+{
+    int type = kFnRendererObjectValueTypeUnknown;
+    if (!attr.isValid())
+        return type;
+
+    const std::string typeValue = attr.getValue("", false);
+    if (hash(typeValue) == hash("string"))
+        type = kFnRendererObjectValueTypeString;
+    else if (hash(typeValue) == hash("color"))
+        type = kFnRendererObjectValueTypeColor3;
+    else if (hash(typeValue) == hash("filename"))
+        type = kFnRendererObjectValueTypeString;
+    else if (hash(typeValue) == hash("boolean"))
+        type = kFnRendererObjectValueTypeBoolean;
+    else if (hash(typeValue) == hash("mapper"))
+        type = kFnRendererObjectValueTypeFloat;
+    else if (hash(typeValue )== hash("popup"))
+        type = kFnRendererObjectValueTypeString;
+    else if (hash(typeValue) == hash("vector2"))
+        type = kFnRendererObjectValueTypeVector2;
+    else if (hash(typeValue) == hash("vector3"))
+        type = kFnRendererObjectValueTypeVector3;
+    else if (hash(typeValue) == hash("vector4"))
+        type = kFnRendererObjectValueTypeVector4;
+
+    return type;
 }
 }  // namespace
 
@@ -145,6 +191,7 @@ void UsdRenderInfoPlugin::fillRendererObjectTypes(
     {
         renderObjectTypes.push_back("displacement");
         renderObjectTypes.push_back("surface");
+        renderObjectTypes.push_back("light");
     }
 }
 
@@ -163,18 +210,34 @@ void UsdRenderInfoPlugin::fillRendererObjectNames(
     const std::string& type,
     const std::vector<std::string>& typeTags) const
 {
-    if (type == kFnRendererObjectTypeShader)
+    if (type != kFnRendererObjectTypeShader)
     {
-        std::vector<std::string> nodeNames = m_sdrRegistry.GetNodeNames();
-        for (const auto& name : nodeNames)
+        return;
+    }
+
+    for (const auto& typeTag : typeTags)
+    {
+        if (typeTag == "light")
         {
-            if (startsWith(name, "Usd"))
+            for (const auto& luxLight : getLightEntries())
             {
-                rendererObjectNames.push_back(name);
+                rendererObjectNames.push_back(luxLight.first);
+            }
+        }
+        else if (typeTag == "surface")
+        {
+            std::vector<std::string> nodeNames = m_sdrRegistry.GetNodeNames();
+            for (const auto& name : nodeNames)
+            {
+                if (startsWith(name, "Usd"))
+                {
+                    rendererObjectNames.push_back(name);
+                }
             }
         }
     }
 }
+
 void UsdRenderInfoPlugin::fillShaderInputNames(
     std::vector<std::string>& shaderInputNames,
     const std::string& shaderName) const
@@ -341,56 +404,162 @@ bool UsdRenderInfoPlugin::buildRendererObjectInfo(
             name, kFnRendererObjectValueTypeUnknown, containerHintsAttr);
 
         SdrShaderNodeConstPtr shader = m_sdrRegistry.GetShaderNodeByName(name);
-        if (!shader)
+        if (shader)
         {
-            return false;
-        }
-        const NdrTokenVec inputNames = shader->GetInputNames();
-        for (const TfToken& inputName : inputNames)
-        {
-            SdrShaderPropertyConstPtr shaderInput =
-                shader->GetShaderInput(inputName);
-            if (!shaderInput)
+            const NdrTokenVec inputNames = shader->GetInputNames();
+            for (const TfToken& inputName : inputNames)
             {
-                return false;
-            }
-            const VtValue& defaultValue = shaderInput->GetDefaultValue();
-            FnKat::Attribute defaultAttr =
-                PxrUsdKatanaUtils::ConvertVtValueToKatAttr(defaultValue);
-            EnumPairVector enumValues;
-            FnAttribute::GroupBuilder hintsGroupBuilder;
-
-            const std::string widgetType =
-                GetWidgetTypeFromShaderInputProperty(name, shaderInput);
-            if (!widgetType.empty())
-            {
-                hintsGroupBuilder.set("widget",
-                                      FnAttribute::StringAttribute(widgetType));
-                if (widgetType == "number")  // candidate for a slider
+                SdrShaderPropertyConstPtr shaderInput =
+                    shader->GetShaderInput(inputName);
+                if (!shaderInput)
                 {
-                    hintsGroupBuilder.set("slider",
-                                          FnAttribute::FloatAttribute(1.0f));
-                    hintsGroupBuilder.set("min",
-                                          FnAttribute::FloatAttribute(0.0f));
-                    hintsGroupBuilder.set("max",
-                                          FnAttribute::FloatAttribute(1.0f));
-                    hintsGroupBuilder.set("slidermin",
-                                          FnAttribute::FloatAttribute(0.0f));
-                    hintsGroupBuilder.set("slidermax",
-                                          FnAttribute::FloatAttribute(1.0f));
+                    return false;
                 }
+                const VtValue& defaultValue = shaderInput->GetDefaultValue();
+                FnKat::Attribute defaultAttr =
+                    PxrUsdKatanaUtils::ConvertVtValueToKatAttr(defaultValue);
+                EnumPairVector enumValues;
+                FnAttribute::GroupBuilder hintsGroupBuilder;
+
+                const std::string widgetType =
+                    GetWidgetTypeFromShaderInputProperty(name, shaderInput);
+                if (!widgetType.empty())
+                {
+                    hintsGroupBuilder.set(
+                        "widget", FnAttribute::StringAttribute(widgetType));
+                    if (widgetType == "number")  // candidate for a slider
+                    {
+                        hintsGroupBuilder.set(
+                            "slider", FnAttribute::FloatAttribute(1.0f));
+                        hintsGroupBuilder.set(
+                            "min", FnAttribute::FloatAttribute(0.0f));
+                        hintsGroupBuilder.set(
+                            "max", FnAttribute::FloatAttribute(1.0f));
+                        hintsGroupBuilder.set(
+                            "slidermin", FnAttribute::FloatAttribute(0.0f));
+                        hintsGroupBuilder.set(
+                            "slidermax", FnAttribute::FloatAttribute(1.0f));
+                    }
+                }
+
+                // add any addtional custom hints
+                ApplyCustomFloatHints(name, inputName, hintsGroupBuilder);
+                ApplyCustomStringHints(name, inputName, hintsGroupBuilder);
+
+                addRenderObjectParam(rendererObjectInfo, std::string(inputName),
+                                     kFnRendererObjectValueTypeUnknown, 0,
+                                     defaultAttr, hintsGroupBuilder.build(),
+                                     enumValues);
             }
-
-            // add any addtional custom hints
-            ApplyCustomFloatHints(name, inputName, hintsGroupBuilder);
-            ApplyCustomStringHints(name, inputName, hintsGroupBuilder);
-
-            addRenderObjectParam(rendererObjectInfo, std::string(inputName),
-                                 kFnRendererObjectValueTypeUnknown, 0,
-                                 defaultAttr, hintsGroupBuilder.build(),
-                                 enumValues);
+            return true;
         }
-        return true;
+        else
+        {
+            LightEntriesMap lights = getLightEntries();
+            const std::string filePath = lights[name].filePath;
+            return parseARGS(filePath, name, rendererObjectInfo);
+        }
+        return false;
     }
     return false;
+}
+
+bool UsdRenderInfoPlugin::parseARGS(const std::string& location,
+                                    const std::string& name,
+                                    FnAttribute::GroupBuilder& gb) const
+{
+    std::string argsPath = TfAbsPath(location + "/" + name + ".args");
+    if (!TfPathExists(argsPath))
+        return false;
+
+    FnAttribute::GroupAttribute result =
+        FnGeolibServices::FnArgsFile::parseArgsFile(argsPath);
+    if (!result.isValid())
+        return false;
+
+    FnAttribute::GroupAttribute paramsGroup = result.getChildByName("params");
+    if (!paramsGroup.isValid())
+        return false;
+
+    // Loop through all params listed in ARGS file.
+    for (int64_t i = 0; i < paramsGroup.getNumberOfChildren(); ++i)
+    {
+        FnAttribute::Attribute defaultAttr;
+        std::string paramName = paramsGroup.getChildName(i);
+        FnAttribute::GroupAttribute attr = paramsGroup.getChildByIndex(i);
+        FnAttribute::GroupAttribute hintsAttr = attr.getChildByName("hints");
+        if (hintsAttr.isValid())
+        {
+            int type = GetParameterType(hintsAttr.getChildByName("type"));
+            if (type == kFnRendererObjectValueTypeUnknown)
+            {
+                // No type attribute in the args file determine by widget.
+                FnAttribute::StringAttribute widgetAttr;
+                widgetAttr = hintsAttr.getChildByName("widget");
+                type = GetParameterType(widgetAttr);
+            }
+
+            defaultAttr = hintsAttr.getChildByName("default");
+            if (!defaultAttr.isValid())
+                defaultAttr = FnAttribute::StringAttribute("");
+
+            std::string defaultValue =
+                ((FnAttribute::StringAttribute)defaultAttr).getValue("", false);
+
+            std::vector<std::string> tokens = TfStringTokenize(defaultValue);
+            float values[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+            for (size_t index = 0; index < tokens.size(); ++index)
+            {
+                double d = TfStringToDouble(tokens[index]);
+                values[index] = static_cast<float>(d);
+            }
+
+            int64_t arraySize =
+                (type != kFnRendererObjectValueTypeUnknown) ? tokens.size() : 1;
+
+            if (kFnRendererObjectValueTypeString != type)
+            {
+                defaultAttr = FnAttribute::FloatAttribute(&values[0], arraySize,
+                                                          arraySize);
+            }
+
+            EnumPairVector enums;
+            addRenderObjectParam(gb, paramName, type, tokens.size(),
+                                 defaultAttr, hintsAttr, enums);
+        }
+    }
+    return true;
+}
+
+LightEntriesMap UsdRenderInfoPlugin::getLightEntries() const
+{
+    LightEntriesMap lights;
+    const char* const katanaRootCStr = getenv("KATANA_ROOT");
+    if (katanaRootCStr == nullptr)
+    {
+        std::cerr << "Couldn't get KATANA_ROOT environment variable."
+                  << std::endl;
+        return lights;
+    }
+    const std::string path = std::string(katanaRootCStr) +
+                             "/plugins/Resources/Core/Shaders/USD/Light";
+    std::string error;
+    std::vector<std::string> filenames;
+
+    if (TfReadDir(path, nullptr, &filenames, nullptr, &error))
+    {
+        for (auto& filename : filenames)
+        {
+            LightEntry light;
+            light.filePath = path;
+            const std::string name = filename.substr(0, filename.rfind("."));
+            lights[name] = std::move(light);
+        }
+    }
+    else
+    {
+        std::cerr << error << ": " << path << std::endl;
+    }
+
+    return lights;
 }

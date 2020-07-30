@@ -12,9 +12,16 @@
 #include "pxr/pxr.h"
 #include "pxr/usd/sdr/registry.h"
 #include "pxr/usd/sdr/shaderProperty.h"
+#include "pxr/usd/ndr/registry.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+struct LightEntry
+{
+    std::string filePath;
+};
+
+using LightEntriesMap = std::unordered_map<std::string, LightEntry>;
 /**
  * \brief This plug-in registers and defines the <b>usd</b>
  * render info plug-in.
@@ -86,6 +93,12 @@ private:
     void fillShaderTagsFromUsdShaderProperty(
         std::vector<std::string>& shaderTags,
         SdrShaderPropertyConstPtr shaderProperty) const;
+
+    bool parseARGS(const std::string& location,
+                   const std::string& name,
+                   FnAttribute::GroupBuilder& gb) const;
+
+    LightEntriesMap getLightEntries() const;
 
     SdrRegistry& m_sdrRegistry;
 };
