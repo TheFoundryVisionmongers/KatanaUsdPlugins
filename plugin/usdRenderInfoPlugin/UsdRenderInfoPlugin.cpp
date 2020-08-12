@@ -215,25 +215,43 @@ void UsdRenderInfoPlugin::fillRendererObjectNames(
         return;
     }
 
+    const LightEntriesMap lightEntries = getLightEntries();
+    // A lambda to fill rendererObjectNames with lights
+    auto fillWithLights = [&]() {
+        for (const auto& luxLight : lightEntries)
+        {
+            rendererObjectNames.push_back(luxLight.first);
+        }
+    };
+
+    std::vector<std::string> nodeNames = m_sdrRegistry.GetNodeNames();
+    // A lambda to fill rendererObjectNames with surface shaders
+    auto fillWithSurface = [&]() {
+        for (const auto& name : nodeNames)
+        {
+            if (startsWith(name, "Usd"))
+            {
+                rendererObjectNames.push_back(name);
+            }
+        }
+    };
+
+    if (typeTags.empty())
+    {
+        fillWithLights();
+        fillWithSurface();
+        return;
+    }
+
     for (const auto& typeTag : typeTags)
     {
         if (typeTag == "light")
         {
-            for (const auto& luxLight : getLightEntries())
-            {
-                rendererObjectNames.push_back(luxLight.first);
-            }
+            fillWithLights();
         }
         else if (typeTag == "surface")
         {
-            std::vector<std::string> nodeNames = m_sdrRegistry.GetNodeNames();
-            for (const auto& name : nodeNames)
-            {
-                if (startsWith(name, "Usd"))
-                {
-                    rendererObjectNames.push_back(name);
-                }
-            }
+            fillWithSurface();
         }
     }
 }
