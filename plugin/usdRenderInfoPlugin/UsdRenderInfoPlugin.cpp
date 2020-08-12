@@ -136,6 +136,11 @@ std::string GetWidgetTypeFromShaderInputProperty(
     {
         return "popup";
     }
+    else if (key == "UsdPrimvarReader_int.fallback" ||
+        key == "UsdPrimvarReader_float.fallback")
+    {
+        return std::string();
+    }
 
     // color needs to be handled specifically
     if (shaderInput->GetType().GetString() == "color")
