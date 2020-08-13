@@ -37,7 +37,8 @@ class UsdExport(BaseOutputFormat):
     # Protected Class Methods -------------------------------------------------
 
     @classmethod
-    def writeOverrides(cls, stage, outputDictList, sharedOverrides):
+    def writeOverrides(cls, stage, outputDictList, sharedOverrides,
+                       rootPrimName):
         # We want to write the sharedoverride to root locations, but have these not loaded,
         # they should only be loaded as references.
         # We need to write locations in an order to ensure that bindings
@@ -75,8 +76,10 @@ class UsdExport(BaseOutputFormat):
                         else:
                             continue
 
-                    if locationPath[0] != "/":
+                    if not locationPath.startswith("/"):
                         locationPath = "/" + locationPath
+                    if rootPrimName:
+                        locationPath = rootPrimName + locationPath
                     sdfLocationPath = Sdf.Path(locationPath)
                     if stage.GetPrimAtPath(sdfLocationPath):
                         continue
@@ -105,6 +108,8 @@ class UsdExport(BaseOutputFormat):
                             materialPath = \
                                 cls.GetRelativeUsdSdfPathFromAttribute(
                                     rootName, attribute)
+                            if rootPrimName:
+                                materialPath = rootPrimName + materialPath
                             material = UsdShade.Material.Get(stage,
                                 materialPath)
                             if material:
@@ -143,7 +148,7 @@ class UsdExport(BaseOutputFormat):
         # If the enclosing directory doesn't exist, then try to create it
         LookFileUtil.CreateLookFileDirectory(fileDir)
 
-        def do_material_write(stage):
+        def do_material_write(stage, rootPrimName):
             # Iterate over materials
             for materialLocationPath, (locationType, materialScenegraphAttr) \
                     in passData.materialDict.iteritems():
@@ -154,7 +159,8 @@ class UsdExport(BaseOutputFormat):
                                 'be skipped.', materialLocationPath)
                     continue
                 # Create a material
-                materialSdfPath = Sdf.Path(materialLocationPath)
+                materialSdfPath = Sdf.Path(
+                    "/".join([rootPrimName, materialLocationPath]))
 
                 # Convert from PyScenegraphAttribute to FnAttribute
                 materialAttribute = \
@@ -163,7 +169,8 @@ class UsdExport(BaseOutputFormat):
                     WriteMaterial(
                         stage, materialSdfPath, materialAttribute)
             self.__class__.writeOverrides(
-                stage, passData.outputDictList, passData.sharedOverridesDict)
+                stage, passData.outputDictList, passData.sharedOverridesDict,
+                rootPrimName)
 
         filePath = os.path.join(fileDir, self._settings["fileName"])
         filePath = filePath + "." + self._settings["fileFormat"]
@@ -171,6 +178,12 @@ class UsdExport(BaseOutputFormat):
             # write all material data to the same variant file
             # (create on first pass, then append in subsequent passes)
             rootPrimName = self._settings["variantRootPrimName"]
+
+            #Validate rootPrimName, must start with / and must not end with /
+            if not rootPrimName.startswith("/"):
+                rootPrimName = "/" + rootPrimName
+            if rootPrimName.endswith("/"):
+                rootPrimName = rootPrimName[:-1]
 
             if self._settings["materialVariantSetInitialized"]:
                 stage = Usd.Stage.Open(filePath)
@@ -195,11 +208,11 @@ class UsdExport(BaseOutputFormat):
             variantset.SetVariantSelection(variantName)
 
             with variantset.GetVariantEditContext():
-                do_material_write(stage)
+                do_material_write(stage, rootPrimName)
         else:
             # Create a new USD stage
             stage = Usd.Stage.CreateNew(filePath)
-            do_material_write(stage)
+            do_material_write(stage, None)
 
         # Save the stage
         stage.GetRootLayer().Save()
