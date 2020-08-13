@@ -1,3 +1,5 @@
+# Copyright (c) 2020 The Foundry Visionmongers Ltd. All Rights Reserved.
+
 from Katana import RenderingAPI, FnAttribute
 import logging
 
@@ -131,16 +133,27 @@ def WriteMaterialParameters(parametersAttr, shaderId, shader):
             # used in properties such as the texcoordreader inputs,
             # but the sdftype of 'string' does not work, so force to a token
             sdfType = Sdf.ValueTypeNames.Token
-        gfCast = valueTypeCastMethods[sdfType]
         if sdfType:
+            gfCast = valueTypeCastMethods.get(sdfType)
             exposedPort = shader.CreateInput(paramName, sdfType)
             if gfCast:
                 if not isinstance(paramValue,  list):
                     # Convert from Most likely
                     # PyFnAttribute.ConstVector
                     paramValue = [v for v in paramValue]
-                if len(paramValue) == 1:
-                    paramValue = gfCast(paramValue[0])
+                if isinstance(paramValue, list):
+                    if len(paramValue) == 1:
+                        paramValue = gfCast(paramValue[0])
+                    if "Vec" in str(gfCast):
+                        # We have a Gf.Vec#X
+                        if gfCast.dimension == 2:
+                            paramValue = gfCast(paramValue[0], paramValue[1])
+                        if gfCast.dimension == 3:
+                            paramValue = gfCast(paramValue[0], paramValue[1],
+                                paramValue[2])
+                        if gfCast.dimension == 4:
+                            paramValue = gfCast(paramValue[0], paramValue[1],
+                                paramValue[2], paramValue[3])
                 else:
                     paramValue = gfCast(paramValue)
             exposedPort.Set(paramValue)
@@ -151,9 +164,14 @@ def WriteShaderConnections(stage, connectionsAttr, materialPath, shader):
         This will haveto read the types from the Usd shader info from the shader
         Registry (Sdr).
     """
-
     reg = Sdr.Registry()
     shaderNode = reg.GetNodeByName(shader.GetShaderId())
+    if not shaderNode:
+        log.warning("Unable to write shadingNode connections for path {0},"
+            "cannot find shaderID {1}".format(materialPath,
+            shader.GetShaderId())
+        )
+        return
     for connectionIndex in xrange(connectionsAttr.getNumberOfChildren()):
         connectionName = connectionsAttr.getChildName(connectionIndex)
         connectionAttr = connectionsAttr.getChildByIndex(connectionIndex)
@@ -165,6 +183,9 @@ def WriteShaderConnections(stage, connectionsAttr, materialPath, shader):
 
         connectionshaderPath = materialPath.AppendChild(inputShaderName)
         inputShader = UsdShade.Shader.Get(stage, connectionshaderPath)
+        if not inputShader.GetSchemaType():
+            continue
+
         inputShaderType = inputShader.GetShaderId()
         sourceSdfType = GetShaderAttrSdfType(inputShaderType,
                                              inputShaderPortName,

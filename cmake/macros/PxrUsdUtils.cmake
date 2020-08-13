@@ -38,11 +38,12 @@ endfunction() # pxr_katana_nodetypes
 
 
 # from USD/cmake/macros/Public.cmake
-function(pxr_katana_lookFileBake)
+function(pxr_katana_python_plugin)
     set(options
     )
     set(oneValueArgs
         MODULE_NAME
+        PLUGIN_TYPE
     )
     set(multiValueArgs
         PYTHON_FILES
@@ -63,9 +64,9 @@ function(pxr_katana_lookFileBake)
     if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
         bundle_files(
             TARGET
-            USD.LookFileBakePlugins.bundle
+            ${args_MODULE_NAME}
             DESTINATION_FOLDER
-            ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Plugins/${pyModuleName}
+            ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/${args_PLUGIN_TYPE}/${pyModuleName}
             FILES
             ${args_PYTHON_FILES}
         )

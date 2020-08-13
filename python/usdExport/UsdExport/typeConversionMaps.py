@@ -1,3 +1,5 @@
+# Copyright (c) 2020 The Foundry Visionmongers Ltd. All Rights Reserved.
+
 import logging
 import os
 
@@ -33,16 +35,19 @@ valueTypeCastMethods = {
     Sdf.ValueTypeNames.Float4: Gf.Vec4f,
     Sdf.ValueTypeNames.Float3: Gf.Vec3f,
     Sdf.ValueTypeNames.Float2: Gf.Vec2f,
+    Sdf.ValueTypeNames.Float: float,
     Sdf.ValueTypeNames.Color3f: Gf.Vec3f,
     Sdf.ValueTypeNames.Double4: Gf.Vec4d,
     Sdf.ValueTypeNames.Double3: Gf.Vec3d,
     Sdf.ValueTypeNames.Double2: Gf.Vec2d,
+    Sdf.ValueTypeNames.Double: float,
     Sdf.ValueTypeNames.String: str,
     Sdf.ValueTypeNames.Asset: str,
     Sdf.ValueTypeNames.Token: str,
     Sdf.ValueTypeNames.Int4: Gf.Vec4i,
     Sdf.ValueTypeNames.Int3: Gf.Vec3i,
     Sdf.ValueTypeNames.Int2: Gf.Vec2i,
+    Sdf.ValueTypeNames.Int: int,
 }
 
 RenderInfoShaderTagToSdfMap = {
