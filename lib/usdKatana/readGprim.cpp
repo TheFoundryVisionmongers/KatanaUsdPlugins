@@ -280,5 +280,14 @@ PxrUsdKatanaGeomGetVelocityAttr(
 
 }
 
+Foundry::Katana::Attribute
+PxrUsdKatanaGeomGetAccelerationAttr(
+    const UsdGeomPointBased& points,
+    const PxrUsdKatanaUsdInPrivateData& data)
+{
+    return _ConvertGeomAttr<GfVec3f, FnKat::FloatAttribute>(
+            points.GetAccelerationsAttr(), 3, data);
+}
+
 PXR_NAMESPACE_CLOSE_SCOPE
 
