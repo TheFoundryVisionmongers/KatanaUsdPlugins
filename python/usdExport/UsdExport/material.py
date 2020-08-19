@@ -16,6 +16,67 @@ except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
 
+def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
+                       parentMaterialSdfPaths):
+    """
+    @param stage: The USD stage to write the material to.
+    @param materialSdfPath: The SdfPath to write this new child material to.
+        Child materials should use the name of the parent material and the name
+        of the child material separated by an underscore, e.g:
+        GrandParentMaterial_ParentMaterial_ChildMaterial
+        Where the hierarchy of Katana Material locations was:
+        GrandParentMaterial
+        --ParentMaterial
+        ----ChildMaterial
+    @param materialAttribute: The material attribute. Usually a sparse group
+        attribute, with the change from the parent's material Attribute.
+    @param parentMaterialSdfPaths: A list of the parent SdfPaths, in order from
+        oldest parent, to youngest. We use this to read the attribute types
+        from the oldest parent, but specialise/intherit from the youngest
+        parent.
+    @type stage: C{Usd.Stage}
+    @type materialSdfPath: C{Sdf.Path}
+    @type materialAttribute: C{FnAttribute.GroupAttribute}
+    @type parentMaterialSdfPaths: C{list}
+    """
+    if not materialAttribute:
+        return
+    # Only define the Material prim if it has not already been defined.
+    # We write the 'material.nodes' if they exist first, so if these attributes
+    # exist, we may have already created the Material prim.
+    materialPrim = stage.GetPrimAtPath(materialSdfPath)
+    if materialPrim:
+        material = UsdShade.Material(materialPrim)
+    else:
+        material = UsdShade.Material.Define(stage, materialSdfPath)
+    materialPath = material.GetPath()
+
+    # We want to read the attribute data from the oldest parent (as this is
+    # where material interfaces are defined), but we want to inherit
+    # all of the values from the youngestParent (direct parent location)
+    # Again, we cant use USD here, because these aren't parents in USD, because
+    # parent->child inheritance is a construct not replicated in USD.
+    # So we must pass these through as we create them.
+    # For non-grand-children++  oldest and youngest will be the same.
+    if len(parentMaterialSdfPaths) < 1:
+        return material
+    oldestParentSdfPath = parentMaterialSdfPaths[0]
+    youngestParentSdfPath = parentMaterialSdfPaths[-1]
+    oldestParentMaterial = UsdShade.Material(
+            stage.GetPrimAtPath(oldestParentSdfPath))
+    youngestParentMaterial = UsdShade.Material(
+        stage.GetPrimAtPath(youngestParentSdfPath))
+    if oldestParentMaterial and youngestParentMaterial:
+        material.SetBaseMaterial(youngestParentMaterial)
+        parameters = materialAttribute.getChildByName("parameters")
+        # We cant add materialInterfaces to child materials in Katana at
+        # present, therefore we only need to check the oldest parent Material.
+        if parameters:
+            OverWriteMaterialInterfaces(stage, parameters, materialPath,
+                                        material, oldestParentMaterial)
+        return material
+
+
 
 def WriteMaterial(stage, materialSdfPath, materialAttribute):
     """
@@ -132,7 +193,7 @@ def WriteMaterialParameters(parametersAttr, shaderId, shader):
 
 
 def addParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
-                         paramName=None):
+                         paramName=None, sdfType=None):
     """ Adds a parameter as an input onto a given Shader or Material prim
 
         @param shaderParamName: The parameter name as it appears on the shader.
@@ -145,12 +206,23 @@ def addParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
             provided for the shaderId of the shader the param would have
             originally be set to. This is in order to retrieve the correct
             SdfType.
+        @shaderId: The Id of the shader to search for the SdrShadingNode to
+            search for the parameters sdfType.  This should be provided if the
+            shader provided is not the shader you want to write to is not
+            the SdrShaderNode you want to read the inputs and therefore
+            sdfTypes from.
+        @param sdfType: Optional argument, This can override any retrieval of
+            sdfType from the shader, or shaderId from the Usd SdrRegistry.
+            This is useful if you want to use the sdfType from connected
+            attriubutes as we do for material interfaces.
         @type shaderParamName: C{str}
         @type paramAttr: C{FnAttribute.GroupAttriute}
         @type shader: C{UsdShade.Shader}
+        @type shaderId: C{str}
+        @type sdfType: C{SdfTypeIndicator}
         @return: C{Usd.Shader.Input} created by this method.
     """
-    if shaderId is None:
+    if shaderId is None and sdfType is None:
         shaderId = shader.GetShaderId()
     if paramName is None:
         paramName = shaderParamName
@@ -160,8 +232,13 @@ def addParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
         pass  # TODO: Get per sample values and save those into USD.
     else:
         paramValue = paramAttr.getNearestSample(0)
-
-    sdfType = GetShaderAttrSdfType(shaderId, shaderParamName, isOutput=False)
+    if not shaderId:
+        log.warning("Unable to find shaderId, and sdfType is not provided for"
+        " shaderParamName:{}".format(
+            shaderParamName))
+    if sdfType is None:
+        sdfType = GetShaderAttrSdfType(shaderId, shaderParamName,
+                                       isOutput=False)
     if shaderParamName == "varname":
         # used in properties such as the texcoordreader inputs,
         # but the sdftype of 'string' does not work, so force to a token
@@ -255,6 +332,31 @@ def WriteShaderConnections(stage, connectionsAttr, materialPath, shader):
         inputPort.ConnectToSource(
             inputShader, str(inputShaderPortName),
             UsdShade.AttributeType.Output, sourceSdfType)
+
+def OverWriteMaterialInterfaces(stage, parametersAttr, materialPath, material,
+                                parentMaterial):
+    # Not techincally the parent in USD, but it is the parent from Katana.
+    parentInputs = parentMaterial.GetInputs()
+    for parameterIndex in xrange(parametersAttr.getNumberOfChildren()):
+        parameterName = parametersAttr.getChildName(parameterIndex)
+        parameterAttr = parametersAttr.getChildByIndex(parameterIndex)
+        if parameterIndex in foundParameterIndices:
+            continue
+        #Because the parameter interface may have a group namespace, but
+        # the parameterName does not contain this, we need to try and find
+        # the related input.
+        matchingParamFullName = None
+        paramSdfType = None
+        for input in parentInputs:
+            inputName = input.GetFullName()
+            inputParamName = inputName.split(":")[-1]
+            if inputParamName == parameterName:
+                matchingParamFullName = inputName
+                paramSdfType = input.GetTypeName()
+        if matchingParamFullName and paramSdfType:
+            addParameterToShader(parameterName, parameterAttr, material,
+                                sdfType=paramSdfType,
+                                paramName=matchingParamFullName)
 
 
 def WriteMaterialInterfaces(stage, parametersAttr, interfacesAttr,

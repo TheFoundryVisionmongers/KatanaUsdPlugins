@@ -14,7 +14,8 @@ pxrImported = False
 try:
     from fnpxr import Usd, UsdShade, Sdf, Gf
     # These includes also require fnpxr
-    from .UsdExport.material import WriteMaterial, WriteMaterialOverride, WriteMaterialAssign
+    from .UsdExport.material import (WriteMaterial, WriteMaterialOverride,
+        WriteMaterialAssign, WriteChildMaterial)
     pxrImported = True
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
@@ -37,6 +38,199 @@ class UsdExport(BaseOutputFormat):
     # Protected Class Methods -------------------------------------------------
 
     @classmethod
+    def __checkTypeWritingOrder(cls, locationType, locationTypePass,
+                                locationTypeWritingOrder):
+        # This section determines whether we want to write the
+        # currently reached scene graph location or not.
+        # As described above, we will need to write certain
+        # location types first to ensure we can bind against them.
+        if locationType != locationTypePass:
+            if locationType in locationTypeWritingOrder:
+                return False
+            elif locationTypePass == "all":
+                return True
+            else:
+                return False
+        return True
+
+    @classmethod
+    def locationPathtoSdfPath(cls, locationPath, rootPrimName):
+        if not locationPath.startswith("/"):
+            locationPath = "/" + locationPath
+        if rootPrimName:
+            locationPath = rootPrimName + locationPath
+        return Sdf.Path(locationPath)
+
+    @classmethod
+    def writeOverride(cls, stage, outputDict, sharedOverrides,
+                      locationTypePass, locationTypeWritingOrder,
+                      locationPath, rootName, rootPrimName, pathsToRemove,
+                      outputDictKey=None, parentMaterialSdfList=None):
+        """
+        This method is responsible for writing all of the overrides
+        from the passData.shaderdOverrides dictionary.
+        We use the outputDict which has key value pairs of the location
+        from katana, to the key of the sharedOverride from the
+        sharedOverrides dictionary.
+        This method is also called recursively, and in the recursive calls
+        we also pass in outputDictKey and parentMaterialSdfList.
+        @param stage: The USD Stage to write the overrides onto.
+        @param outputDict: A dictionary from the passData, which has a
+            dictionary keyed by the location, with the value being a key
+            into the sharedOverrides dictionary.
+        @param sharedOverrides: A dictionary from the passData which
+            contains attribute data which is shared across many locations
+            as a de-duplication step.  The key is an integer which is
+            stored as the value on each location keyed value of the
+            outputDict.
+        @param locationTypePass:
+        @param locationTypeWritingOrder:
+        @param locationPath:
+        @param rootName:
+        @param rootPrimName:
+        @param pathsToRemove:
+        @param outputDictKey:
+        @param parentMaterialSdfList:
+
+        @type stage: C{Usd.Stage}
+        @type outputDict: C{dict} of C{str} : C{int}
+        @type sharedOverrides: C{dict} of C{int} : (
+            C{dict} of (
+                    C{str} : C{FnAttribute.Attribute}
+                )
+            )
+        @type locationTypePass: C{str}
+        @type locationTypeWritingOrder: C{list} of C{str}
+        @type locationPath: C{str}
+        @type rootName: C{str}
+        @type rootPrimName: C{str}
+        @type pathsToRemove: C{list} of C{str}
+        @type outputDictKey: C{str}
+        @type parentMaterialSdfList: C{list} of C{Sdf.Path}
+        """
+        # We take the full path as the override path.
+        # since the root will be handled by UsdIn
+        if not locationPath:
+            return []
+        if outputDictKey:
+            sharedOverridesKey = outputDict[outputDictKey]
+        else:
+            sharedOverridesKey = outputDict[locationPath]
+            outputDictKey = locationPath
+        # Copy this such that if we change locationPath later,
+        # it wont affect our deletion.
+        originalLocationPath = locationPath
+        # Check to see if we are meant to add this type of location
+        # yet.
+        attrDict = sharedOverrides.get(sharedOverridesKey)
+        if not attrDict:
+            return []
+        typeAttr = attrDict.get("type")
+        locationType = ""
+        if typeAttr:
+            locationType = typeAttr.getValue()
+        if not cls.__checkTypeWritingOrder(attrDict,
+                                            locationTypePass,
+                                            locationTypeWritingOrder):
+            return []
+
+        sdfLocationPath = cls.locationPathtoSdfPath(locationPath, rootPrimName)
+        overridePrim = stage.OverridePrim(sdfLocationPath)
+
+        # Now loop through the data, if it doesn't exist in
+        # the UsdStage create the location and data, and then
+        # reference.  If it already exists, just reference! key is
+        # an integer, the index between the sharedOverrides and
+        # rootOverrides locations they relate to.
+        for attrName in attrDict.keys():
+            if attrName == "layout":
+                # Here is where we would look to support layout info.
+                continue
+            attribute = AttrBridge.scenegraphAttrToAttr(attrDict[attrName])
+            if attrName == "material":
+                if locationType == "material":
+                    if parentMaterialSdfList:
+                        material = WriteMaterial(
+                            stage, sdfLocationPath, attribute)
+                        WriteChildMaterial(
+                            stage, sdfLocationPath, attribute,
+                            parentMaterialSdfList)
+                    else:
+                        WriteMaterial(
+                            stage, sdfLocationPath, attribute)
+                else:
+                    material = WriteMaterialOverride(
+                        stage, sdfLocationPath, overridePrim,
+                        sharedOverridesKey, attribute)
+                    WriteMaterialAssign(material, overridePrim)
+            elif attrName == "lookfileChildren":
+                # The children returned are for any location not just
+                # not just material children.  Here we only care about
+                # material children.
+                if not "material" in attrDict:
+                    continue
+                childNames = attribute.getNearestSample(0)
+                # Loop through all the children of this material.
+                for childName in childNames:
+                    # Build the new locationPath for the child material
+                    childLocationPath = originalLocationPath + "_" +\
+                        childName
+                    # Build the child material's original location as
+                    # seen in Katana.
+                    childOriginalPath = outputDictKey + "/" + childName
+                    # If we have already retrieved the
+                    parentSdf = sdfLocationPath
+                    materialPrim = stage.GetPrimAtPath(parentSdf)
+                    parentNames = []
+                    while not materialPrim:
+                        parentNames.append(parentSdf.name)
+                        parentSdf = parentSdf.GetParentPath()
+                        materialPrim = stage.GetPrimAtPath(parentSdf)
+
+                    # build its closest original parent material
+                    if parentNames:
+                        parentNames.append(parentSdf.name)
+                        parentAppendName = "_".join(reversed(parentNames))
+                        parentSdf = parentSdf.ReplaceName(parentAppendName)
+                    if parentMaterialSdfList:
+                        # Copy the list first, because otherwise the
+                        # changes will be retained in this for loop for the
+                        # next child, and not just passed down the depth of
+                        # the tree.
+                        newParentSdfList = parentMaterialSdfList[:]
+                        newParentSdfList.append(parentSdf)
+                    else:
+                        newParentSdfList = [parentSdf]
+
+                    childpathsToRemove = cls.writeOverride(stage,
+                        outputDict, sharedOverrides,
+                        locationTypePass, locationTypeWritingOrder,
+                        childLocationPath, rootName, rootPrimName,
+                        [], outputDictKey=childOriginalPath,
+                        parentMaterialSdfList=newParentSdfList)
+                    pathsToRemove.extend(childpathsToRemove)
+                    pathsToRemove.append(childOriginalPath)
+            elif attrName == "materialAssign":
+                if not attribute:
+                    continue
+                cls.writeMaterialAssign(stage, rootName, attribute,
+                    rootPrimName, overridePrim)
+        if not outputDictKey:
+            pathsToRemove.append(originalLocationPath)
+        return pathsToRemove
+
+    @classmethod
+    def writeMaterialAssign(cls, stage, rootName, attribute, rootPrimName,
+                            overridePrim):
+        materialPath = cls.GetRelativeUsdSdfPathFromAttribute(rootName,
+                                                              attribute)
+        if rootPrimName:
+            materialPath = rootPrimName + materialPath
+        material = UsdShade.Material.Get(stage, materialPath)
+        if material:
+            WriteMaterialAssign(material, overridePrim)
+
+    @classmethod
     def writeOverrides(cls, stage, outputDictList, sharedOverrides,
                        rootPrimName):
         # We want to write the sharedoverride to root locations, but have these not loaded,
@@ -48,73 +242,19 @@ class UsdExport(BaseOutputFormat):
         locationTypeWritingOrder = ["material","all"]
         for (outputDict, rootName, rootType) in outputDictList:
             _ = rootType
+            pathsToRemove = []
+            outputDictKeys = sorted(outputDict.keys())
             for locationTypePass in locationTypeWritingOrder:
-                for locationPath, sharedOverridesKey in outputDict.iteritems():
-                    # We take the full path as the override path.
-                    # since the root will be handled by UsdIn
-                    if not locationPath:
+                for path in pathsToRemove:
+                    del outputDict[path]
+                pathsToRemove = []
+                for locationPath in outputDictKeys:
+                    if locationPath in pathsToRemove:
                         continue
-
-                    # Check to see if we are meant to add this type of location
-                    # yet.
-                    attr_dict = sharedOverrides.get(sharedOverridesKey)
-                    if not attr_dict:
-                        continue
-                    typeAttr = attr_dict.get("type")
-                    # This section determines whether we want to write the
-                    # currently reached scene graph location or not.
-                    # As described above, we will need to write certain
-                    # location types first to ensure we can bind against them.
-                    locationType = ""
-                    if typeAttr:
-                        locationType = typeAttr.getValue()
-                    if locationType != locationTypePass:
-                        if locationType in locationTypeWritingOrder:
-                            continue
-                        elif locationTypePass == "all":
-                                pass
-                        else:
-                            continue
-
-                    if not locationPath.startswith("/"):
-                        locationPath = "/" + locationPath
-                    if rootPrimName:
-                        locationPath = rootPrimName + locationPath
-                    sdfLocationPath = Sdf.Path(locationPath)
-                    if stage.GetPrimAtPath(sdfLocationPath):
-                        continue
-                    overridePrim = stage.OverridePrim(sdfLocationPath)
-
-                    # Now loop through the data, if it doesn't exist in
-                    # the UsdStage create the location and data, and then
-                    # reference.  If it already exists, just reference! key is
-                    # an integer, the index between the sharedOverrides and
-                    # rootOverrides locations they relate to.
-                    for attr_name in attr_dict.keys():
-                        attribute = AttrBridge.scenegraphAttrToAttr(
-                            attr_dict[attr_name])
-                        if attr_name == "material":
-                            if locationType == "material":
-                                WriteMaterial(
-                                    stage, sdfLocationPath, attribute)
-                            else:
-                                material = WriteMaterialOverride(
-                                    stage, sdfLocationPath, overridePrim,
-                                    sharedOverridesKey, attribute)
-                                WriteMaterialAssign(material, overridePrim)
-                        if attr_name == "materialAssign":
-                            if not attribute:
-                                continue
-                            materialPath = \
-                                cls.GetRelativeUsdSdfPathFromAttribute(
-                                    rootName, attribute)
-                            if rootPrimName:
-                                materialPath = rootPrimName + materialPath
-                            material = UsdShade.Material.Get(stage,
-                                materialPath)
-                            if material:
-                                WriteMaterialAssign(material, overridePrim)
-
+                    pathsToRemove = cls.writeOverride(stage, outputDict,
+                      sharedOverrides, locationTypePass,
+                      locationTypeWritingOrder, locationPath, rootName,
+                      rootPrimName, pathsToRemove)
 
 
     @classmethod
@@ -137,11 +277,11 @@ class UsdExport(BaseOutputFormat):
 
     def writeSinglePass(self, passData):
         """
-        @type passData: C{LookFileBakeAPI.LookFilePassData}
-        @rtype: C{list} of C{str}
         @param passData: The data representing a single look file pass to be
             baked.
+        @type passData: C{LookFileBakeAPI.LookFilePassData}
         @return: A list of paths to files which have been written.
+        @rtype: C{list} of C{str}
         """
         # Get the file path for this pass from the given pass data
         filePath = passData.filePath
