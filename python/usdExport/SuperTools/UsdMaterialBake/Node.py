@@ -177,8 +177,8 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
             log.error("Requires at least two ports to bake a Look file")
         variantSetName = node.getParameter(
             "variantSetName").getValue(frameTime)
-        variantRootPrimName = node.getParameter(
-            "variantRootPrimName").getValue(frameTime)
+        rootPrimName = node.getParameter(
+            "rootPrimName").getValue(frameTime)
         alwaysCreateVariantSet = bool(node.getParameter(
             "alwaysCreateVariantSet").getValue(frameTime) == "Yes")
         fileName = node.getParameter("fileName").getValue(
@@ -188,7 +188,7 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
         createVariantSet = alwaysCreateVariantSet or (len(inputPorts) > 2)
         additionalSettings = {
             "variantSetName" : variantSetName,
-            "variantRootPrimName" : variantRootPrimName,
+            "rootPrimName" : rootPrimName,
             "createVariantSet" : createVariantSet,
             "fileFormat" : fileFormat,
             "fileName" : fileName
@@ -268,7 +268,7 @@ _parameters_XML = """
         <string_parameter name="saveTo"/>
         <string_parameter name='fileName' value='shadingVariants'/>
         <string_parameter name="fileFormat" value="usd"/>
-        <string_parameter name="variantRootPrimName" value="/root"/>
+        <string_parameter name="rootPrimName" value="/root"/>
         <string_parameter name="variantSetName" value="shadingVariants"/>
         <string_parameter name='alwaysCreateVariantSet' value='No'/>
         <stringarray_parameter name="variants" size="0" tupleSize="1"/>
@@ -313,11 +313,11 @@ _ExtraHints = {
             created if there are multiple variants to bake.
         """
     },
-    "UsdMaterialBake.variantRootPrimName": {
+    "UsdMaterialBake.rootPrimName": {
         "help": """
-            Specify the root prim name for where the variantSet will be located.
-            VariantSets must be part of a prim, therefore to reference this file
-            from another usd file, you will need to also reference this prim.
+            Specify the root prim name for where shading data will be written
+            under.  A root prim is required for referencing the resultant
+            USD shading stage.
         """
     },
     "UsdMaterialBake.variantSetName": {

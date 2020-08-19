@@ -53,7 +53,7 @@ class UsdMaterialBakeEditor(QtWidgets.QFrame):
         widgets.append(self.__widgetFactory.buildWidget(
             self, self.__rootPolicy.getChildByName('alwaysCreateVariantSet')))
         widgets.append(self.__widgetFactory.buildWidget(
-            self, self.__rootPolicy.getChildByName('variantRootPrimName')))
+            self, self.__rootPolicy.getChildByName('rootPrimName')))
         widgets.append(self.__widgetFactory.buildWidget(
             self, self.__rootPolicy.getChildByName('variantSetName')))
 
