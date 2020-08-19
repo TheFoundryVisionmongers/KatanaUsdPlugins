@@ -133,6 +133,7 @@ class UsdExport(BaseOutputFormat):
     def __init__(self, settings):
         super(UsdExport, self).__init__(settings)
         self._settings.materialVariantSetInitialized = False
+        self._settings.defaultMaterialVariant = None
 
     def writeSinglePass(self, passData):
         """
@@ -211,6 +212,14 @@ class UsdExport(BaseOutputFormat):
 
             with variantSet.GetVariantEditContext():
                 do_material_write(stage, rootPrimName)
+
+            # Set the default variant to the first variant seen.
+            # We cant use the variantSet.GetNames() because that returns us
+            # the results in alphabetical order, so we must remember which
+            # we added first ourselves.
+            if self._settings.defaultMaterialVariant:
+                variantSet.SetVariantSelection(
+                    self._settings.defaultMaterialVariant)
         else:
             # Create a new USD stage
             stage = Usd.Stage.CreateNew(filePath)
