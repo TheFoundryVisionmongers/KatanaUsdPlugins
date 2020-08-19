@@ -10,44 +10,17 @@ except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
 
-myTypeMap = {
-    "Float4": Sdf.ValueTypeNames.Float4,
-    "Float3": Sdf.ValueTypeNames.Float3,
-    "Float2": Sdf.ValueTypeNames.Float2,
-    "Float1": Sdf.ValueTypeNames.Float,
-    "Float": Sdf.ValueTypeNames.Float,
-    "Double4": Sdf.ValueTypeNames.Double4,
-    "Double3": Sdf.ValueTypeNames.Double3,
-    "Double2": Sdf.ValueTypeNames.Double2,
-    "Double1": Sdf.ValueTypeNames.Double,
-    "Double": Sdf.ValueTypeNames.Double,
-    "String": Sdf.ValueTypeNames.String,
-    "String1": Sdf.ValueTypeNames.String,
-    "Int": Sdf.ValueTypeNames.Int,
-    "Int1": Sdf.ValueTypeNames.Int,
-    "Int2": Sdf.ValueTypeNames.Int2,
-    "Int3": Sdf.ValueTypeNames.Int3,
-    "Int4": Sdf.ValueTypeNames.Int4,
-    "Color": Sdf.ValueTypeNames.Color3f,
-    "AssetIdInput": Sdf.ValueTypeNames.Asset
-}
 valueTypeCastMethods = {
-    Sdf.ValueTypeNames.Float4: Gf.Vec4f,
-    Sdf.ValueTypeNames.Float3: Gf.Vec3f,
-    Sdf.ValueTypeNames.Float2: Gf.Vec2f,
-    Sdf.ValueTypeNames.Float: float,
-    Sdf.ValueTypeNames.Color3f: Gf.Vec3f,
-    Sdf.ValueTypeNames.Double4: Gf.Vec4d,
-    Sdf.ValueTypeNames.Double3: Gf.Vec3d,
-    Sdf.ValueTypeNames.Double2: Gf.Vec2d,
-    Sdf.ValueTypeNames.Double: float,
-    Sdf.ValueTypeNames.String: str,
     Sdf.ValueTypeNames.Asset: str,
-    Sdf.ValueTypeNames.Token: str,
-    Sdf.ValueTypeNames.Int4: Gf.Vec4i,
-    Sdf.ValueTypeNames.Int3: Gf.Vec3i,
-    Sdf.ValueTypeNames.Int2: Gf.Vec2i,
+    Sdf.ValueTypeNames.Bool: bool,
+    Sdf.ValueTypeNames.Double: float,
+    Sdf.ValueTypeNames.Float: float,
     Sdf.ValueTypeNames.Int: int,
+    Sdf.ValueTypeNames.Int64: int,
+    Sdf.ValueTypeNames.String: str,
+    Sdf.ValueTypeNames.Token: str,
+    Sdf.ValueTypeNames.UInt: int,
+    Sdf.ValueTypeNames.UInt64: int,
 }
 
 RenderInfoShaderTagToSdfMap = {

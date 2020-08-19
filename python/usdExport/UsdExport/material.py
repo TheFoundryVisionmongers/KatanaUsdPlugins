@@ -1,6 +1,7 @@
 # Copyright (c) 2020 The Foundry Visionmongers Ltd. All Rights Reserved.
 
 from Katana import RenderingAPI, FnAttribute
+import PyFnAttribute
 import logging
 
 log = logging.getLogger("UsdExport")
@@ -166,26 +167,46 @@ def addParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
         # but the sdftype of 'string' does not work, so force to a token
         sdfType = Sdf.ValueTypeNames.Token
     if sdfType:
-        gfCast = valueTypeCastMethods.get(sdfType)
+        if sdfType.type.pythonClass:
+            gfCast = sdfType.type.pythonClass
+        else:
+            gfCast = valueTypeCastMethods.get(sdfType)
         input = shader.CreateInput(paramName, sdfType)
         if gfCast:
-            if not isinstance(paramValue,  list):
-                # Convert from Most likely
-                # PyFnAttribute.ConstVector
+            if isinstance(paramValue,  PyFnAttribute.ConstVector):
+                # Convert Katana's PyFnAttribute.ConstVector to a python list
                 paramValue = [v for v in paramValue]
             if isinstance(paramValue, list):
                 if len(paramValue) == 1:
                     paramValue = gfCast(paramValue[0])
-                if "Vec" in str(gfCast):
-                    # We have a Gf.Vec#X
+                elif hasattr(gfCast, "dimension"):
                     if gfCast.dimension == 2:
                         paramValue = gfCast(paramValue[0], paramValue[1])
-                    if gfCast.dimension == 3:
+                    elif gfCast.dimension == 3:
                         paramValue = gfCast(paramValue[0], paramValue[1],
                             paramValue[2])
-                    if gfCast.dimension == 4:
+                    elif gfCast.dimension == 4:
                         paramValue = gfCast(paramValue[0], paramValue[1],
                             paramValue[2], paramValue[3])
+                    elif gfCast.dimension == (2, 2):
+                        paramValue = gfCast(
+                            paramValue[0], paramValue[1],
+                            paramValue[2], paramValue[3])
+                    elif gfCast.dimension == (3, 3):
+                        paramValue = gfCast(
+                            paramValue[0], paramValue[1], paramValue[2],
+                            paramValue[3], paramValue[4], paramValue[5],
+                            paramValue[6], paramValue[7], paramValue[8])
+                    elif gfCast.dimension == (4, 4):
+                        pv = paramValue
+                        paramValue = gfCast(
+                            pv[0], pv[1], pv[2], pv[3],
+                            pv[4], pv[5], pv[6], pv[7],
+                            pv[8], pv[9], pv[10], pv[11],
+                            pv[12], pv[13], pv[14], pv[15])
+                elif gfCast in [Gf.Quath, Gf.Quatf, Gf.Quatd]:
+                    paramValue = gfCast(paramValue[0], paramValue[1],
+                        paramValue[2], paramValue[3])
             else:
                 paramValue = gfCast(paramValue)
         input.Set(paramValue)
