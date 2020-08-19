@@ -45,7 +45,6 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
                 Utils.UndoStack.EnableCapture()
 
         except Exception:
-            # The node factory does not print exceptions, lame
             log.exception("CREATE UsdMaterialBake FAILED.")
             raise
         self.__timer = None

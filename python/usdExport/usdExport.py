@@ -34,18 +34,21 @@ class UsdExport(BaseOutputFormat):
     DisplayName = "UsdExport"
     FileExtension = ""
     PassFileExtension = "usda"
+    LocationTypeWritingOrder = ["material", "all"]
 
     # Protected Class Methods -------------------------------------------------
 
     @classmethod
-    def __checkTypeWritingOrder(cls, locationType, locationTypePass,
-                                locationTypeWritingOrder):
+    def __checkTypeWritingOrder(cls, locationType, locationTypePass):
         # This section determines whether we want to write the
         # currently reached scene graph location or not.
         # As described above, we will need to write certain
         # location types first to ensure we can bind against them.
+        # Special case for adding child materials
+        if locationTypePass is None:
+            return True
         if locationType != locationTypePass:
-            if locationType in locationTypeWritingOrder:
+            if locationType in cls.LocationTypeWritingOrder:
                 return False
             elif locationTypePass == "all":
                 return True
@@ -63,9 +66,9 @@ class UsdExport(BaseOutputFormat):
 
     @classmethod
     def writeOverride(cls, stage, outputDict, sharedOverrides,
-                      locationTypePass, locationTypeWritingOrder,
-                      locationPath, rootName, rootPrimName, pathsToRemove,
-                      outputDictKey=None, parentMaterialSdfList=None):
+                      locationTypePass, locationPath, rootName, rootPrimName,
+                      pathsToRemove, materialDict, outputDictKey=None,
+                      parentMaterialSdfList=None):
         """
         This method is responsible for writing all of the overrides
         from the passData.shaderdOverrides dictionary.
@@ -84,14 +87,16 @@ class UsdExport(BaseOutputFormat):
             stored as the value on each location keyed value of the
             outputDict.
         @param locationTypePass:
-        @param locationTypeWritingOrder:
         @param locationPath:
         @param rootName:
         @param rootPrimName:
         @param pathsToRemove:
+        @param materialDict: A dictionary containing a mapping of the 
+            Katana location paths to the Sdf.Path's of the material prim
+            created for that path.  This ensures child materials
+            are bindable, and we pass this to our materialAssignment logic.
         @param outputDictKey:
         @param parentMaterialSdfList:
-
         @type stage: C{Usd.Stage}
         @type outputDict: C{dict} of C{str} : C{int}
         @type sharedOverrides: C{dict} of C{int} : (
@@ -100,18 +105,18 @@ class UsdExport(BaseOutputFormat):
                 )
             )
         @type locationTypePass: C{str}
-        @type locationTypeWritingOrder: C{list} of C{str}
         @type locationPath: C{str}
         @type rootName: C{str}
         @type rootPrimName: C{str}
         @type pathsToRemove: C{list} of C{str}
+        @type materialDict: C{dict} of C{str} : C{Sdf.Path}
         @type outputDictKey: C{str}
         @type parentMaterialSdfList: C{list} of C{Sdf.Path}
         """
         # We take the full path as the override path.
         # since the root will be handled by UsdIn
         if not locationPath:
-            return []
+            return pathsToRemove
         if outputDictKey:
             sharedOverridesKey = outputDict[outputDictKey]
         else:
@@ -124,15 +129,13 @@ class UsdExport(BaseOutputFormat):
         # yet.
         attrDict = sharedOverrides.get(sharedOverridesKey)
         if not attrDict:
-            return []
+            return pathsToRemove
         typeAttr = attrDict.get("type")
         locationType = ""
         if typeAttr:
             locationType = typeAttr.getValue()
-        if not cls.__checkTypeWritingOrder(attrDict,
-                                            locationTypePass,
-                                            locationTypeWritingOrder):
-            return []
+        if not cls.__checkTypeWritingOrder(locationType, locationTypePass):
+            return pathsToRemove
 
         sdfLocationPath = cls.locationPathtoSdfPath(locationPath, rootPrimName)
         overridePrim = stage.OverridePrim(sdfLocationPath)
@@ -147,6 +150,8 @@ class UsdExport(BaseOutputFormat):
                 # Here is where we would look to support layout info.
                 continue
             attribute = AttrBridge.scenegraphAttrToAttr(attrDict[attrName])
+            if not attribute:
+                continue
             if attrName == "material":
                 if locationType == "material":
                     if parentMaterialSdfList:
@@ -156,8 +161,8 @@ class UsdExport(BaseOutputFormat):
                             stage, sdfLocationPath, attribute,
                             parentMaterialSdfList)
                     else:
-                        WriteMaterial(
-                            stage, sdfLocationPath, attribute)
+                        WriteMaterial(stage, sdfLocationPath, attribute)
+                    materialDict[outputDictKey] = sdfLocationPath
                 else:
                     material = WriteMaterialOverride(
                         stage, sdfLocationPath, overridePrim,
@@ -201,34 +206,19 @@ class UsdExport(BaseOutputFormat):
                         newParentSdfList.append(parentSdf)
                     else:
                         newParentSdfList = [parentSdf]
-
                     childpathsToRemove = cls.writeOverride(stage,
-                        outputDict, sharedOverrides,
-                        locationTypePass, locationTypeWritingOrder,
+                        outputDict, sharedOverrides, None,
                         childLocationPath, rootName, rootPrimName,
-                        [], outputDictKey=childOriginalPath,
+                        [], materialDict, outputDictKey=childOriginalPath,
                         parentMaterialSdfList=newParentSdfList)
                     pathsToRemove.extend(childpathsToRemove)
                     pathsToRemove.append(childOriginalPath)
             elif attrName == "materialAssign":
-                if not attribute:
-                    continue
-                cls.writeMaterialAssign(stage, rootName, attribute,
-                    rootPrimName, overridePrim)
+                cls.writeMaterialAssign(materialDict, stage, rootName,
+                    attribute, overridePrim)
         if not outputDictKey:
             pathsToRemove.append(originalLocationPath)
         return pathsToRemove
-
-    @classmethod
-    def writeMaterialAssign(cls, stage, rootName, attribute, rootPrimName,
-                            overridePrim):
-        materialPath = cls.GetRelativeUsdSdfPathFromAttribute(rootName,
-                                                              attribute)
-        if rootPrimName:
-            materialPath = rootPrimName + materialPath
-        material = UsdShade.Material.Get(stage, materialPath)
-        if material:
-            WriteMaterialAssign(material, overridePrim)
 
     @classmethod
     def writeOverrides(cls, stage, outputDictList, sharedOverrides,
@@ -239,33 +229,75 @@ class UsdExport(BaseOutputFormat):
         # and references will work, otherwise we end up with missing bindings
         # because, for example, the Material does not exist before the
         # GeoPrim tries to bind to it.
-        locationTypeWritingOrder = ["material","all"]
         for (outputDict, rootName, rootType) in outputDictList:
             _ = rootType
             pathsToRemove = []
             outputDictKeys = sorted(outputDict.keys())
-            for locationTypePass in locationTypeWritingOrder:
+            materialDict = {}
+            for locationTypePass in cls.LocationTypeWritingOrder:
                 for path in pathsToRemove:
-                    del outputDict[path]
+                    if path in outputDictKeys:
+                        outputDictKeys.remove(path)
                 pathsToRemove = []
                 for locationPath in outputDictKeys:
                     if locationPath in pathsToRemove:
                         continue
                     pathsToRemove = cls.writeOverride(stage, outputDict,
-                      sharedOverrides, locationTypePass,
-                      locationTypeWritingOrder, locationPath, rootName,
-                      rootPrimName, pathsToRemove)
-
+                      sharedOverrides, locationTypePass, locationPath, rootName,
+                      rootPrimName, pathsToRemove, materialDict)
 
     @classmethod
-    def GetRelativeUsdSdfPathFromAttribute(cls, rootName, assignAttr):
+    def writeMaterialAssign(cls, materialDict, stage, rootName, attribute,
+                            overridePrim):
+
+        assignValue = str(attribute.getValue())
+        materialPath = cls.GetRelativeUsdSdfPathFromAttribute(
+            materialDict, rootName, assignValue)
+
+        if materialPath:
+            material = UsdShade.Material.Get(stage, materialPath)
+            if material:
+                WriteMaterialAssign(material, overridePrim)
+
+    @classmethod
+    def GetRelativeUsdSdfPathFromAttribute(cls, materialDict, rootName,
+                                           assignValue):
         """ To be used with values from attributes like "materialAssign".
             Katana will provide the full scenegraph location path, but since
             the lookfilebake writes out from a given root, we need to remove
-            the root prefix.
+            the root prefix. We also need to remap child material paths,
+            so we pass in the materialDict which
         """
-        assignValue = str(assignAttr.getValue())
-        return assignValue[(assignValue.find(rootName) + len(rootName)):]
+        materialKeys = materialDict.keys()
+        rfindIndex = len(assignValue)
+        # We need to add the path separators to ensure we are not just
+        # finding the rootName word.
+        # This does mean we need to take these extra characters into
+        # account when using rfind, since we will strip the leading,
+        # or closing "/" which we will need.
+        rootNamePath = "/" + rootName + "/"
+        rfindIndex = assignValue.rfind(rootNamePath, 0, rfindIndex)
+        if rfindIndex < 0:
+            return None
+        #Ensure we start reading with a closing "/"
+        materialPath = assignValue[rfindIndex + len(rootNamePath) - 1:]
+        if materialPath in materialKeys:
+            return materialDict[materialPath]
+        # If we don't find the path first try, it means we may be dealing
+        # with a materialAssignment path with multiple duplicate levels in
+        # the hierarchy, so we must check until we find our valid relative
+        # material path.
+        materialPath = assignValue[rfindIndex:]
+        #Ensure we start reading with a closing "/"
+        rfindIndex = rfindIndex + 1
+        while materialPath and materialPath not in materialKeys:
+            rfindIndex = assignValue.rfind(rootNamePath, 0, rfindIndex)
+            # If we can no longer find the rootNamePath.
+            if rfindIndex < 0:
+                return None
+            materialPath = assignValue[rfindIndex:]
+            rfindIndex = rfindIndex + 1
+        return materialDict[materialPath]
 
 
     # Instance Methods --------------------------------------------------------
