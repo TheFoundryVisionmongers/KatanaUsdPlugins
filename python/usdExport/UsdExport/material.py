@@ -410,34 +410,6 @@ def WriteMaterialInterfaces(stage, parametersAttr, interfacesAttr,
             UsdShade.AttributeType.Input, sourceSdfType)
 
 
-def WriteMaterialOverride(stage, sdfLocationPath, overridePrim,
-                          sharedOverridesKey, attribute):
-    """ Write out the material overrides.  If the material hasnt been created
-    (It is not part of the selectedMaterialTreeRootLocations on the
-    LookFileBake Node), then we need to create the material.  This is only for
-    resolved materialAssigns, where the material data gets written to the node
-    itself.
-    """
-    # TODO: Investigate whether this is fully required, we may not support
-    # resolved materials from the first release.  If we do, we may want to look
-    # into further de-duplication, check the materialOverrides attribute, and the
-    # originally assigned material, and write that out instead, and apply overrides
-    # where necessary, rather than writing out the entire material multiple times
-    # for each different set of overrides.
-    materialOverridePath = sdfLocationPath.AppendChild("material")
-    materialOverride = \
-        UsdShade.Material.Define(stage, materialOverridePath)
-    stage.OverridePrim("/resolveMaterials")
-    materialSdfPath = "/resolveMaterials/material"+sharedOverridesKey
-    material = UsdShade.Material.Get(stage, materialSdfPath)
-    if not material:
-        material = WriteMaterial(stage, materialSdfPath,
-                                 attribute)
-    references = materialOverride.GetPrim().GetReferences()
-    references.AddInternalReference(materialSdfPath)
-    return materialOverride
-
-
 def GetShaderAttrSdfType(shaderType, shaderAttr, isOutput=False):
     reg = Sdr.Registry()
     shader = reg.GetNodeByName(shaderType)

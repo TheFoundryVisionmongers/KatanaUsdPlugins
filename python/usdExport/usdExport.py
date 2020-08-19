@@ -14,8 +14,8 @@ pxrImported = False
 try:
     from fnpxr import Usd, UsdShade, Sdf, Gf
     # These includes also require fnpxr
-    from .UsdExport.material import (WriteMaterial, WriteMaterialOverride,
-        WriteMaterialAssign, WriteChildMaterial)
+    from .UsdExport.material import (WriteMaterial, WriteMaterialAssign,
+        WriteChildMaterial)
     pxrImported = True
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
@@ -163,11 +163,6 @@ class UsdExport(BaseOutputFormat):
                     else:
                         WriteMaterial(stage, sdfLocationPath, attribute)
                     materialDict[outputDictKey] = sdfLocationPath
-                else:
-                    material = WriteMaterialOverride(
-                        stage, sdfLocationPath, overridePrim,
-                        sharedOverridesKey, attribute)
-                    WriteMaterialAssign(material, overridePrim)
             elif attrName == "lookfileChildren":
                 # The children returned are for any location not just
                 # not just material children.  Here we only care about
