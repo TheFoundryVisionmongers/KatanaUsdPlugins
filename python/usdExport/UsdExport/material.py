@@ -232,7 +232,9 @@ def addParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
         pass  # TODO: Get per sample values and save those into USD.
     else:
         paramValue = paramAttr.getNearestSample(0)
-    if not shaderId:
+    # Check to make sure that either the sdfType has been set or the shaderId
+    # has been found using the shader.
+    if not shaderId and sdfType is None:
         log.warning("Unable to find shaderId, and sdfType is not provided for"
         " shaderParamName:{}".format(
             shaderParamName))
@@ -340,8 +342,6 @@ def OverWriteMaterialInterfaces(stage, parametersAttr, materialPath, material,
     for parameterIndex in xrange(parametersAttr.getNumberOfChildren()):
         parameterName = parametersAttr.getChildName(parameterIndex)
         parameterAttr = parametersAttr.getChildByIndex(parameterIndex)
-        if parameterIndex in foundParameterIndices:
-            continue
         #Because the parameter interface may have a group namespace, but
         # the parameterName does not contain this, we need to try and find
         # the related input.
