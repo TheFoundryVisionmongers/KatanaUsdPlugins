@@ -10,7 +10,7 @@ log = logging.getLogger("UsdExport")
 try:
     from fnpxr import Usd, UsdShade, Sdf, Gf, Ndr, Sdr
     # These includes also require fnpxr
-    from .typeConversionMaps import (myTypeMap, valueTypeCastMethods,
+    from .typeConversionMaps import (valueTypeCastMethods,
                                      convertRenderInfoShaderTagsToSdfType)
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
