@@ -1,0 +1,259 @@
+<args format="1.0">
+    <shaderType>
+        <tag value="light"/>
+    </shaderType>
+
+    <param name="angle"
+            label="Angle"
+            type="float" min="0.0"
+            default="0.53"
+            connectable="False"
+            slider="1" slidermin="0.0" slidermax="360.0"
+            widget="default">
+        <help>
+            Angular size of the light in degrees.
+            As an example, the Sun is approximately 0.53 degrees as seen from
+            Earth. Higher values broaden the light and therefore soften shadow
+            edges.
+        </help>
+    </param>
+    <param name="color"
+            label="Color"
+            type="color"
+            default="1 1 1"
+            connectable="False"
+            widget="color">
+            <help>
+                The color of emitted light, in energy-linear terms.
+            </help>
+    </param>
+    <param name="colorTemperature"
+            label="Color Temperature"
+            type="int"
+            default="6500" min="0"
+            slider="1" slidermin="0" slidermax="13000"
+            connectable="False"
+            widget="default">
+        <help>
+            colorTemperature: Color temperature, in degrees Kelvin, representing
+            the white point.  The default is a common white point, D65. Lower
+            values are warmer and higher values are cooler.  The valid range
+            is from 1000 to 10000. Only takes effect when
+            enableColorTemperature is set to true.  When active, the
+            computed result multiplies against the color attribute.
+            See UsdLuxBlackbodyTemperatureAsRgb()
+        </help>
+    </param>
+    <param name="diffuse"
+            label="Diffuse Amount"
+            type="float" min="0.0"
+            default="1.0"
+            connectable="False"
+            slider="1" slidermin="0.0" slidermax="1.0">
+        <help>
+            diffuse: Amount of diffuse light that is emitted. This is a non-physical control.
+            You could use a light with Diffuse Amount 0.0 to act purely as a source of
+            highlights for your scene objects
+        </help>
+    </param>
+    <param name="enableColorTemperature"
+            label="Enable Color Temperature"
+            type="int"
+            default="0"
+            connectable="False"
+            widget="checkBox">
+        <help>
+            Enables using colorTemperature.
+        </help>
+    </param>
+    <param name="exposure"
+            label="Exposure"
+            type="float" default="0"
+            slider="1" slidermin="-10.0" slidermax="10.0"
+            connectable="False"
+            widget="default">
+        <help>
+            Scales the power of the light exponentially as a power
+            of 2 (similar to an F-stop control over exposure).  The result
+            is multiplied against the intensity.
+        </help>
+    </param>
+    <param name="intensity"
+            label="Intensity"
+            type="float"
+            default="1.0" min="0.0"
+            slider="1" slidermin="0.0" slidermax="100.0"
+            connectable="False"
+            widget="default">
+        <help>
+            intensity:  Scales the contribution of this light linearly.  The light intensity is
+            computed using physical units.
+        </help>
+    </param>
+    <param name="normalize"
+            label="Normalize Power"
+            type="int"
+            default="0"
+            connectable="False"
+            widget="checkBox">
+        <help>
+            Normalizes power by the surface area of the light.
+            This makes it easier to independently adjust the power and shape
+            of the light, by causing the power to not vary with the area or
+            angular size of the light.
+        </help>
+    </param>
+    <param name="specular"
+            label="Specular Amount"
+            type="float" min="0.0"
+            default="1.0"
+            connectable="False"
+            slider="1" slidermin="0.0" slidermax="1.0">
+        <help>
+            specular: Amount of specular light that is emitted. This is a non-physical control.
+            You could use a light with Specular Amount 0.0 to act purely as a source of diffuse
+            light for your scene objects and avoid adding highlights.
+        </help>
+    </param>
+    <page name="Shaping" open="False">
+        <param name="shapingConeAngle"
+                label="Cone Angle"
+                type="float" min="0.0" max="360.0"
+                default="90.0"
+                connectable="False"
+                slider="1" slidermin="0.0" slidermax="360.0">
+            <help>
+                Angular limit off the primary axis to restrict the
+                light spread.
+            </help>
+        </param>
+        <param name="shapingConeSoftness"
+                label="Cone Softness"
+                type="float" min="0.0"
+                default="0.0"
+                connectable="False"
+                slider="1" slidermin="0.0" slidermax="10.0">
+            <help>
+                Controls the cutoff softness for cone angle.
+                TODO: clarify semantics
+            </help>
+        </param>
+        <param name="shapingFocus"
+                label="Focus"
+                type="float" min="0.0"
+                default="0.0"
+                connectable="False"
+                slider="1" slidermin="0.0" slidermax="8.0">
+            <help>
+                A control to shape the spread of light. Higher focus
+                values pull light towards the center and narrow the spread.
+                Implemented as an off-axis cosine power exponent.
+                TODO: clarify semantic
+            </help>
+        </param>
+        <param name="shapingFocusTint"
+               label="Focus Tint"
+               type="color"
+               default="0 0 0"
+               connectable="False"
+               widget="color">
+            <help>
+                Off-axis color tint.  This tints the emission in the
+                falloff region.  The default tint is black.
+                TODO: clarify semantics
+            </help>
+        </param>
+        <page name="IES" open="False">
+            <param name="shapingIesAngleScale"
+                    label="Angle Scale"
+                    type="float" min="0.0"
+                    default="0.0"
+                    connectable="False"
+                    slider="1" slidermin="0.0" slidermax="100.0">
+                <help>
+                    Rescales the angular distribution of the IES profile.
+                    TODO: clarify semantics
+                </help>
+            </param>
+            <param name="shapingIesFile"
+                label="File"
+                type="string" widget="assetIdInput"
+                options="texture"
+                connectable="False">
+                <help>
+                    An IES (Illumination Engineering Society) light
+                    profile describing the angular distribution of light.
+                </help>
+            </param>
+            <param name="shapingIesNormalize"
+                    label="Normalize"
+                    type="int"
+                    default="0"
+                    connectable="False"
+                    widget="checkBox">
+                <help>
+                    Normalizes the IES profile so that it affects the shaping
+                    of the light while preserving the overall energy output.
+                </help>
+            </param>
+        </page>
+    </page>
+    <page name="Shadow" open="False">
+        <param name="shadowColor"
+            label="Color"
+            type="color"
+            default="0 0 0"
+            connectable="False"
+            widget="color">
+            <help>
+                The color of shadows cast by the light.  This is a
+                non-physical control.  The default is to cast black
+                shadows.
+            </help>
+        </param>
+        <param name="shadowDistance"
+                label="Distance"
+                type="float" min="-1.0"
+                default="-1.0"
+                connectable="False"
+                slider="1" slidermin="-1.0" slidermax="1000.0">
+            <help>
+                The maximum distance shadows are cast.
+                The default value (-1) indicates no limit.
+            </help>
+        </param>
+        <param name="shadowEnable"
+                label="Enable"
+                type="int"
+                default="1"
+                connectable="False"
+                widget="checkBox">
+            <help>
+                Enables shadows to be cast by this light.
+            </help>
+        </param>
+        <param name="shadowFalloff"
+                label="Falloff"
+                type="float" min="-1.0"
+                default="-1.0"
+                connectable="False"
+                slider="1" slidermin="-1.0" slidermax="1000.0">
+            <help>
+                The near distance at which shadow falloff begins.
+                The default value (-1) indicates no falloff.
+            </help>
+        </param>
+        <param name="shadowFalloffGamma"
+                label="Gamma"
+                type="float" min="0.0"
+                default="1.0"
+                connectable="False"
+                slider="1" slidermin="0.0" slidermax="1000.0">
+            <help>
+                    A gamma (i.e., exponential) control over shadow strength
+                    with linear distance within the falloff zone.
+                    This requires the use of shadowDistance and shadowFalloff.
+            </help>
+        </param>
+    </page>
+</args>

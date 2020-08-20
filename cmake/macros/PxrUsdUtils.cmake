@@ -356,3 +356,31 @@ function(_katana_build_install libTarget installPathSuffix)
         )
     endif()
 endfunction() # _katana_build_install
+
+function(pxr_katana_install_plugin_resources)
+    set(options
+    )
+    set(oneValueArgs
+        MODULE_NAME
+        PLUGIN_TYPE
+    )
+    set(multiValueArgs
+        FILES
+    )
+    cmake_parse_arguments(args
+        "${options}"
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+        ${ARGN}
+    )
+    if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
+        bundle_files(
+            TARGET
+            ${args_MODULE_NAME}
+            DESTINATION_FOLDER
+            ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin
+            FILES
+            ${args_FILES}
+        )
+    endif()
+endfunction() # pxr_katana_install_plugin_resources

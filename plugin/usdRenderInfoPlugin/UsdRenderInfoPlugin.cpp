@@ -565,7 +565,7 @@ LightEntriesMap UsdRenderInfoPlugin::getLightEntries() const
         return lights;
     }
     const std::string path = std::string(katanaRootCStr) +
-                             "/plugins/Resources/Core/Shaders/USD/Light";
+                             "/plugins/Resources/Usd/plugin/Shaders";
     std::string error;
     std::vector<std::string> filenames;
 
