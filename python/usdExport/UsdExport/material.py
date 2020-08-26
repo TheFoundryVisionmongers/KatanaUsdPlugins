@@ -150,6 +150,8 @@ def CreateEmptyShaders(stage, materialNodes, materialPath):
 def WriteTerminals(stage, terminals, materialPath, material):
     """ Write the terminals onto the Material outputs.
     """
+    supported_output_types = ["surface", "displacement", "volume"]
+
     #:TODO: We might want to base this on the actual outputs from the material
     # definitions from USD itself, rather than from Katana, using Katana to
     # just try and match up, and if there is a match between these terminals,
@@ -160,8 +162,36 @@ def WriteTerminals(stage, terminals, materialPath, material):
         # We dont want to export the ports as terminals..
         if "Port" in terminalName:
             continue
-        else:
-            terminalName = terminalName[3:].lower()
+
+        # universal (catch all for unrecognised renderers)
+        output_prefix = ""
+        output_type = "surface"
+
+        # if we understand the renderer, use the render context
+        # appropriate to it
+        if terminalName.startswith("usd"):
+            output_prefix = "glslfx:"
+            output_type = terminalName[3:].lower()
+        elif terminalName.startswith("prman"):
+            output_prefix = "ri:"
+            output_type = terminalName[5:].lower()
+            if output_type == "bxdf":
+                output_type = "surface"
+        elif terminalName.startswith("arnold"):
+            output_prefix = "arnold:"
+            output_type = terminalName[6:].lower()
+        elif terminalName.startswith("dl"):
+            output_prefix = "nsi:"
+            output_type = terminalName[2:].lower()
+
+        if output_type not in supported_output_types:
+            log.warning("Unable to map terminal '%s' to a supported "
+                "USD shade output type, of either\n%s",
+                terminalName, " ".join(supported_output_types))
+            continue
+
+        terminalName = output_prefix + output_type
+
         terminalShader = str(terminalAttr.getValue())
         materialTerminal = material.CreateOutput(terminalName,
                                                  Sdf.ValueTypeNames.Token)
@@ -241,10 +271,24 @@ def addParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
     if sdfType is None:
         sdfType = GetShaderAttrSdfType(shaderId, shaderParamName,
                                        isOutput=False)
-    if shaderParamName == "varname":
-        # used in properties such as the texcoordreader inputs,
-        # but the sdftype of 'string' does not work, so force to a token
-        sdfType = Sdf.ValueTypeNames.Token
+        #TODO: Get widget hints for parameter to work out if its
+        # an assetID or not. Some strngs are meant to be "asset"
+        # types in USD.  This is if we want some backup type conversion.
+        if paramName == "file":
+            sdfType = Sdf.ValueTypeNames.Asset
+        if paramName == "varname":
+            # used in properties such as the texcoordreader inputs,
+            # but the sdftype of 'string' does not work, so force to a token
+            sdfType = Sdf.ValueTypeNames.Token
+        if sdfType == None:
+            log.warning("Unable to find an Sdf conversion of "
+                "shader:%s and param:%s", shaderId, paramName)
+            # best guess because we've been unable to identify any shader node
+            # information from the shaderId (is the renderer supported?)
+            if "color" in paramName:
+                log.warning("Guessed shader:%s and param:%s will "
+                    "use datatype color3f", shaderId, paramName)
+                sdfType = Sdf.ValueTypeNames.Color3f
     if sdfType:
         if sdfType.type.pythonClass:
             gfCast = sdfType.type.pythonClass
@@ -286,10 +330,10 @@ def addParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
                 elif gfCast in [Gf.Quath, Gf.Quatf, Gf.Quatd]:
                     paramValue = gfCast(paramValue[0], paramValue[1],
                         paramValue[2], paramValue[3])
-            else:
-                paramValue = gfCast(paramValue)
-        input.Set(paramValue)
-        return input
+        else:
+            paramValue = gfCast(paramValue)
+    input.Set(paramValue)
+    return input
 
 
 def WriteShaderConnections(stage, connectionsAttr, materialPath, shader):
@@ -298,7 +342,8 @@ def WriteShaderConnections(stage, connectionsAttr, materialPath, shader):
         shader Registry (Sdr).
     """
     reg = Sdr.Registry()
-    shaderNode = reg.GetNodeByName(shader.GetShaderId())
+    shaderNode = getShaderNodeFromRegistry(reg, shader.GetShaderId())
+
     if not shaderNode:
         log.warning(
             "Unable to write shadingNode connections for path {0},"
@@ -412,7 +457,7 @@ def WriteMaterialInterfaces(stage, parametersAttr, interfacesAttr,
 
 def GetShaderAttrSdfType(shaderType, shaderAttr, isOutput=False):
     reg = Sdr.Registry()
-    shader = reg.GetNodeByName(shaderType)
+    shader = getShaderNodeFromRegistry(reg, shaderType)
     if shader:
         # From the Docs: Two scenarios can result: an exact mapping from property
         # type to Sdf type, and an inexact mapping. In the first scenario, the
@@ -423,10 +468,16 @@ def GetShaderAttrSdfType(shaderType, shaderAttr, isOutput=False):
         # From USD code: (So we know what an SdfTypeIndicator is in the future!)
         # typedef std::pair<SdfValueTypeName, TfToken> SdfTypeIndicator;
         if isOutput:
-            return shader.GetOutput(shaderAttr).GetTypeAsSdfType()[0]
+            output = shader.GetOutput(shaderAttr)
+            if output:
+                return output.GetTypeAsSdfType()[0]
         else:
-            return shader.GetInput(shaderAttr).GetTypeAsSdfType()[0]
+            input =  shader.GetInput(shaderAttr)
+            if input:
+                return input.GetTypeAsSdfType()[0]
+        return Sdf.ValueTypeNames.Token
     else:
+        #Fallback if we cant find the shaders info in the SdrRegistry
         for renderer in RenderingAPI.RenderPlugins.GetRendererPluginNames(True):
             infoPlugin = RenderingAPI.RenderPlugins.GetInfoPlugin(renderer)
             if shaderType in infoPlugin.getRendererObjectNames("shader"):
@@ -460,3 +511,20 @@ def addMaterialAssignment(sharedOverrides, materialOverridePrim):
         pass
     else:
         pass
+
+
+def getShaderNodeFromRegistry(sdrRegistry, shaderType):
+    """
+    Method required to get the SdrShadingNode from the SdrRegistry in different
+    ways, depending on the usdPlugin.
+    @param sdrRegistry: The Sdr Registry from Usd, holds the shader information
+    @param shaderType: The type of the shader we want to find from the shading
+        registry.
+    """
+    shader = sdrRegistry.GetNodeByName(shaderType)
+    if not shader:
+        # try arnold, that uses identifiers instead of node names
+        shader = sdrRegistry.GetShaderNodeByIdentifier(
+            "arnold:{}".format(shaderType))
+
+    return shader
