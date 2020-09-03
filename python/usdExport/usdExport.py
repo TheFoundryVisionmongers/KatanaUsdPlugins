@@ -149,7 +149,7 @@ class UsdExport(BaseOutputFormat):
             if attrName == "layout":
                 # Here is where we would look to support layout info.
                 continue
-            attribute = AttrBridge.scenegraphAttrToAttr(attrDict[attrName])
+            attribute = attrDict[attrName]
             if not attribute:
                 continue
             if attrName == "material":
@@ -318,7 +318,7 @@ class UsdExport(BaseOutputFormat):
 
         def do_material_write(stage, rootPrimName):
             # Iterate over materials
-            for materialLocationPath, (locationType, materialScenegraphAttr) \
+            for materialLocationPath, (locationType, materialAttribute) \
                     in passData.materialDict.iteritems():
                 _ = locationType
                 # Discard materials if the path is not a valid SdfPath.
@@ -330,9 +330,6 @@ class UsdExport(BaseOutputFormat):
                 materialSdfPath = Sdf.Path(
                     "/".join([rootPrimName, materialLocationPath]))
 
-                # Convert from PyScenegraphAttribute to FnAttribute
-                materialAttribute = \
-                    AttrBridge.scenegraphAttrToAttr(materialScenegraphAttr)
                 if materialAttribute:
                     WriteMaterial(
                         stage, materialSdfPath, materialAttribute)

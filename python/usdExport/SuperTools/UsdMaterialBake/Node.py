@@ -5,6 +5,8 @@ import time
 
 from Katana import NodegraphAPI, Utils
 import LookFileBakeAPI
+from LookFileBakeAPI import LookFileBaker
+from Nodes3DAPI import LookFileBaking
 
 log = logging.getLogger("UsdMaterialBake.Node")
 
@@ -144,7 +146,7 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
                             % repr(graphState))
 
         sourcePort, sourceGraphState = self.getInputSource(portName,
-            graphState)
+                                                           graphState)
 
         sourceNode = None
         if sourcePort is not None:
@@ -173,24 +175,22 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
         inputPorts = node.getInputPorts()
         numPorts = len(inputPorts)
         if numPorts < 2:
-            log.error("Requires at least two ports to bake a Look file")
+            log.error("Requires at least two input ports to bake a USD Look")
         variantSetName = node.getParameter(
             "variantSetName").getValue(frameTime)
-        rootPrimName = node.getParameter(
-            "rootPrimName").getValue(frameTime)
+        rootPrimName = node.getParameter("rootPrimName").getValue(frameTime)
         alwaysCreateVariantSet = bool(node.getParameter(
             "alwaysCreateVariantSet").getValue(frameTime) == "Yes")
-        fileName = node.getParameter("fileName").getValue(
-            frameTime)
+        fileName = node.getParameter("fileName").getValue(frameTime)
         fileFormat = node.getParameter("fileFormat").getValue(frameTime)
 
         createVariantSet = alwaysCreateVariantSet or (len(inputPorts) > 2)
         additionalSettings = {
-            "variantSetName" : variantSetName,
-            "rootPrimName" : rootPrimName,
-            "createVariantSet" : createVariantSet,
-            "fileFormat" : fileFormat,
-            "fileName" : fileName
+            "variantSetName": variantSetName,
+            "rootPrimName": rootPrimName,
+            "createVariantSet": createVariantSet,
+            "fileFormat": fileFormat,
+            "fileName": fileName
         }
         # Ensure the interruptWidget is only created in a UI session
         if parentWidget:
@@ -202,30 +202,37 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
             self.__interruptWidget = None
             self.__timer = None
 
-        #When updating to the later version of the LookFileBakeAPI, dont
-        # forget to update require3DInput from the Node.py
-        lfbf = LookFileBakeAPI.Functionality.LookFileBakeFunctionality(
-            node,
-            "UsdExport",
-            originalInputName=None,
-            evictionLocationInterval=None,
-            includeGlobalAttributes=None,
-            includeLodInfo=None,
-            progressCallback=self.__progressCallback,
-            materialTreeRootLocations=None,
-            additionalSettings=additionalSettings)
-
         assetId = node.getParameter("saveTo").getValue(frameTime)
         rootLocationsParam = node.getParameter("rootLocations")
         rootLocations = [x.getValue(frameTime) for x in
-            rootLocationsParam.getChildren()]
+                         rootLocationsParam.getChildren()]
+
+        # Retrieve the Ops for each of the inputs
+        referenceOp, passNamesAndOps = self.__getBakerOps(
+            self._getPassInputPortNames(), graphState)
+
+        sourceFile = NodegraphAPI.GetOriginalSourceFile()
+        if not sourceFile:
+            # Use legacy API call in case this file was created in a very old
+            # version of Katana (1.6.11 or earlier)
+            sourceFile = NodegraphAPI.GetSourceFile()
+        sourceAsset = NodegraphAPI.GetKatanaSceneName()
+
+        #When updating to the later version of the LookFileBakeAPI, dont
+        # forget to update require3DInput from the Node.py
+        baker = LookFileBaker("UsdExport")
+        baker.progressCallback = self.__progressCallback
+        baker.additionalSettings = additionalSettings
+        baker.sourceAsset = sourceAsset
+        baker.sourceFile = sourceFile
 
         if self.__interruptWidget:
             self.__interruptWidget.show()
             self.__interruptWidget.update("Saving Materials To %s" % assetId,
-                True)
+                                          True)
 
-        lfbf.WriteToAsset(graphState, assetId, rootLocations)
+        baker.writeToAsset(
+            referenceOp, passNamesAndOps, rootLocations, assetId)
 
         if self.__interruptWidget:
             self.__interruptWidget.close()
@@ -255,6 +262,26 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
         class InterruptionException(Exception):
             pass
         raise InterruptionException()
+
+    def _getReferenceInputPort(self):
+        return self.getInputPortByIndex(0)
+
+    def _getPassInputPorts(self):
+        return self.getInputPorts()[1:]
+
+    def _getReferenceInputPortName(self):
+        return self._getReferenceInputPort().getName()
+
+    def _getPassInputPortNames(self):
+        return [port.getName() for port in self._getPassInputPorts()]
+
+    def __getBakerOps(self, passInputPortNames, graphState):
+        ops = LookFileBaking.GetLookFileBakeOps(
+            self, [self._getReferenceInputPortName()] + passInputPortNames,
+            graphState)
+        referenceOp = ops[0]
+        passNamesAndOps = zip(passInputPortNames, ops[1:])
+        return (referenceOp, passNamesAndOps)
 
 
 _parameters_XML = """
@@ -294,7 +321,7 @@ _ExtraHints = {
         """
     },
     "UsdMaterialBake.fileFormat": {
-        "widget" : "popup",
+        "widget": "popup",
         "options": ['usd', 'usda', 'usdc'],
         "help": "The type of usd file to write."
     },
