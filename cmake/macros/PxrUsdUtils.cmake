@@ -39,14 +39,16 @@ endfunction() # pxr_katana_nodetypes
 
 # from USD/cmake/macros/Public.cmake
 function(pxr_katana_python_plugin)
-    set(options
-    )
+    # Installs the PYTHON_MODULE_FILES to /lib/python
+    # Installs the PYTHON_PLUGIN_REGISTRY_FILES files to /plugin/{PLUGIN_TYPE}
+    set(options)
     set(oneValueArgs
         MODULE_NAME
         PLUGIN_TYPE
     )
     set(multiValueArgs
-        PYTHON_FILES
+        PYTHON_PLUGIN_REGISTRY_FILES # Files used to register plugins
+        PYTHON_MODULE_FILES # Module files to be installed into lib/python
     )
     cmake_parse_arguments(args
         "${options}"
@@ -54,22 +56,39 @@ function(pxr_katana_python_plugin)
         "${multiValueArgs}"
         ${ARGN}
     )
-    set(installDir ${PXR_INSTALL_SUBDIR}/plugin/Plugins)
+    set(pluginInstallDir ${PXR_INSTALL_SUBDIR}/plugin/${args_PLUGIN_TYPE})
+    set(pythonInstallDir ${PXR_INSTALL_SUBDIR}/lib/python)
 
     install(
-        PROGRAMS ${args_PYTHON_FILES}
-        DESTINATION ${installDir}
+        PROGRAMS ${args_PYTHON_PLUGIN_REGISTRY_FILES}
+        DESTINATION ${pluginInstallDir}
+    )
+    install(
+        PROGRAMS ${args_PYTHON_MODULE_FILES}
+        DESTINATION ${pythonInstallDir}
     )
 
     if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
-        bundle_files(
-            TARGET
-            ${args_MODULE_NAME}
-            DESTINATION_FOLDER
-            ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/${args_PLUGIN_TYPE}/${pyModuleName}
-            FILES
-            ${args_PYTHON_FILES}
-        )
+        if(args_PYTHON_PLUGIN_REGISTRY_FILES)
+            bundle_files(
+                TARGET
+                ${args_MODULE_NAME}
+                DESTINATION_FOLDER
+                ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/${args_PLUGIN_TYPE}
+                FILES
+                ${args_PYTHON_PLUGIN_REGISTRY_FILES}
+            )
+        endif()
+        if(args_PYTHON_MODULE_FILES)
+            bundle_files(
+                TARGET
+                ${args_MODULE_NAME}.python
+                DESTINATION_FOLDER
+                ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib/python
+                FILES
+                ${args_PYTHON_MODULE_FILES}
+            )
+        endif()
     endif()
 endfunction() # pxr_katana_lookFileBake
 

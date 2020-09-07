@@ -14,7 +14,7 @@ pxrImported = False
 try:
     from fnpxr import Usd, UsdShade, Sdf, Gf
     # These includes also require fnpxr
-    from .UsdExport.material import (WriteMaterial, WriteMaterialAssign,
+    from UsdExport.material import (WriteMaterial, WriteMaterialAssign,
         WriteChildMaterial)
     pxrImported = True
 except ImportError as e:
