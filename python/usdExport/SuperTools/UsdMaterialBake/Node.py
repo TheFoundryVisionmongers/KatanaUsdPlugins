@@ -327,7 +327,7 @@ _ExtraHints = {
     },
     "UsdMaterialBake.saveTo": {
         "widget": "assetIdInput",
-        "scope": "product",
+        "dirsOnly": "True",
         "context": "usd",
     },
     "UsdMaterialBake.alwaysCreateVariantSet": {
