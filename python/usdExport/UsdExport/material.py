@@ -1,8 +1,12 @@
 # Copyright (c) 2020 The Foundry Visionmongers Ltd. All Rights Reserved.
 
+import logging
+
 from Katana import RenderingAPI, FnAttribute
 import PyFnAttribute
-import logging
+
+# From the KatanaUsdPlugins
+import UsdKatana
 
 log = logging.getLogger("UsdExport")
 
@@ -15,6 +19,7 @@ try:
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
+
 
 def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
                        parentMaterialSdfPaths):
@@ -68,6 +73,10 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
         stage.GetPrimAtPath(youngestParentSdfPath))
     if oldestParentMaterial and youngestParentMaterial:
         material.SetBaseMaterial(youngestParentMaterial)
+        childName = (materialSdfPath.name)[len(youngestParentSdfPath.name)+1:]
+        katanaLookAPISchema = UsdKatana.LookAPI(materialPrim)
+        katanaLookAPISchema.Apply(materialPrim)
+        katanaLookAPISchema.CreatePrimNameAttr(childName)
         parameters = materialAttribute.getChildByName("parameters")
         # We cant add materialInterfaces to child materials in Katana at
         # present, therefore we only need to check the oldest parent Material.
