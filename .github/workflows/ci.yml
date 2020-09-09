@@ -16,9 +16,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        usd: ["19.11"]
+        usd: ["19.11", "20.08"]
         year: [2019]
-        katana: ["3.6v2"] # ["3.1v7", "3.6v2"]
+        katana: ["3.1v7", "3.6v2"]
 
     steps:
     # - uses: actions/setup-python@v2
