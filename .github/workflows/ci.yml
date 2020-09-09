@@ -11,7 +11,7 @@ jobs:
       - ${{ github.workspace }}/tmp/katana:${{ github.workspace }}/tmp/katana
       - ${{ github.workspace }}/tmp/usd:${{ github.workspace }}/tmp/usd
       - ${{ github.workspace }}/build:${{ github.workspace }}/build
-      - ${{ github.workspace }}/dist:${{ github.workspace }}/dist
+      # - ${{ github.workspace }}/dist:${{ github.workspace }}/dist
 
     strategy:
       fail-fast: false
