@@ -11,19 +11,15 @@ jobs:
       - ${{ github.workspace }}/tmp/katana:${{ github.workspace }}/tmp/katana
       - ${{ github.workspace }}/tmp/usd:${{ github.workspace }}/tmp/usd
       - ${{ github.workspace }}/build:${{ github.workspace }}/build
-      # - ${{ github.workspace }}/dist:${{ github.workspace }}/dist
 
     strategy:
       fail-fast: false
       matrix:
         usd: ["19.11", "20.08"]
-        year: [2019]
+        year: [2019, 2020]
         katana: ["3.1v7", "3.6v2"]
 
     steps:
-    # - uses: actions/setup-python@v2
-    #   with:
-    #     python-version: "2.7"
 
     # Install Katana
     - uses: j0yu/setup-rez@v1
@@ -48,65 +44,6 @@ jobs:
     # Build
     - uses: actions/checkout@v2
     - run: mkdir build dist
-    - name: cmake generate
-      working-directory: build
-      run: >
-        cmake ..
-        -DKATANA_API_LOCATION=$KATANA_API_LOCATION
-        -DUSD_ROOT=${{ github.workspace }}/dist
-        -DPXR_PY_PACKAGE_NAME=fnpxr
-        -DUSE_KATANA_THIRDPARTY_LIBS=ON
-        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist
-        -DUSE_KATANA_THIRDPARTY_LIBS=ON
-
-    - working-directory: build
-      run: cmake --build . --target install
-
-
-  vm-build:
-    name: Build USD
-    if: false
-    runs-on: ${{ matrix.os }}-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        usd: ["19.11"]
-        os: [ubuntu]  # ["windows", "ubuntu"]
-        katana: ["3.6v2"] # ["3.1v7", "3.6v2"]
-        include:
-        - {os: ubuntu,  variant: 0}
-        # - {os: windows,  variant: 1}
-
-
-    steps:
-    - uses: actions/setup-python@v2
-      with:
-        python-version: "2.7"
-
-    # Install Katana
-    - uses: j0yu/setup-rez@v1
-    - uses: actions/checkout@v2
-      with:
-        repository: j0yu/rez-katana
-        path: tmp/katana
-
-    - run: rez build --install --variant ${{ matrix.variant }}
-      working-directory: tmp/katana
-
-    - name: Export KATANA_API_LOCATION
-      run: rez env katana -c 'echo "::set-env name=KATANA_API_LOCATION::$REZ_KATANA_ROOT"'
-
-    # Fetch USD
-    - uses: actions/checkout@v2
-      with:
-        repository: PixarAnimationStudios/USD
-        path: tmp/usd
-        ref: v${{ matrix.usd }}
-
-    # Build
-    - uses: actions/checkout@v2
-    - run: mkdir build dist
-
     - name: cmake generate
       working-directory: build
       run: >
