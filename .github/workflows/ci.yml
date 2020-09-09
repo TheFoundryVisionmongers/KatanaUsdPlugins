@@ -6,6 +6,7 @@ jobs:
     name: Build USD
     runs-on: ${{ matrix.os }}-latest
     strategy:
+      fail-fast: false
       matrix:
         os: ["windows", "ubuntu"]
         katana: ["3.1v7", "3.6v2"]
@@ -27,6 +28,7 @@ jobs:
         path: tmp/katana
     
     - run: rez build --install --variant ${{ matrix.variant }}
+      working-directory: tmp/katana
       env:
         REZ_LOCAL_PACKAGES_PATH: ${{ runner.temp }}
 
