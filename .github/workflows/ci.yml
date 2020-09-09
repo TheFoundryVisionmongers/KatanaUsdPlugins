@@ -13,7 +13,7 @@ jobs:
         katana: ["3.6v2"] # ["3.1v7", "3.6v2"]
         include:
         - {os: ubuntu,  variant: 0}
-        - {os: windows,  variant: 1}
+        # - {os: windows,  variant: 1}
 
 
     steps:
@@ -30,12 +30,8 @@ jobs:
     
     - run: rez build --install --variant ${{ matrix.variant }}
       working-directory: tmp/katana
-      env:
-        REZ_LOCAL_PACKAGES_PATH: ${{ runner.temp }}
 
     - name: Export KATANA_API_LOCATION
-      env:
-        REZ_PACKAGES_PATH: ${{ runner.temp }}
       run: rez env katana -c 'echo "::set-env name=KATANA_API_LOCATION::$REZ_KATANA_ROOT"'
 
     # Fetch USD
