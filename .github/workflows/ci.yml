@@ -33,6 +33,9 @@ jobs:
       env:
         REZ_LOCAL_PACKAGES_PATH: ${{ runner.temp }}
 
+    - name: Export KATANA_API_LOCATION
+      run: rez env katana -c 'echo "::set-env name=KATANA_API_LOCATION::$REZ_KATANA_ROOT"'
+
     # Fetch USD
     - uses: actions/checkout@v2
       with:
@@ -43,10 +46,12 @@ jobs:
     # Build
     - uses: actions/checkout@v2
     - run: mkdir build dist
-    - working-directory: build
+    
+    - name: cmake generate
+      working-directory: build
       run: >
         cmake .. 
-        -DKATANA_API_LOCATION=${{ runner.temp }}/include
+        -DKATANA_API_LOCATION=$KATANA_API_LOCATION
         -DUSD_ROOT=${{ github.workspace }}/dist
         -DPXR_PY_PACKAGE_NAME=fnpxr
         -DUSE_KATANA_THIRDPARTY_LIBS=ON
