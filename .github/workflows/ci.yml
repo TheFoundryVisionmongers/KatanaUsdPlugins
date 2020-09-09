@@ -6,7 +6,7 @@ jobs:
     name: ASWF container
     runs-on: ubuntu-latest
     container:
-      image: aswf/ci-usd:${{ matrix.year }}
+      image: aswf/ci-usd:2019
       volumes:
       - ${{ github.workspace }}/tmp/katana:${{ github.workspace }}/tmp/katana
       - ${{ github.workspace }}/tmp/usd:${{ github.workspace }}/tmp/usd
@@ -16,7 +16,6 @@ jobs:
       fail-fast: false
       matrix:
         usd: ["19.11", "20.08"]
-        year: [2019, 2020]
         katana: ["3.1v7", "3.6v2"]
 
     steps:
