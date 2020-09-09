@@ -1,0 +1,39 @@
+name: CI
+on: [push]
+
+jobs:
+  vm-build:
+    name: Build USD
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      matrix:
+        os: ["windows", "ubuntu"]
+        katana: ["3.1v7", "3.6v2"]
+        include:
+        - {os: ubuntu,  variant: 0, exe: katana}
+        - {os: windows,  variant: 1, exe: katanaBin.exe}
+
+
+    steps:
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "2.7"
+
+    # Install Katana
+    - uses: j0yu/setup-rez@v1
+    - uses: actions/checkout@v2
+      with:
+        repository: j0yu/rez-katana
+        path: tmp/katana
+    
+    - run: rez build --install --variant ${{ matrix.variant }}
+      env:
+        REZ_LOCAL_PACKAGES_PATH: ${{ runner.temp }}
+
+    # Build USD
+    - uses: actions/checkout@v2
+    - run: >
+        cmake .. 
+        -DKATANA_API_LOCATION=${{ runner.temp }}/include
+        -DUSE_KATANA_THIRDPARTY_LIBS=ON
+        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/build
