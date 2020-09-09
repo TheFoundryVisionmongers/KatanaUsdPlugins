@@ -8,11 +8,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        usd: ["19.11"]
         os: ["windows", "ubuntu"]
         katana: ["3.1v7", "3.6v2"]
         include:
-        - {os: ubuntu,  variant: 0, exe: katana}
-        - {os: windows,  variant: 1, exe: katanaBin.exe}
+        - {os: ubuntu,  variant: 0}
+        - {os: windows,  variant: 1}
 
 
     steps:
@@ -32,12 +33,25 @@ jobs:
       env:
         REZ_LOCAL_PACKAGES_PATH: ${{ runner.temp }}
 
-    # Build USD
+    # Fetch USD
     - uses: actions/checkout@v2
-    - run: mkdir build
+      with:
+        repository: PixarAnimationStudios/USD
+        path: tmp/usd
+        ref: v${{ matrix.usd }}
+
+    # Build
+    - uses: actions/checkout@v2
+    - run: mkdir build dist
     - working-directory: build
       run: >
         cmake .. 
         -DKATANA_API_LOCATION=${{ runner.temp }}/include
+        -DUSD_ROOT=${{ github.workspace }}/dist
+        -DPXR_PY_PACKAGE_NAME=fnpxr
         -DUSE_KATANA_THIRDPARTY_LIBS=ON
-        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/build
+        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist
+        -DUSE_KATANA_THIRDPARTY_LIBS=ON
+
+    - working-directory: build
+      run: cmake --build . --target install
