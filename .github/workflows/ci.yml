@@ -9,8 +9,8 @@ jobs:
       fail-fast: false
       matrix:
         usd: ["19.11"]
-        os: ["windows", "ubuntu"]
-        katana: ["3.1v7", "3.6v2"]
+        os: [ubuntu]  # ["windows", "ubuntu"]
+        katana: ["3.6v2"] # ["3.1v7", "3.6v2"]
         include:
         - {os: ubuntu,  variant: 0}
         - {os: windows,  variant: 1}
@@ -35,7 +35,7 @@ jobs:
 
     - name: Export KATANA_API_LOCATION
       env:
-        REZ_LOCAL_PACKAGES_PATH: ${{ runner.temp }}
+        REZ_PACKAGES_PATH: ${{ runner.temp }}
       run: rez env katana -c 'echo "::set-env name=KATANA_API_LOCATION::$REZ_KATANA_ROOT"'
 
     # Fetch USD
