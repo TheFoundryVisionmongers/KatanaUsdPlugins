@@ -16,6 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        usd: ["19.11"]
         year: [2019]
         katana: ["3.6v2"] # ["3.1v7", "3.6v2"]
 
