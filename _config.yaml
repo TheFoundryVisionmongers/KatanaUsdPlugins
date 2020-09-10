@@ -1,8 +1,18 @@
 plugins:
 - jekyll-remote-theme
 
-# theme: jekyll-theme-slate
 remote_theme: pmarsceill/just-the-docs
+color_scheme: dark
+
+aux_links_new_tab: true
+aux_links:
+  "GitHub":
+    - "{{ site.github.project_url }}"
+    - "{{ site.github.project_url }}/actions"
+  "CI":
+    - "{{ site.github.project_url }}/actions"
+  "Pixar USD Releases":
+    - "https://github.com/PixarAnimationStudios/USD/releases"
 
 readme_index:
   enabled: true
