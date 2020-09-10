@@ -7,11 +7,15 @@ color_scheme: dark
 aux_links_new_tab: true
 aux_links:
   "GitHub":
-    - "{{ site.github.project_url }}"
-    - "{{ site.github.project_url }}/actions"
-  "CI":
-    - "{{ site.github.project_url }}/actions"
-  "Pixar USD Releases":
+  - {{ site.github.project_url }}
+  
+  License:
+  - LICENSE.txt
+  
+  Notice:
+  - NOTICE.txt
+  
+  "USD Releases":
     - "https://github.com/PixarAnimationStudios/USD/releases"
 
 readme_index:

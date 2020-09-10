@@ -20,13 +20,5 @@ See the [online documentation](http://openusd.org/docs/Katana-USD-Plugins.html)
 for more details.
 
 
-## Pages
-
-- [Building]
-- [Change Log](CHANGELOG.md)
-- [License](LICENSE.txt)
-- [Notice](NOTICE.txt)
-
-
 [Building]: BUILDING.md
 [v19.11]: https://github.com/PixarAnimationStudios/USD/releases/tag/v19.11
