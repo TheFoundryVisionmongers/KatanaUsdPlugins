@@ -1,8 +1,0 @@
-plugins = [
-  "just-the-docs",
-]
-
-theme = "just-the-docs"
-
-[readme_index]
-enabled = true
