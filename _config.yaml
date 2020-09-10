@@ -1,7 +1,7 @@
 plugins:
-- just-the-docs
+- jekyll-theme-slate
 
-theme: just-the-docs
+theme: jekyll-theme-slate
 
 readme_index:
   enabled: true
