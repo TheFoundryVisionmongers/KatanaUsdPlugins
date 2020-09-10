@@ -30,27 +30,6 @@ jobs:
         | tar -xzO "katana_files.tar.gz" \
         | tar -xz -C "$INSTALL_PATH"
         echo "::set-env name=KATANA_API_LOCATION::$REZ_BUILD_INSTALL_PATH"
-
-    # Install Katana
-    # - uses: actions/checkout@v2
-    #   with:
-    #     repository: j0yu/rez-katana
-    #     path: tmp/katana
-
-    # - name: Install Katana
-    #   working-directory: tmp/katana
-    #   env:
-    #     RELEASES_URL: "http://thefoundry.s3.amazonaws.com/products/katana/releases"
-    #     REZ_BUILD_INSTALL: 1
-    #     REZ_BUILD_INSTALL_PATH: ${{ runner.temp }}/katana
-    #     REZ_BUILD_SOURCE_PATH: ${{ github.workspace }}/tmp/katana
-    #     REZ_PLATFORM_VERSION: linux
-    #     REZ_ARCH_VERSION: x86_64
-
-    #   run: |
-    #     mkdir -p "$REZ_BUILD_INSTALL_PATH"
-    #     bash -x linux.bash "${{ matrix.katana }}"
-    #     echo "::set-env name=KATANA_API_LOCATION::$REZ_BUILD_INSTALL_PATH"
  
     # Fetch USD
     - uses: actions/checkout@v2
@@ -61,16 +40,16 @@ jobs:
 
     # Build
     - uses: actions/checkout@v2
-    - run: mkdir build dist
+    - run: mkdir build dist && echo "$KATANA_API_LOCATION"
     - name: cmake generate
       working-directory: build
       run: >
         cmake ..
-        -DKATANA_API_LOCATION=$KATANA_API_LOCATION
-        -DUSD_ROOT=${{ github.workspace }}/dist
+        -DKATANA_API_LOCATION="$KATANA_API_LOCATION"
+        -DUSD_ROOT="${{ github.workspace }}/tmp/usd"
         -DPXR_PY_PACKAGE_NAME=fnpxr
         -DUSE_KATANA_THIRDPARTY_LIBS=ON
-        -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/dist
+        -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/dist"
         -DUSE_KATANA_THIRDPARTY_LIBS=ON
 
     - working-directory: build
