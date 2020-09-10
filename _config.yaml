@@ -1,3 +1,10 @@
+# Setup for basic GitHub pages hosting straight from master branch
+#
+# 1. Go to repository's Settings page
+# 2. Scroll down to "GitHub Pages" section
+# 3. Set source branch to "master", leave folder as "/ (root)"
+# 4. Press "Save". It takes about a minute or so until the site is ready.
+
 plugins:
 - jekyll-remote-theme
 
@@ -7,7 +14,7 @@ color_scheme: dark
 aux_links_new_tab: true
 aux_links:
   "GitHub":
-  - {{ site.github.project_url }}
+  - https://github.com/TheFoundryVisionmongers/KatanaUsdPlugins
   
   License:
   - LICENSE.txt

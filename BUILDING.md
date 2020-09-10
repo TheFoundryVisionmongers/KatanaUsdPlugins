@@ -1,7 +1,6 @@
 ---
 title: Building
 nav_order: 2
-has_toc: true
 ---
 
 
@@ -340,6 +339,6 @@ directory paths for each dependant library to the `PATH` or `LD_LIBRARY_PATH`
 dependant on your system. This only applies if using shared libraries.
 
 
-[FindUSD.cmake]: blob/master/cmake/modules/FindUSD.cmake
+[FindUSD.cmake]: https://github.com/TheFoundryVisionmongers/KatanaUsdPlugins/blob/master/cmake/modules/FindUSD.cmake
 [findpackage]: https://cmake.org/cmake/help/latest/command/find_package.html
 [findboost]: https://cmake.org/cmake/help/latest/module/FindBoost.html
