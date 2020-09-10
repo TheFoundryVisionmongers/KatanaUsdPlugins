@@ -17,9 +17,10 @@ for more details.
 ## Pages
 
 - [Building]
-- [Change Log]
+- [Change Log](CHANGELOG.md)
+- [License](LICENSE.txt)
+- [Notice](NOTICCE.txt)
 
 
 [Building]: BUILDING.md
-[Change Log]: CHANGELOG.md
 [v19.11]: https://github.com/PixarAnimationStudios/USD/releases/tag/v19.11
