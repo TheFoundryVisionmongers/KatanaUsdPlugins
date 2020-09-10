@@ -19,7 +19,7 @@ for more details.
 - [Building]
 - [Change Log](CHANGELOG.md)
 - [License](LICENSE.txt)
-- [Notice](NOTICCE.txt)
+- [Notice](NOTICE.txt)
 
 
 [Building]: BUILDING.md

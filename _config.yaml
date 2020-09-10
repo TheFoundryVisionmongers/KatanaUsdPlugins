@@ -1,7 +1,8 @@
 plugins:
-- jekyll-theme-slate
+- jekyll-remote-theme
 
-theme: jekyll-theme-slate
+# theme: jekyll-theme-slate
+remote_theme: pmarsceill/just-the-docs
 
 readme_index:
   enabled: true
