@@ -56,12 +56,14 @@ class UsdExport(BaseOutputFormat):
                 return False
         return True
 
-    @classmethod
-    def locationPathtoSdfPath(cls, locationPath, rootPrimName):
+    @staticmethod
+    def locationPathtoSdfPath(locationPath, rootPrimName):
         if not locationPath.startswith("/"):
             locationPath = "/" + locationPath
         if rootPrimName:
             locationPath = rootPrimName + locationPath
+        # ":" is not supported in an SdfPath
+        locationPath = locationPath.replace(":", "_")
         return Sdf.Path(locationPath)
 
     @classmethod
@@ -91,7 +93,7 @@ class UsdExport(BaseOutputFormat):
         @param rootName:
         @param rootPrimName:
         @param pathsToRemove:
-        @param materialDict: A dictionary containing a mapping of the 
+        @param materialDict: A dictionary containing a mapping of the
             Katana location paths to the Sdf.Path's of the material prim
             created for that path.  This ensures child materials
             are bindable, and we pass this to our materialAssignment logic.
@@ -326,10 +328,8 @@ class UsdExport(BaseOutputFormat):
                     log.warning('"%s" is not a valid SdfPath. Material will '
                                 'be skipped.', materialLocationPath)
                     continue
-                # Create a material
-                materialSdfPath = Sdf.Path(
-                    "/".join([rootPrimName, materialLocationPath]))
-
+                materialSdfPath = self.__class__.locationPathtoSdfPath(
+                    materialLocationPath, rootPrimName)
                 if materialAttribute:
                     WriteMaterial(
                         stage, materialSdfPath, materialAttribute)
@@ -340,15 +340,14 @@ class UsdExport(BaseOutputFormat):
         filePath = os.path.join(fileDir, self._settings["fileName"])
         filePath = filePath + "." + self._settings["fileFormat"]
         rootPrimName = self._settings["rootPrimName"]
+        # Validate rootPrimName, must start with / and must not end with /
+        if not rootPrimName.startswith("/"):
+            rootPrimName = "/" + rootPrimName
+        if rootPrimName.endswith("/"):
+            rootPrimName = rootPrimName[:-1]
         if self._settings["createVariantSet"]:
             # write all material data to the same variant file
             # (create on first pass, then append in subsequent passes)
-
-            #Validate rootPrimName, must start with / and must not end with /
-            if not rootPrimName.startswith("/"):
-                rootPrimName = "/" + rootPrimName
-            if rootPrimName.endswith("/"):
-                rootPrimName = rootPrimName[:-1]
 
             if self._settings["materialVariantSetInitialized"]:
                 stage = Usd.Stage.Open(filePath)
