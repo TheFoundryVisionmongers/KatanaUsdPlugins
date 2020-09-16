@@ -742,7 +742,7 @@ _AddCustomProperties(
         double currentTime,
         FnKat::GroupBuilder& customBuilder)
 {
-    if (TfGetenv("USD_KATANA_ADD_CUSTOM_PROPERTIES", "0") == "0")
+    if (TfGetenv("USD_KATANA_ADD_CUSTOM_PROPERTIES", "1") == "0")
     {
         return false;
     }
