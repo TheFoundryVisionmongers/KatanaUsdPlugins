@@ -69,9 +69,9 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-TF_DEFINE_ENV_SETTING(USD_KATANA_ALLOW_CUSTOM_MATERIAL_SCOPES, false,
-        "Set to true to enable custom names for the parent scope "
-        "of materials. Otherwise only scopes named Looks are allowed.");
+TF_DEFINE_ENV_SETTING(USD_KATANA_ALLOW_CUSTOM_MATERIAL_SCOPES, true,
+        "If set to false, this will limit material assignments to materials "
+        "scoped under a Looks location.");
 
 TF_DEFINE_ENV_SETTING(USD_KATANA_API_SCHEMAS_AS_GROUP_ATTR, false,
         "If true, API schemas will be imported as group attributes instead "
