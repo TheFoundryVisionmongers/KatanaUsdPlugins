@@ -6,7 +6,7 @@ import os
 
 from Katana import LookFileBakeAPI, Callbacks, FnAttribute
 from Nodes3DAPI.Manifest import PyScenegraphAttrFnAttributeBridge as AttrBridge
-from GeoAPI.Util import LookFileUtil
+from LookFileBakeAPI import LookFileUtil, LookFileBakeException
 log = logging.getLogger("UsdExport")
 
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
@@ -337,24 +337,34 @@ class UsdExport(BaseOutputFormat):
                 stage, passData.outputDictList, passData.sharedOverridesDict,
                 rootPrimName)
 
-        filePath = os.path.join(fileDir, self._settings["fileName"])
-        filePath = filePath + "." + self._settings["fileFormat"]
-        rootPrimName = self._settings["rootPrimName"]
+        # Validate whether we have the settings we need:
+        try:
+            createVariantSet = self._settings["createVariantSet"]
+            fileName = self._settings["fileName"]
+            fileFormat = self._settings["fileFormat"]
+            rootPrimName = self._settings["rootPrimName"]
+            materialVariantSetInitialized = \
+                self._settings["materialVariantSetInitialized"]
+            variantSetName = self._settings["variantSetName"]
+        except ValueError:
+            raise LookFileBakeException("Invalid Settings for UsdExport. "
+                                        "The UsdExport Output Format plug-in "
+                                        "is intended for use with the "
+                                        "UsdMaterialBake node.")
+        filePath = os.path.join(fileDir, fileName) + "." + fileFormat
         # Validate rootPrimName, must start with / and must not end with /
         if not rootPrimName.startswith("/"):
             rootPrimName = "/" + rootPrimName
         if rootPrimName.endswith("/"):
             rootPrimName = rootPrimName[:-1]
-        if self._settings["createVariantSet"]:
-            # write all material data to the same variant file
+        if createVariantSet:
+            # Write all material data to the same variant file
             # (create on first pass, then append in subsequent passes)
-
-            if self._settings["materialVariantSetInitialized"]:
+            if materialVariantSetInitialized:
                 stage = Usd.Stage.Open(filePath)
-                rootPrim = stage.GetPrimAtPath(\
-                    rootPrimName)
-                variantSet = rootPrim.GetVariantSets().GetVariantSet(\
-                    self._settings["variantSetName"])
+                rootPrim = stage.GetPrimAtPath(rootPrimName)
+                variantSet = rootPrim.GetVariantSets().GetVariantSet(
+                    variantSetName)
             else:
                 stage = Usd.Stage.CreateNew(filePath)
                 now = datetime.datetime.now()
@@ -364,8 +374,8 @@ class UsdExport(BaseOutputFormat):
                         now.strftime("%d/%b/%Y %H:%M:%S")))
                 rootPrim = stage.DefinePrim(rootPrimName)
                 stage.SetDefaultPrim(rootPrim)
-                variantSet = rootPrim.GetVariantSets().AddVariantSet(\
-                    self._settings["variantSetName"])
+                variantSet = rootPrim.GetVariantSets().AddVariantSet(
+                    variantSetName)
                 self._settings["defaultMaterialVariant"] = passData.passName
                 self._settings["materialVariantSetInitialized"] = True
 
