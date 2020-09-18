@@ -34,6 +34,7 @@ class UsdExport(BaseOutputFormat):
     DisplayName = "UsdExport"
     FileExtension = ""
     PassFileExtension = "usda"
+    Hidden = True
     LocationTypeWritingOrder = ["material", "all"]
 
     # Protected Class Methods -------------------------------------------------
