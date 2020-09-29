@@ -628,7 +628,36 @@ _GetMaterialAttr(
     {
         if (materialOutput.HasConnectedSource())
         {
-            TfToken materialOutTerminalName = materialOutput.GetBaseName();
+            const TfToken materialOutTerminalName =
+                materialOutput.GetBaseName();
+            std::string katanaTerminalName =
+                materialOutTerminalName.GetString();
+            if (katanaTerminalName.empty())
+            {
+                continue;
+            }
+
+            if (TfStringStartsWith(katanaTerminalName, "gslfx:"))
+            {
+                katanaTerminalName = "usd" + katanaTerminalName.substr(6);
+                katanaTerminalName[3] = toupper(katanaTerminalName[3]);
+            }
+            else if (TfStringStartsWith(katanaTerminalName, "arnold:"))
+            {
+                // Erase the colon and make the terminal name uppercase.
+                // e.g arnold:surface becomes arnoldSurface
+                katanaTerminalName.erase(6, 1);
+                katanaTerminalName[6] = toupper(katanaTerminalName[6]);
+            }
+            else if (TfStringStartsWith(katanaTerminalName, "nsi:"))
+            {
+                katanaTerminalName = "dl" + katanaTerminalName.substr(4);
+                katanaTerminalName[4] = toupper(katanaTerminalName[4]);
+            }
+            else
+            {
+                katanaTerminalName[0] = toupper(katanaTerminalName[0]);
+            }
             UsdShadeConnectableAPI materialOutSource;
             TfToken sourceName;
             UsdShadeAttributeType sourceType;
@@ -636,9 +665,6 @@ _GetMaterialAttr(
                                               &sourceType);
             UsdShadeShader shader = UsdShadeShader(materialOutSource.GetPrim());
             const SdfPath& connectedShaderPath = materialOutSource.GetPath();
-            std::string katanaTerminalName =
-                "usd" + materialOutTerminalName.GetString();
-            katanaTerminalName[3] = toupper(katanaTerminalName[3]);
             const std::string katanaTerminalPortName =
                 katanaTerminalName + "Port";
             terminalsBuilder.set(
