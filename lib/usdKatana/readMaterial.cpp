@@ -672,7 +672,7 @@ _GetMaterialAttr(
                 FnKat::StringAttribute(connectedShaderPath.GetName()));
             terminalsBuilder.set(
                 katanaTerminalPortName.c_str(),
-                FnKat::StringAttribute(materialOutTerminalName));
+                FnKat::StringAttribute(katanaTerminalName));
         }
     }
 
