@@ -231,7 +231,7 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
             self.__interruptWidget.update("Saving Materials To %s" % assetId,
                                           True)
 
-        baker.writeToAsset(
+        baker.bakeAndPublish(
             referenceOp, passNamesAndOps, rootLocations, assetId)
 
         if self.__interruptWidget:
