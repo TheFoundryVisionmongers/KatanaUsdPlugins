@@ -15,9 +15,10 @@ __all__ = ['UsdMaterialBakeNode']
 
 class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
     """
-        UsdMaterialBake node, with extra methods to allow for baking features
-        and ability to change and re-order inputs driven by the Editor UI, or
-        by calling these directly.
+    UsdMaterialBake node, with extra methods to allow for baking features
+    and ability to change and re-order inputs driven by the Editor UI, or
+    by calling these directly. Used for baking USD data using the UsdExport
+    OutputFormat plug-in.
     """
     MIN_PORTS = 1
 
@@ -55,17 +56,18 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
     # --- Public node API -------------------------------------------
     def addVariantInput(self, variantName):
         """
-            Add a new input port for a new variant name.
-            @param variantName: The new name to give to the new port.
-            @type variantName: C{str}
+        Adds a new input port for a new variant name.
+
+        @type variantName: C{str}
+        @param variantName: New name to give to the new port.
         """
         self.addInputPort(variantName)
 
     def deleteVariantInput(self, index):
         """
-            Delete existing variant.
-            @param index: The index of the input port to delete
-            @type index: C{int}
+        Deletes the existing variant from the index provided.
+        @type index: C{int}
+        @param index: Index of the input port to delete.
         """
         if index < self.MIN_PORTS or index >= self.getNumInputPorts():
             return
@@ -75,15 +77,15 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
 
     def reorderInput(self, index, newIndex):
         """
-            Reorder two input variants. By Deleting the old port and recreating
-            it in the new index.
+        Reorders two input variants by Deleting the old port and recreating
+        it in the new index.
 
-            @param index: Index of the input port to reposition
-            @param newIndex: The new position of the input port. Assuming that
-                the current index does not exist.
-            @type index: C{int}
-            @type newIndex: C{int}
-            """
+        @type index: C{int}
+        @type newIndex: C{int}
+        @param index: Index of the input port to reposition.
+        @param newIndex: New position of the input port. Assuming that the
+            current index does not exist.
+        """
         if index < self.MIN_PORTS or index >= self.getNumInputPorts():
             return
         if newIndex < self.MIN_PORTS or newIndex >= self.getNumInputPorts():
@@ -100,13 +102,12 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
 
     def renameVariantInput(self, index, newName):
         """
-            Rename an existing input name.
-            Does not change the input order.
+        Renames an existing input. Does not change the input order.
 
-            @param index: Index of the input to rename.
-            @param newName: The new name to change the port to/
-            @type index: C{int}
-            @type newName: C{str}
+        @type index: C{int}
+        @type newName: C{str}
+        @param index: Index of the input to rename.
+        @param newName: New name to change the port to.
         """
         if index < self.MIN_PORTS or index >= self.getNumInputPorts():
             return
@@ -123,19 +124,32 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
             newPort.connect(i)
 
     def addParameterHints(self, attrName, inputDict):
+        """
+        Adds parameter hints to the given dictionary of hints for a
+        GenericAssign parameter that shows the value of an attribute from the
+        incoming scene.
+
+        @type attrName: C{str}
+        @type inputDict: C{dict}
+        @param attrName: The name of the scene graph attribute from the
+            incoming scene for which to add parameter hints.
+        @param inputDict: The dictionary to which to add parameter hints.
+        """
         inputDict.update(_ExtraHints.get(attrName, {}))
 
     def require3DInput(self, portName, graphState):
         """
-            A Method from the 3DNode used inside the look file bake code.
-            Used to gather the input port given the port name and graphstate.
+        A Method from C{Node3D} used inside the look file bake code to gather
+        the input port given the port name and graph state.
 
-            @param portName: The port name to read the 3dInput from.
-            @param newIndex: The graph state used to get the input source.
-            @type portName: C{str}
-            @type newIndex: C{NodegraphAPI.GraphState}
-            @raises: TypeError, RuntimeError
-            @returns: Tuple of the source Node, port and graphState
+        @type portName: C{str}
+        @type graphState: C{NodegraphAPI.GraphState}
+        @param portName: Port name to read the 3dInput from.
+        @param graphState: Graph state used to get the input source.
+        @raise TypeError: If C{graphState} provided is not valid.
+        @raise RuntimeError: If the port related to the C{portName} does
+            not point to a valid node.
+        @return: Tuple of the source Node, port and graphState.
         """
         # Required for the current iteration of LookFileBakeAPI, it expects
         # the node it is owrking on to be able to provide the 3dInput
@@ -161,13 +175,14 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
 
     def bake(self, parentWidget=None):
         """
-            Performs the bake based on the settings of this current node
-            parameter settings.
+        Performs the bake based on the settings of this current node
+        parameter settings. If a parentWidget is provided, we create a progress
+        widget and setup callbacks to update it. If no parentWidget is provided
+        we can run this without calling any UI code.
 
-            @param parentWidget: This will be the parent that the progress
-                widget will be parented to.  If set to None, the progress
-                callback is not produced.
-            @type parentWidget: C{QtWidgets.QWidget}
+        @type parentWidget: C{QtWidgets.QWidget}
+        @param parentWidget: Parent for the progress widget. If set to None,
+            the progress callback is not produced.
         """
         graphState = NodegraphAPI.GetCurrentGraphState()
         frameTime = graphState.getTime()
@@ -242,9 +257,12 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
 
     def __progressCallback(self, message=None):
         """
-            Callback for displaying progess in the interruptWidget whilst in
-            UI mode. This is passed to the look file bake functionality code
-            which handles passing back the text to write.
+        The Callback for displaying progess in the interruptWidget whilst in
+        UI mode. This is passed to the look file bake functionality code
+        which handles passing back the text to write.
+
+        @type message: C{str}
+        @param message: The message to display in the progress bar.
         """
         if not self.__interruptWidget or self.__timer:
             return
@@ -342,7 +360,7 @@ _ExtraHints = {
     "UsdMaterialBake.rootPrimName": {
         "help": """
             Specify the root prim name for where shading data will be written
-            under.  A root prim is required for referencing the resultant
+            under. A root prim is required for referencing the resultant
             USD shading stage.
         """
     },
