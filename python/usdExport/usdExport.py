@@ -68,188 +68,203 @@ class UsdExport(BaseOutputFormat):
         return Sdf.Path(locationPath)
 
     @classmethod
-    def writeOverride(cls, stage, outputDict, sharedOverrides,
-                      locationTypePass, locationPath, rootName, rootPrimName,
-                      pathsToRemove, materialDict, outputDictKey=None,
-                      parentMaterialSdfList=None):
+    def WriteOverride(cls, stage, overrideDict, sharedOverridesDict,
+                      locationTypePass, location, rootName, rootPrimName,
+                      materialDict):
+        # pylint: disable=too-many-branches,
+        # pylint: disable=too-many-locals
+        # pylint: disable=too-many-arguments
         """
         This method is responsible for writing all of the overrides
         from the passData.shaderdOverrides dictionary.
         We use the outputDict which has key value pairs of the location
         from katana, to the key of the sharedOverride from the
-        sharedOverrides dictionary.
+        sharedOverridesDict dictionary.
         This method is also called recursively, and in the recursive calls
         we also pass in outputDictKey and parentMaterialSdfList.
-        @param stage: The USD Stage to write the overrides onto.
-        @param outputDict: A dictionary from the passData, which has a
-            dictionary keyed by the location, with the value being a key
-            into the sharedOverrides dictionary.
-        @param sharedOverrides: A dictionary from the passData which
-            contains attribute data which is shared across many locations
-            as a de-duplication step.  The key is an integer which is
-            stored as the value on each location keyed value of the
-            outputDict.
-        @param locationTypePass:
-        @param locationPath:
-        @param rootName:
-        @param rootPrimName:
-        @param pathsToRemove:
-        @param materialDict: A dictionary containing a mapping of the
-            Katana location paths to the Sdf.Path's of the material prim
-            created for that path.  This ensures child materials
-            are bindable, and we pass this to our materialAssignment logic.
         @param outputDictKey:
         @param parentMaterialSdfList:
         @type stage: C{Usd.Stage}
         @type outputDict: C{dict} of C{str} : C{int}
-        @type sharedOverrides: C{dict} of C{int} : (
+        @type sharedOverridesDict: C{dict} of C{int} : (
             C{dict} of (
                     C{str} : C{FnAttribute.Attribute}
                 )
             )
         @type locationTypePass: C{str}
-        @type locationPath: C{str}
+        @type location: C{str}
         @type rootName: C{str}
         @type rootPrimName: C{str}
-        @type pathsToRemove: C{list} of C{str}
         @type materialDict: C{dict} of C{str} : C{Sdf.Path}
-        @type outputDictKey: C{str}
-        @type parentMaterialSdfList: C{list} of C{Sdf.Path}
+        @param stage: The C{Usd.Stage} to write data to.
+        @param overrideDict: See C{LookFilePassData} for more details.
+        @param sharedOverridesDict: See C{LookFilePassData} for more details.
+        @param locationTypePass: The current locationTypes to allow writing.
+            See WriteOverrides for more info.
+        @param location: The Katana location path for the
+        @param rootName: The root name from the overrideDictList, see
+            C{LookFilePassData} for more details.
+        @param rootPrimName: The name of the root C{Usd.Prim} for the given
+            stage.
+        @param materialDict: See C{LookFilePassData} for more details.
         """
         # We take the full path as the override path.
         # since the root will be handled by UsdIn
-        if not locationPath:
-            return pathsToRemove
-        if outputDictKey:
-            sharedOverridesKey = outputDict[outputDictKey]
-        else:
-            sharedOverridesKey = outputDict[locationPath]
-            outputDictKey = locationPath
-        # Copy this such that if we change locationPath later,
-        # it wont affect our deletion.
-        originalLocationPath = locationPath
+        if not location:
+            return
+        sharedOverridesKey = overrideDict[location]
         # Check to see if we are meant to add this type of location
         # yet.
-        attrDict = sharedOverrides.get(sharedOverridesKey)
+        attrDict = sharedOverridesDict.get(sharedOverridesKey)
         if not attrDict:
-            return pathsToRemove
+            return
         typeAttr = attrDict.get("type")
         locationType = ""
         if typeAttr:
             locationType = typeAttr.getValue()
         if not cls.__checkTypeWritingOrder(locationType, locationTypePass):
-            return pathsToRemove
+            return
 
-        sdfLocationPath = cls.locationPathtoSdfPath(locationPath, rootPrimName)
-        overridePrim = stage.OverridePrim(sdfLocationPath)
+        sdfLocationPath = cls.locationPathtoSdfPath(location, rootPrimName)
+        # By default create an override prim, any other node creation should
+        # happen before the point of creating this prim.
+        createOverridePrim = True
 
-        # Now loop through the data, if it doesn't exist in
-        # the UsdStage create the location and data, and then
-        # reference.  If it already exists, just reference! key is
-        # an integer, the index between the sharedOverrides and
-        # rootOverrides locations they relate to.
-        for attrName in attrDict.keys():
-            if attrName == "layout":
-                # Here is where we would look to support layout info.
-                continue
-            attribute = attrDict[attrName]
-            if not attribute:
-                continue
-            if attrName == "material":
-                if locationType == "material":
-                    if parentMaterialSdfList:
-                        material = WriteMaterial(
-                            stage, sdfLocationPath, attribute)
-                        WriteChildMaterial(
-                            stage, sdfLocationPath, attribute,
-                            parentMaterialSdfList)
-                    else:
-                        WriteMaterial(stage, sdfLocationPath, attribute)
-                    materialDict[outputDictKey] = sdfLocationPath
-            elif attrName == "lookfileChildren":
-                # The children returned are for any location not just
-                # not just material children.  Here we only care about
-                # material children.
-                if not "material" in attrDict:
-                    continue
-                childNames = attribute.getNearestSample(0)
-                # Loop through all the children of this material.
-                for childName in childNames:
-                    # Build the new locationPath for the child material
-                    childLocationPath = originalLocationPath + "_" +\
-                        childName
-                    # Build the child material's original location as
-                    # seen in Katana.
-                    childOriginalPath = outputDictKey + "/" + childName
-                    # If we have already retrieved the
-                    parentSdf = sdfLocationPath
-                    materialPrim = stage.GetPrimAtPath(parentSdf)
-                    parentNames = []
-                    while not materialPrim:
-                        parentNames.append(parentSdf.name)
-                        parentSdf = parentSdf.GetParentPath()
-                        materialPrim = stage.GetPrimAtPath(parentSdf)
+        # material
+        materialAttribute = attrDict.get("material")
+        # Write materialLocations first, as we may alter the sdfLocationPath
+        # if we are writing to a child location.
+        if materialAttribute is not None and locationType == "material":
+            # Important: Here we override the sdfLocationPath to match
+            # the one we are setting for the child material. This is such
+            # that C{sdfLocationPath} can be re-used regardless as to
+            # whether this location is a child material and has had its
+            # hierarchy altered, or not.
+            sdfLocationPath = cls.writeMaterialAttribute(
+                stage, materialAttribute, location, sdfLocationPath,
+                materialDict)
+            createOverridePrim = False
 
-                    # build its closest original parent material
-                    if parentNames:
-                        parentNames.append(parentSdf.name)
-                        parentAppendName = "_".join(reversed(parentNames))
-                        parentSdf = parentSdf.ReplaceName(parentAppendName)
-                    if parentMaterialSdfList:
-                        # Copy the list first, because otherwise the
-                        # changes will be retained in this for loop for the
-                        # next child, and not just passed down the depth of
-                        # the tree.
-                        newParentSdfList = parentMaterialSdfList[:]
-                        newParentSdfList.append(parentSdf)
-                    else:
-                        newParentSdfList = [parentSdf]
-                    childpathsToRemove = cls.writeOverride(stage,
-                        outputDict, sharedOverrides, None,
-                        childLocationPath, rootName, rootPrimName,
-                        [], materialDict, outputDictKey=childOriginalPath,
-                        parentMaterialSdfList=newParentSdfList)
-                    pathsToRemove.extend(childpathsToRemove)
-                    pathsToRemove.append(childOriginalPath)
-            elif attrName == "materialAssign":
-                cls.writeMaterialAssign(materialDict, stage, rootName,
-                    attribute, overridePrim)
-        if not outputDictKey:
-            pathsToRemove.append(originalLocationPath)
-        return pathsToRemove
+        # Create an overridePrim if not disabled, and then get the prim
+        # we are currently working on to add any other extra data.
+        if createOverridePrim:
+            stage.OverridePrim(sdfLocationPath)
+        prim = stage.GetPrimAtPath(sdfLocationPath)
+
+        # layout
+        layout = attrDict.get("layout")
+        if layout is not None:
+            # Here is where we could write the layout information.
+            pass
+
+        # materialAssign
+        materialAssignAttribute = attrDict.get("materialAssign")
+        if materialAssignAttribute is not None:
+            cls.writeMaterialAssign(materialDict, stage, rootName,
+                                        materialAssignAttribute, prim)
+
+    @staticmethod
+    def writeMaterialAttribute(stage, materialAttribute, location,
+                               sdfLocationPath, materialDict):
+        """
+        Writes a Material prim to the USD Stage, and returns the C{Sdf.Path}
+        for where it wrote to. Handles child materials by writing them as
+        siblings and using the C{BaseMaterial} mechanisms to ensure we
+        utilise the `specializes` composition arc in USD.
+        @type stage: C{Usd.Stage}
+        @type materialAttribute: C{FnAttribute.GroupAttribute}
+        @type location: C{str}
+        @type sdfLocationPath: C{Sdf.Path}
+        @type materialDict: C{dict} of C{ C{str} : C{Sdf.Path} }
+        @rtype: C{Sdf.Path}
+        @param stage: The C{Usd.Stage} to write data to.
+        @param materialAttribute: The `material` attribute from the
+            C{location}.
+        @param location: The Katana location path for the current iteration
+            relative to the C{rootName}.
+        @param sdfLocationPath: The location this C{USD.Material} should be
+            written to.  This is changed if we are writing a child material.
+        @param materialDict: A dictionary containing a mapping between the
+            material location paths from Katana, and the SdfPath in the USD
+            Stage.
+        @return: Returns the C{Sdf.Path} for the material being written.
+            If this is not a child material, C{sdfLocationPath} will be
+            returned.
+        """
+        lastHierarchyIndex = location.rfind("/")
+        parentPath = None
+        if lastHierarchyIndex > 0:
+            parentPath = location[:lastHierarchyIndex]
+            locationName = location[lastHierarchyIndex + 1:]
+        if parentPath is not None and parentPath in materialDict:
+            # This is a child material.
+            parentMaterialPath = materialDict[parentPath].pathString
+            childMaterialPath = Sdf.Path(parentMaterialPath + "_" +
+                                         locationName)
+            parentSdfPaths = []
+            while parentPath in materialDict:
+                parentSdfPaths.append(materialDict[parentPath])
+                lastHierarchyIndex = parentPath.rfind("/")
+                if lastHierarchyIndex <= 0:
+                    break
+                parentPath = parentPath[:lastHierarchyIndex]
+            # Do not create an overridePrim for following attributes
+            WriteChildMaterial(stage, childMaterialPath,
+                               materialAttribute, parentSdfPaths)
+            materialDict[location] = childMaterialPath
+            return childMaterialPath
+        WriteMaterial(stage, sdfLocationPath, materialAttribute)
+        materialDict[location] = sdfLocationPath
+        return sdfLocationPath
 
     @classmethod
-    def writeOverrides(cls, stage, outputDictList, sharedOverrides,
-                       rootPrimName):
-        # We want to write the sharedoverride to root locations, but have these not loaded,
-        # they should only be loaded as references.
-        # We need to write locations in an order to ensure that bindings
-        # and references will work, otherwise we end up with missing bindings
-        # because, for example, the Material does not exist before the
-        # GeoPrim tries to bind to it.
-        for (outputDict, rootName, rootType) in outputDictList:
+    def writeOverrides(cls, stage, outputDictList, sharedOverridesDict,
+                       rootPrimName, materialDict):
+        """
+        Loops through a sorted list of the output information and then loops
+        through the class list of C{LocationTypeWritingOrder} and calls
+        C{WriteOverride} for each path we find in the C{overrideDict}.
+        We must sort the overrideDict keys in order to ensure we work from top
+        to bottom with regard to hierarchies, since the locations are stored
+        as strings, which could result in trying to populate a leaf before
+        a branch; causing issues with parent-child material relationships.
+        We want to write the sharedoverride to root locations, but have these
+        not loaded, they should only be loaded as references.
+        We need to write locations in an order to ensure that bindings
+        and references will work, otherwise we end up with missing bindings
+        because, for example, the Material does not exist before the
+        GeoPrim tries to bind to it.
+
+        @type stage: C{Usd.Stage}
+        @type outputDictList: C{list}
+        @type sharedOverridesDict: C{dict}
+        @type rootPrimName: C{str}
+        @param stage: The UsdStage to write data to.
+        @param outputDictList: See the C{LookFilePassData} object for more
+            details.
+        @param sharedOverridesDict: See the C{LookFilePassData} object for more
+            details.
+        @param rootPrimName: The name of the root C{Usd.Prim} of the
+            C{Usd.Stage}
+        """
+        for (overrideDict, rootName, rootType) in outputDictList:
             _ = rootType
-            pathsToRemove = []
-            outputDictKeys = sorted(outputDict.keys())
-            materialDict = {}
+            outputDictKeys = sorted(overrideDict.keys())
             for locationTypePass in cls.LocationTypeWritingOrder:
-                for path in pathsToRemove:
-                    if path in outputDictKeys:
-                        outputDictKeys.remove(path)
-                pathsToRemove = []
-                for locationPath in outputDictKeys:
-                    if locationPath in pathsToRemove:
-                        continue
-                    pathsToRemove = cls.writeOverride(stage, outputDict,
-                      sharedOverrides, locationTypePass, locationPath, rootName,
-                      rootPrimName, pathsToRemove, materialDict)
+                for location in outputDictKeys:
+                    cls.WriteOverride(stage, overrideDict,
+                                      sharedOverridesDict,
+                                      locationTypePass,
+                                      location,
+                                      rootName, rootPrimName,
+                                      materialDict)
 
     @classmethod
     def writeMaterialAssign(cls, materialDict, stage, rootName, attribute,
                             overridePrim):
 
         assignValue = str(attribute.getValue())
-        materialPath = cls.GetRelativeUsdSdfPathFromAttribute(
+        materialPath = cls.GetRelativeUsdSdfPath(
             materialDict, rootName, assignValue)
 
         if materialPath:
@@ -258,42 +273,56 @@ class UsdExport(BaseOutputFormat):
                 WriteMaterialAssign(material, overridePrim)
 
     @classmethod
-    def GetRelativeUsdSdfPathFromAttribute(cls, materialDict, rootName,
-                                           assignValue):
-        """ To be used with values from attributes like "materialAssign".
-            Katana will provide the full scenegraph location path, but since
-            the lookfilebake writes out from a given root, we need to remove
-            the root prefix. We also need to remap child material paths,
-            so we pass in the materialDict which
+    def GetRelativeUsdSdfPath(cls, materialDict, rootName, location):
         """
-        materialKeys = materialDict.keys()
-        rfindIndex = len(assignValue)
+        To be used with values from attributes like "materialAssign".
+        Katana will provide the full scenegraph location path, but since
+        the LookFileBakeAPI writes out from a given root, we need to remove
+        the root prefix; since this is not written to the USD file. We also
+        need to remap child material paths, so we pass in the materialDict
+        in order to get the SdfPath for the material from the original location
+        in Katana.
+
+        @type materialDict: C{dict} of C{ C{str} : C{Sdf.Path} }
+        @type rootName: C{str}
+        @type location: C{str}
+        @rtype: C{str} C{None}
+        @param materialDict: The dictionary of katana relative paths to the
+            location of L{rootName}, and their C{Usd.Sdf} paths. This is
+            filled in whilst populating the materials in the Usd Stage first.
+        @param rootName: Refer to L{LookFilePassData} for more information
+        @param location: Katana location
+        @return: The material path to the
+        """
+        if location in materialDict:
+            return materialDict[location]
+        rfindIndex = len(location)
         # We need to add the path separators to ensure we are not just
         # finding the rootName word.
         # This does mean we need to take these extra characters into
         # account when using rfind, since we will strip the leading,
         # or closing "/" which we will need.
         rootNamePath = "/" + rootName + "/"
-        rfindIndex = assignValue.rfind(rootNamePath, 0, rfindIndex)
+        rfindIndex = location.rfind(rootNamePath, 0, rfindIndex)
         if rfindIndex < 0:
             return None
         #Ensure we start reading with a closing "/"
-        materialPath = assignValue[rfindIndex + len(rootNamePath) - 1:]
-        if materialPath in materialKeys:
+        materialPath = location[rfindIndex + len(rootNamePath) - 1:]
+        if materialPath in materialDict:
             return materialDict[materialPath]
         # If we don't find the path first try, it means we may be dealing
         # with a materialAssignment path with multiple duplicate levels in
         # the hierarchy, so we must check until we find our valid relative
         # material path.
-        materialPath = assignValue[rfindIndex:]
+        materialPath = location[rfindIndex:]
         #Ensure we start reading with a closing "/"
         rfindIndex = rfindIndex + 1
-        while materialPath and materialPath not in materialKeys:
-            rfindIndex = assignValue.rfind(rootNamePath, 0, rfindIndex)
+        while materialPath and materialPath not in materialDict:
+            rfindIndex = location.rfind(rootNamePath, 0, rfindIndex)
             # If we can no longer find the rootNamePath.
             if rfindIndex < 0:
                 return None
-            materialPath = assignValue[rfindIndex:]
+            materialPath = location[rfindIndex:]
             rfindIndex = rfindIndex + 1
         return materialDict[materialPath]
 
@@ -321,22 +350,29 @@ class UsdExport(BaseOutputFormat):
 
         def do_material_write(stage, rootPrimName):
             # Iterate over materials
-            for materialLocationPath, (locationType, materialAttribute) \
-                    in passData.materialDict.iteritems():
-                _ = locationType
-                # Discard materials if the path is not a valid SdfPath.
-                if not Sdf.Path.IsValidPathString(materialLocationPath):
-                    log.warning('"%s" is not a valid SdfPath. Material will '
-                                'be skipped.', materialLocationPath)
+            # Maintain a dictionary of materialpaths and their resultant
+            # sdf paths.
+            materialDict = {}
+            passDatamaterialDictKeys = passData.materialDict.keys()
+            passDatamaterialDictKeys.sort()
+            for location in passDatamaterialDictKeys:
+                (locationType, materialAttribute) = \
+                    passData.materialDict[location]
+                if locationType != "material" or not materialAttribute:
                     continue
-                materialSdfPath = self.__class__.locationPathtoSdfPath(
-                    materialLocationPath, rootPrimName)
-                if materialAttribute:
-                    WriteMaterial(
-                        stage, materialSdfPath, materialAttribute)
+                # Discard materials if the path is not a valid SdfPath.
+                if not Sdf.Path.IsValidPathString(location):
+                    log.warning('"%s" is not a valid SdfPath. Material will '
+                                'be skipped.', location)
+                    continue
+                sdfLocationPath = self.__class__.locationPathtoSdfPath(
+                    location, rootPrimName)
+                self.__class__.writeMaterialAttribute(
+                    stage, materialAttribute, location, sdfLocationPath,
+                    materialDict)
             self.__class__.writeOverrides(
                 stage, passData.outputDictList, passData.sharedOverridesDict,
-                rootPrimName)
+                rootPrimName, materialDict)
 
         # Validate whether we have the settings we need:
         try:

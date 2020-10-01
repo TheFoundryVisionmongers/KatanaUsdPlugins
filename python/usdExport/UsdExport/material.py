@@ -36,8 +36,8 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
     @param materialAttribute: The material attribute. Usually a sparse group
         attribute, with the change from the parent's material Attribute.
     @param parentMaterialSdfPaths: A list of the parent SdfPaths, in order from
-        oldest parent, to youngest. We use this to read the attribute types
-        from the oldest parent, but specialise/intherit from the youngest
+        youngest parent, to oldest. We use this to read the attribute types
+        from the oldest parent, but specialize/inherit from the youngest
         parent.
     @type stage: C{Usd.Stage}
     @type materialSdfPath: C{Sdf.Path}
@@ -45,7 +45,8 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
     @type parentMaterialSdfPaths: C{list}
     """
     if not materialAttribute:
-        return
+        return None
+    WriteMaterial(stage, materialSdfPath, materialAttribute)
     # Only define the Material prim if it has not already been defined.
     # We write the 'material.nodes' if they exist first, so if these attributes
     # exist, we may have already created the Material prim.
@@ -65,8 +66,8 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
     # For non-grand-children++  oldest and youngest will be the same.
     if len(parentMaterialSdfPaths) < 1:
         return material
-    oldestParentSdfPath = parentMaterialSdfPaths[0]
-    youngestParentSdfPath = parentMaterialSdfPaths[-1]
+    youngestParentSdfPath = parentMaterialSdfPaths[0]
+    oldestParentSdfPath = parentMaterialSdfPaths[-1]
     oldestParentMaterial = UsdShade.Material(
             stage.GetPrimAtPath(oldestParentSdfPath))
     youngestParentMaterial = UsdShade.Material(
