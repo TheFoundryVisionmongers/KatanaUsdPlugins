@@ -122,11 +122,10 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
             WriteShaderConnections(
                 stage, connectionsAttr, materialPath, shader)
 
-    parameters = materialAttribute.getChildByName("parameters")
     interfaces = materialAttribute.getChildByName("interface")
-    if parameters and interfaces:
-        WriteMaterialInterfaces(stage, parameters, interfaces, materialPath,
-                                material)
+    if interfaces:
+        parameters = materialAttribute.getChildByName("parameters")
+        WriteMaterialInterfaces(stage, parameters, interfaces, material)
 
     terminals = materialAttribute.getChildByName("terminals")
     if terminals:
@@ -351,8 +350,7 @@ def WriteShaderConnections(stage, connectionsAttr, materialPath, shader):
         This will haveto read the types from the Usd shader info from the
         shader Registry (Sdr).
     """
-    reg = Sdr.Registry()
-    shaderNode = getShaderNodeFromRegistry(reg, shader.GetShaderId())
+    shaderNode = GetShaderNodeFromRegistry(shader.GetShaderId())
 
     if not shaderNode:
         log.warning(
@@ -414,23 +412,21 @@ def OverWriteMaterialInterfaces(stage, parametersAttr, materialPath, material,
                                 paramName=matchingParamFullName)
 
 
-def WriteMaterialInterfaces(stage, parametersAttr, interfacesAttr,
-                            materialPath, material):
+def WriteMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
     """
-        Search through the parameter interface attributes and add these as
-        parameters onto the material, and add connections from the shader to
-        these values.
+    Add the parameter interface attributes onto the material, and add
+    connections from the shader to these values. Called by L{WriteMaterial}.
 
-        @param stage: The Usd Stage to write the new prims and parameters to
-        @param parametersAttr: The attribute from materials.parameters
-        @param interfacesAttr: The attribute from materials.interface
-        @param materialPath: The path to the material Prim in the UsdStage
-        @param material: The material prim to add the parameter interface to.
-        @type stage: C{Usd.Stage}
-        @type parametersAttr: C{FnAttribute.GroupAttribute}
-        @type interfacesAttr: C{FnAttribute.GroupAttribute}
-        @type materialPath: C{SdfPath}
-        @type material: C{UsdShade.Material}
+    @param stage: The Usd Stage to write the new prims and parameters to
+    @param parametersAttr: The attribute from materials.parameters. If no
+        parametersAttr is provided, this is assumed to then be the default
+        value.
+    @param interfacesAttr: The attribute from materials.interface
+    @param material: The material prim to add the parameter interface to.
+    @type stage: C{Usd.Stage}
+    @type parametersAttr: C{FnAttribute.GroupAttribute}
+    @type interfacesAttr: C{FnAttribute.GroupAttribute}
+    @type material: C{UsdShade.Material}
     """
     for interfaceIndex in xrange(interfacesAttr.getNumberOfChildren()):
         interfaceName = interfacesAttr.getChildName(interfaceIndex)
@@ -443,31 +439,65 @@ def WriteMaterialInterfaces(stage, parametersAttr, interfacesAttr,
                 groupName = pageAttr.getValue()
 
         sourceAttr = interfaceAttr.getChildByName("src")
-        sourceValueSplit = str(sourceAttr.getValue()).split(".")
-        sourceShaderName = sourceValueSplit[0]
-        sourceParam = sourceValueSplit[1]
-
-        paramAttr = parametersAttr.getChildByName(interfaceName)
-        sourceShaderPath = materialPath.AppendChild(sourceShaderName)
+        sourceShaderName, sourceParamName = str(
+            sourceAttr.getValue()).split(".")
+        sourceShaderPath = material.GetPath().AppendChild(sourceShaderName)
         sourceShader = UsdShade.Shader.Get(stage, sourceShaderPath)
         shaderId = sourceShader.GetShaderId()
+        #Save the parameter name so we can find it in the parameters attribute.
+        parameterName = interfaceName
         if groupName:
             interfaceName = groupName + ":" + interfaceName
 
-        materialPort = addParameterToShader(
-            sourceParam, paramAttr, material, shaderId,
-            paramName=interfaceName)
+        materialPort = None
+        if parametersAttr:
+            paramAttr = parametersAttr.getChildByName(parameterName)
+            if paramAttr:
+                materialPort = addParameterToShader(
+                    sourceParamName, paramAttr, material, shaderId,
+                    paramName=interfaceName)
+
+        if not materialPort:
+            sdfType = GetShaderAttrSdfType(shaderId, sourceParamName,
+                                           isOutput=False)
+            materialPort = material.CreateInput(interfaceName, sdfType)
+
+            sourceShaderPort = sourceShader.GetInput(sourceParamName)
+            if sourceShaderPort:
+                value = sourceShaderPort.Get()
+                materialPort.Set(value)
+            else:
+                shaderNode = GetShaderNodeFromRegistry(shaderId)
+                shaderNodeInput = shaderNode.GetInput(sourceParamName)
+                materialPort.Set(shaderNodeInput.GetDefaultValue())
 
         sourceSdfType = materialPort.GetTypeName()
-        sourceShaderPort = sourceShader.CreateInput(sourceParam, sourceSdfType)
+        sourceShaderPort = sourceShader.CreateInput(sourceParamName,
+                                                    sourceSdfType)
         sourceShaderPort.ConnectToSource(
             material, interfaceName,
             UsdShade.AttributeType.Input, sourceSdfType)
 
 
 def GetShaderAttrSdfType(shaderType, shaderAttr, isOutput=False):
-    reg = Sdr.Registry()
-    shader = getShaderNodeFromRegistry(reg, shaderType)
+    """
+    Retrieves the SdfType of the attribute of a given Shader.
+    This is retrieved from the Usd Shader Registry C{Sdr.Registry}. The shaders
+    attempted to be written must be registered to Usd in order to write
+    correctly.  If not found in the Shader Registry, try to do our best to
+    find the type from the RenderInfoPlugin.
+
+    @type shaderType: C{str}
+    @type shaderAttr: C{str}
+    @type isOutput: C{bool}
+    @rtype: C{Sdf.ValueTypeNames}
+    @param shaderType: The name of the shader.
+    @param shaderAttr: The name of the attribute on the shader.
+    @param isOutput: Whether the attribute is an input or output. C{False}
+        by default. Set to True if the attribute is an output.
+    @return: The Usd Sdf Type for the attribute of the provided shader.
+    """
+    shader = GetShaderNodeFromRegistry(shaderType)
     if shader:
         # From the Docs: Two scenarios can result: an exact mapping from property
         # type to Sdf type, and an inexact mapping. In the first scenario, the
@@ -515,22 +545,18 @@ def WriteMaterialAssign(material, overridePrim):
     UsdShade.MaterialBindingAPI(overridePrim.GetPrim()).Bind(material)
 
 
-def addMaterialAssignment(sharedOverrides, materialOverridePrim):
-    # If info is in the sharedOverrides, we know its already been resolved.
-    if "info" in sharedOverrides.keys():
-        pass
-    else:
-        pass
-
-
-def getShaderNodeFromRegistry(sdrRegistry, shaderType):
+def GetShaderNodeFromRegistry(shaderType):
     """
     Method required to get the SdrShadingNode from the SdrRegistry in different
     ways, depending on the usdPlugin.
-    @param sdrRegistry: The Sdr Registry from Usd, holds the shader information
+
+    @type shaderType: C{str}
+    @rtype: C{Sdr.ShaderNode} or C{None}
     @param shaderType: The type of the shader we want to find from the shading
         registry.
+    @return: The shader from the registry if found or None.
     """
+    sdrRegistry = Sdr.Registry()
     shader = sdrRegistry.GetNodeByName(shaderType)
     if not shader:
         # try arnold, that uses identifiers instead of node names
