@@ -636,10 +636,9 @@ _GetMaterialAttr(
             {
                 continue;
             }
-
-            if (TfStringStartsWith(katanaTerminalName, "gslfx:"))
+            if (TfStringStartsWith(katanaTerminalName, "glslfx:"))
             {
-                katanaTerminalName = "usd" + katanaTerminalName.substr(6);
+                katanaTerminalName = "usd" + katanaTerminalName.substr(7);
                 katanaTerminalName[3] = toupper(katanaTerminalName[3]);
             }
             else if (TfStringStartsWith(katanaTerminalName, "arnold:"))
@@ -657,6 +656,7 @@ _GetMaterialAttr(
             else
             {
                 katanaTerminalName[0] = toupper(katanaTerminalName[0]);
+                katanaTerminalName = "usd" + katanaTerminalName;
             }
             UsdShadeConnectableAPI materialOutSource;
             TfToken sourceName;
