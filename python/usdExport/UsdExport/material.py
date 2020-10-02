@@ -14,8 +14,8 @@ log = logging.getLogger("UsdExport")
 try:
     from fnpxr import Usd, UsdShade, Sdf, Gf, Ndr, Sdr
     # These includes also require fnpxr
-    from .typeConversionMaps import (valueTypeCastMethods,
-                                     convertRenderInfoShaderTagsToSdfType)
+    from .typeConversionMaps import (ValueTypeCastMethods,
+                                     ConvertRenderInfoShaderTagsToSdfType)
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
@@ -24,11 +24,20 @@ except ImportError as e:
 def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
                        parentMaterialSdfPaths):
     """
+    Writes a Katana child material as a sibling material, inheriting from the
+    parent material paths (the whole hierarchy stored in order) by use of
+    BaseMaterials.
+
+    @type stage: C{Usd.Stage}
+    @type materialSdfPath: C{Sdf.Path}
+    @type materialAttribute: C{FnAttribute.GroupAttribute}
+    @type parentMaterialSdfPaths: C{list}
+    @rtype: C{UsdShade.Material} or C{None}
     @param stage: The USD stage to write the material to.
     @param materialSdfPath: The SdfPath to write this new child material to.
         Child materials should use the name of the parent material and the name
         of the child material separated by an underscore, e.g:
-        GrandParentMaterial_ParentMaterial_ChildMaterial
+        ``GrandParentMaterial_ParentMaterial_ChildMaterial``.
         Where the hierarchy of Katana Material locations was:
         GrandParentMaterial
         --ParentMaterial
@@ -36,13 +45,11 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
     @param materialAttribute: The material attribute. Usually a sparse group
         attribute, with the change from the parent's material Attribute.
     @param parentMaterialSdfPaths: A list of the parent SdfPaths, in order from
-        youngest parent, to oldest. We use this to read the attribute types
+        youngest parent, to oldest. Used to read the attribute types
         from the oldest parent, but specialize/inherit from the youngest
         parent.
-    @type stage: C{Usd.Stage}
-    @type materialSdfPath: C{Sdf.Path}
-    @type materialAttribute: C{FnAttribute.GroupAttribute}
-    @type parentMaterialSdfPaths: C{list}
+    @return: The material created by this method or None if no child material
+        was created.
     """
     if not materialAttribute:
         return None
@@ -69,7 +76,7 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
     youngestParentSdfPath = parentMaterialSdfPaths[0]
     oldestParentSdfPath = parentMaterialSdfPaths[-1]
     oldestParentMaterial = UsdShade.Material(
-            stage.GetPrimAtPath(oldestParentSdfPath))
+        stage.GetPrimAtPath(oldestParentSdfPath))
     youngestParentMaterial = UsdShade.Material(
         stage.GetPrimAtPath(youngestParentSdfPath))
     if oldestParentMaterial and youngestParentMaterial:
@@ -82,27 +89,37 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
         # We cant add materialInterfaces to child materials in Katana at
         # present, therefore we only need to check the oldest parent Material.
         if parameters:
-            OverWriteMaterialInterfaces(stage, parameters, materialPath,
-                                        material, oldestParentMaterial)
+            OverwriteMaterialInterfaces(parameters, material,
+                                        oldestParentMaterial)
         return material
+    return None
 
 
 
 def WriteMaterial(stage, materialSdfPath, materialAttribute):
     """
-    https://graphics.pixar.com/usd/docs/api/usd_shade_page_front.html
-        The entry point to writing a material and all its shaders into the Usd
-        Stage.
-        Returns material.
+    Converts the given material C{GroupAttribute} into a C{UsdShade.Material}
+    along with all the shaders and their connections.
+
+    @type stage: C{Usd.Stage}
+    @type materialSdfPath: C{Sdf.Path}
+    @type materialAttribute: C{FnAttribute.GroupAttribute}
+    @rtype: C{UsdShade.Material} or C{None}
+    @param stage: The USD stage to write the material to.
+    @param materialSdfPath: The path to write the C{UsdShade.Material} to.
+    @param materialAttribute: The ``material`` attribute from Katana's
+        scenegraph for the material location.
+    @return: The C{UsdShade.Material} created by this function or C{None} if
+        no material was created.
     """
     material = UsdShade.Material.Define(stage, materialSdfPath)
     if not materialAttribute:
-        return
+        return None
     materialNodes = materialAttribute.getChildByName("nodes")
     materialPath = material.GetPath()
 
     if not materialNodes:
-        return
+        return None
     CreateEmptyShaders(stage, materialNodes, materialPath)
 
     # Now we have defined all the shaders we can connect them with no
@@ -116,36 +133,41 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
         shaderId = str(shader.GetShaderId())
 
         if parametersAttr:
-            WriteMaterialParameters(parametersAttr, shaderId, shader)
+            AddMaterialParameters(parametersAttr, shaderId, shader)
         connectionsAttr = materialNode.getChildByName("connections")
         if connectionsAttr:
-            WriteShaderConnections(
+            AddShaderConnections(
                 stage, connectionsAttr, materialPath, shader)
 
+    parameters = materialAttribute.getChildByName("parameters")
     interfaces = materialAttribute.getChildByName("interface")
-    if interfaces:
-        parameters = materialAttribute.getChildByName("parameters")
-        WriteMaterialInterfaces(stage, parameters, interfaces, material)
+    if parameters and interfaces:
+        AddMaterialInterfaces(stage, parameters, interfaces, material)
 
     terminals = materialAttribute.getChildByName("terminals")
     if terminals:
-        WriteTerminals(stage, terminals, materialPath, material)
+        AddTerminals(stage, terminals, material)
     return material
 
 
 def CreateEmptyShaders(stage, materialNodes, materialPath):
-    """ This method creates all the shader prims for the current material
-        but only fills in the type.  This is because the connections require
-        both materials to be present, so we fill in parameters at a later
-        stage, once all shaders for this material are created.
-        :TODO: We may want the option in the future to write out the shaders
-        from material.layout instead, as this includes nodes which may not be
-        connected.
-        @param stage: The Usd.Stage to write the shaders to.
-        @param materialNodes: The material.nodes GroupAttribute from the
-            attributes of the current location.
-        :materialPath: SdfPath, the path to the material in the Usd Stage.
     """
+    Creates all the shader prims for the current material but only fills in the
+    type. This is because the connections require both materials to be present.
+    The parameters are populated at a later stage, once all shaders for this
+    material are created. Called by L{WriteMaterial}.
+
+    @type stage: C{Usd.Stage}
+    @type materialNodes: C{FnAttribute.GroupAttribute}
+    @type materialPath: C{Sdf.Path}
+    @param stage: The C{Usd.Stage} to write the shaders to.
+    @param materialNodes: The ``material.nodes`` C{FnAttribute.GroupAttribute}
+        from the attributes of the current location.
+    @param materialPath: The path to the material in the Usd Stage.
+    """
+    # We may want the option in the future to write out the shaders from
+    # material.layout instead, as this includes nodes which may not be
+    # connected.
     for materialNodeIndex in xrange(materialNodes.getNumberOfChildren()):
         materialNode = materialNodes.getChildByIndex(materialNodeIndex)
         shaderName = materialNodes.getChildName(materialNodeIndex)
@@ -156,110 +178,119 @@ def CreateEmptyShaders(stage, materialNodes, materialPath):
         shader.SetShaderId(shaderId)
 
 
-def WriteTerminals(stage, terminals, materialPath, material):
-    """ Write the terminals onto the Material outputs.
+def AddTerminals(stage, terminals, material):
     """
-    supported_output_types = ["surface", "displacement", "volume"]
+    Adds the terminals onto the USD material. Called by L{WriteMaterial}.
 
-    #:TODO: We might want to base this on the actual outputs from the material
-    # definitions from USD itself, rather than from Katana, using Katana to
-    # just try and match up, and if there is a match between these terminals,
-    # and the outputs on a shader, use that.
+    @type stage: C{Usd.Stage}
+    @type terminals: C{FnAttribute.GroupAttribute}
+    @type material: The Material to write the terminals to.
+    @param stage: The C{Usd.Stage} to write to.
+    @param terminals: The ``material.terminals`` attribute
+    @param material: The Material to write the terminals to.
+    """
+    supportedOutputTypes = ["surface", "displacement", "volume"]
     for terminalIndex in xrange(terminals.getNumberOfChildren()):
         terminalAttr = terminals.getChildByIndex(terminalIndex)
         terminalName = terminals.getChildName(terminalIndex)
-        # We dont want to export the ports as terminals..
+        # Ignore the ports as terminals..
         if "Port" in terminalName:
             continue
 
-        # universal (catch all for unrecognised renderers)
-        output_prefix = ""
-        output_type = "surface"
+        # Universal (catch all for unrecognized renderers)
+        outputPrefix = ""
+        outputType = "surface"
 
-        # if we understand the renderer, use the render context
+        # If we understand the renderer, use the render context
         # appropriate to it
         if terminalName.startswith("usd"):
-            output_prefix = "glslfx:"
-            output_type = terminalName[3:].lower()
+            outputPrefix = "glslfx:"
+            outputType = terminalName[3:].lower()
         elif terminalName.startswith("prman"):
-            output_prefix = "ri:"
-            output_type = terminalName[5:].lower()
-            if output_type == "bxdf":
-                output_type = "surface"
+            outputPrefix = "ri:"
+            outputType = terminalName[5:].lower()
+            if outputType == "bxdf":
+                outputType = "surface"
         elif terminalName.startswith("arnold"):
-            output_prefix = "arnold:"
-            output_type = terminalName[6:].lower()
+            outputPrefix = "arnold:"
+            outputType = terminalName[6:].lower()
         elif terminalName.startswith("dl"):
-            output_prefix = "nsi:"
-            output_type = terminalName[2:].lower()
+            outputPrefix = "nsi:"
+            outputType = terminalName[2:].lower()
 
-        if output_type not in supported_output_types:
+        if outputType not in supportedOutputTypes:
             log.warning("Unable to map terminal '%s' to a supported "
-                "USD shade output type, of either\n%s",
-                terminalName, " ".join(supported_output_types))
+                        "USD shade output type, of either\n%s",
+                        terminalName, " ".join(supportedOutputTypes))
             continue
 
-        terminalName = output_prefix + output_type
+        terminalName = outputPrefix + outputType
 
         terminalShader = str(terminalAttr.getValue())
         materialTerminal = material.CreateOutput(terminalName,
                                                  Sdf.ValueTypeNames.Token)
-
+        materialPath = material.GetPath()
         terminalShaderPath = materialPath.AppendChild(terminalShader)
         terminalShader = UsdShade.Shader.Get(stage, terminalShaderPath)
-        # :TODO: Make this work based on the target attribute from the shader.
-        # We will have to link to the attributes from Katana for this, as there
-        # isnt a place for this on the shader itself (shaders are targetless
-        # in USD)
         materialTerminal.ConnectToSource(terminalShader, terminalName)
 
 
-def WriteMaterialParameters(parametersAttr, shaderId, shader):
-    """ Writing the parameters section for each shader.
+def AddMaterialParameters(parametersAttr, shaderId, shader):
+    """
+    Iterates through all the parameters in C{parametersAttr}. Adds the
+    parameters onto the shader, calls L{AddParameterToShader}. Called by
+    L{WriteMaterial}.
 
-        @param parametersAttr: The GroupAttribute relating to
-            material.nodes.<nodeName>.parameters
-        @param shaderId: The `str` ID of the shader (its type)
-        @param shader: The UsdShader shader object from the Usd Stage.
-        @type parametersAttr: C{FnAttribute.GroupAttribute}
-        @type shaderId: C{str}
-        @type shader: C{Usd.Shader}
+    @type parametersAttr: C{FnAttribute.GroupAttribute}
+    @type shaderId: C{str}
+    @type shader: C{Usd.Shader}
+    @param parametersAttr: The GroupAttribute relating to
+        C{material.nodes.<nodeName>.parameters}.
+    @param shaderId: The ``str`` ID of the shader (its type).
+    @param shader: The UsdShader shader object from the Usd Stage.
     """
     for paramIndex in xrange(parametersAttr.getNumberOfChildren()):
         paramName = parametersAttr.getChildName(paramIndex)
         paramAttr = parametersAttr.getChildByIndex(paramIndex)
-        addParameterToShader(paramName, paramAttr, shader, shaderId)
+        AddParameterToShader(paramName, paramAttr, shader, shaderId)
 
 
-def addParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
+def AddParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
                          paramName=None, sdfType=None):
-    """ Adds a parameter as an input onto a given Shader or Material prim
+    """
+    Adds a parameter as an input onto a given Shader or Material prim.
 
-        @param shaderParamName: The parameter name as it appears on the shader.
-            This is used to determine the
-        @param paramAttr: The Katana attribute to read the value from, as well
-             as timesamples.
-        @param shader: The shader or material to add the shaderInput onto.  If
-            this is not the shader the parameter originally belongs to, and
-            is part of a material interface, the shaderId should also be
-            provided for the shaderId of the shader the param would have
-            originally be set to. This is in order to retrieve the correct
-            SdfType.
-        @shaderId: The Id of the shader to search for the SdrShadingNode to
-            search for the parameters sdfType.  This should be provided if the
-            shader provided is not the shader you want to write to is not
-            the SdrShaderNode you want to read the inputs and therefore
-            sdfTypes from.
-        @param sdfType: Optional argument, This can override any retrieval of
-            sdfType from the shader, or shaderId from the Usd SdrRegistry.
-            This is useful if you want to use the sdfType from connected
-            attriubutes as we do for material interfaces.
-        @type shaderParamName: C{str}
-        @type paramAttr: C{FnAttribute.GroupAttriute}
-        @type shader: C{UsdShade.Shader}
-        @type shaderId: C{str}
-        @type sdfType: C{SdfTypeIndicator}
-        @return: C{Usd.Shader.Input} created by this method.
+    @type shaderParamName: C{str}
+    @type paramAttr: C{FnAttribute.GroupAttriute}
+    @type shader: C{UsdShade.Shader}
+    @type shaderId: C{str}
+    @type paramName: C{str}
+    @type sdfType: C{SdfTypeIndicator}
+    @rtype: C{Usd.Shader.Input} or C{None}
+    @param shaderParamName: The parameter name as it appears on the shader.
+        This is used to determine the type of the shader attribute.
+    @param paramAttr: The Katana attribute to read the value from, as well
+        as timesamples.
+    @param shader: The shader or material to add the shaderInput onto. If
+        this is not the shader the parameter originally belongs to, and
+        is part of a material interface, the shaderId should also be
+        provided for the shaderId of the shader the param would have
+        originally be set to. This is in order to retrieve the correct
+        SdfType.
+    @param shaderId: The Id of the shader to search for the SdrShadingNode to
+        search for the parameters sdfType. This should be provided if the
+        shader provided is not the shader you want to write to is not
+        the SdrShaderNode you want to read the inputs and therefore
+        sdfTypes from.
+    @param paramName: Optional argument. The name to be given to the attribute
+        on the shader. This can differ from the L{shaderParamName} in cases of
+        material parameter interfaces.
+    @param sdfType: Optional argument, This can override any retrieval of
+        sdfType from the shader, or shaderId from the Usd SdrRegistry.
+        This is useful if you want to use the sdfType from connected
+        attributes; this is used for material interfaces.
+    @return: The shader input created by this method or C{None} if no shader
+        input was created.
     """
     if shaderId is None and sdfType is None:
         shaderId = shader.GetShaderId()
@@ -268,90 +299,112 @@ def addParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
     timeSamples = paramAttr.getNumberOfTimeSamples()
     if timeSamples > 1:
         paramValue = paramAttr.getNearestSample(0)
-        pass  # TODO: Get per sample values and save those into USD.
+        # TODO(jp): Get per sample values and save those into USD.
     else:
         paramValue = paramAttr.getNearestSample(0)
     # Check to make sure that either the sdfType has been set or the shaderId
     # has been found using the shader.
     if not shaderId and sdfType is None:
         log.warning("Unable to find shaderId, and sdfType is not provided for"
-        " shaderParamName:{}".format(
-            shaderParamName))
+                    " shaderParamName:%s", shaderParamName)
     if sdfType is None:
         sdfType = GetShaderAttrSdfType(shaderId, shaderParamName,
                                        isOutput=False)
-        #TODO: Get widget hints for parameter to work out if its
-        # an assetID or not. Some strngs are meant to be "asset"
-        # types in USD.  This is if we want some backup type conversion.
+        # TODO(jp): Get widget hints for parameter to work out if its
+        # an assetID or not. Some strings are meant to be "asset"
+        # types in USD. This is if we want some backup type conversion.
         if paramName == "file":
             sdfType = Sdf.ValueTypeNames.Asset
         if paramName == "varname":
-            # used in properties such as the texcoordreader inputs,
+            # Used in properties such as the texcoordreader inputs,
             # but the sdftype of 'string' does not work, so force to a token
             sdfType = Sdf.ValueTypeNames.Token
-        if sdfType == None:
+        if sdfType is None:
             log.warning("Unable to find an Sdf conversion of "
-                "shader:%s and param:%s", shaderId, paramName)
-            # best guess because we've been unable to identify any shader node
+                        "shader:%s and param:%s", shaderId, paramName)
+            # Best guess because we've been unable to identify any shader node
             # information from the shaderId (is the renderer supported?)
             if "color" in paramName:
                 log.warning("Guessed shader:%s and param:%s will "
-                    "use datatype color3f", shaderId, paramName)
+                            "use datatype color3f", shaderId, paramName)
                 sdfType = Sdf.ValueTypeNames.Color3f
     if sdfType:
-        if sdfType.type.pythonClass:
-            gfCast = sdfType.type.pythonClass
-        else:
-            gfCast = valueTypeCastMethods.get(sdfType)
-        input = shader.CreateInput(paramName, sdfType)
-        if gfCast:
-            if isinstance(paramValue,  PyFnAttribute.ConstVector):
-                # Convert Katana's PyFnAttribute.ConstVector to a python list
-                paramValue = [v for v in paramValue]
-            if isinstance(paramValue, list):
-                if len(paramValue) == 1:
-                    paramValue = gfCast(paramValue[0])
-                elif hasattr(gfCast, "dimension"):
-                    if gfCast.dimension == 2:
-                        paramValue = gfCast(paramValue[0], paramValue[1])
-                    elif gfCast.dimension == 3:
-                        paramValue = gfCast(paramValue[0], paramValue[1],
-                            paramValue[2])
-                    elif gfCast.dimension == 4:
-                        paramValue = gfCast(paramValue[0], paramValue[1],
-                            paramValue[2], paramValue[3])
-                    elif gfCast.dimension == (2, 2):
-                        paramValue = gfCast(
-                            paramValue[0], paramValue[1],
-                            paramValue[2], paramValue[3])
-                    elif gfCast.dimension == (3, 3):
-                        paramValue = gfCast(
-                            paramValue[0], paramValue[1], paramValue[2],
-                            paramValue[3], paramValue[4], paramValue[5],
-                            paramValue[6], paramValue[7], paramValue[8])
-                    elif gfCast.dimension == (4, 4):
-                        pv = paramValue
-                        paramValue = gfCast(
-                            pv[0], pv[1], pv[2], pv[3],
-                            pv[4], pv[5], pv[6], pv[7],
-                            pv[8], pv[9], pv[10], pv[11],
-                            pv[12], pv[13], pv[14], pv[15])
-                elif gfCast in [Gf.Quath, Gf.Quatf, Gf.Quatd]:
-                    paramValue = gfCast(paramValue[0], paramValue[1],
-                        paramValue[2], paramValue[3])
-        else:
-            paramValue = gfCast(paramValue)
-    input.Set(paramValue)
-    return input
+        shaderInput = shader.CreateInput(paramName, sdfType)
+        paramValue = ConvertParameterValueToGfType(paramValue, sdfType)
+        shaderInput.Set(paramValue)
+        return shaderInput
+    return None
 
 
-def WriteShaderConnections(stage, connectionsAttr, materialPath, shader):
-    """ Writing the connections from the material.nodes.<nodeName>.connections
-        This will haveto read the types from the Usd shader info from the
-        shader Registry (Sdr).
+def ConvertParameterValueToGfType(value, sdfType):
+    """
+    Converts the Katana attribute into its equivalent Gf type based on the
+    C{sdfType} provided.
+
+    @type value: C{PyFnAttribute}
+    @type sdfType: C{Sdf.ValueTypeNames}
+    @rtype: C{Gf}
+    @param value: The value to be cast to a Gf equivalent.
+    @param sdfType: The type to cast to.
+    @return: The Gf type casted value.
+    """
+    if sdfType.type.pythonClass:
+        gfCast = sdfType.type.pythonClass
+    else:
+        gfCast = ValueTypeCastMethods.get(sdfType)
+    if gfCast:
+        if isinstance(value, PyFnAttribute.ConstVector):
+            # Convert Katana's PyFnAttribute.ConstVector to a python list
+            value = [v for v in value]
+        if isinstance(value, list):
+            if len(value) == 1:
+                value = gfCast(value[0])
+            elif hasattr(gfCast, "dimension"):
+                if gfCast.dimension == 2:
+                    value = gfCast(value[0], value[1])
+                elif gfCast.dimension == 3:
+                    value = gfCast(value[0], value[1], value[2])
+                elif gfCast.dimension == 4:
+                    value = gfCast(value[0], value[1], value[2], value[3])
+                elif gfCast.dimension == (2, 2):
+                    value = gfCast(
+                        value[0], value[1],
+                        value[2], value[3])
+                elif gfCast.dimension == (3, 3):
+                    value = gfCast(
+                        value[0], value[1], value[2],
+                        value[3], value[4], value[5],
+                        value[6], value[7], value[8])
+                elif gfCast.dimension == (4, 4):
+                    value = gfCast(
+                        value[0], value[1], value[2], value[3],
+                        value[4], value[5], value[6], value[7],
+                        value[8], value[9], value[10], value[11],
+                        value[12], value[13], value[14], value[15])
+            elif gfCast in [Gf.Quath, Gf.Quatf, Gf.Quatd]:
+                value = gfCast(value[0], value[1], value[2], value[3])
+    return value
+
+def AddShaderConnections(stage, connectionsAttr, materialPath, shader):
+    """
+    Adds the connections between the shaders from the
+    C{material.nodes.<nodeName>.connections} attribute. The shaders must be
+    written first in order to connect to the current shader. The types will
+    be read from the Usd shader info from the L{GetShaderAttrSdfType} method.
+    Both shaders must be part of the same material. Called by L{WriteMaterial}.
+
+    @type stage: C{Usd.Stage}
+    @type connectionsAttr: C{FnAttribute.GroupAttribute}
+    @type materialPath: C{Sdf.Path}
+    @type shader: C{Sdf.Path}
+    @param stage: The Usd stage to write to.
+    @param connectionsAttr: The material.nodes.<nodeName>connections Katana
+        attribute to read the connection information from.
+    @param materialPath: The USD path for the material for this shader and the
+        shader it will connect to.
+    @param shader: The shader to add the connection to.
     """
     shaderNode = GetShaderNodeFromRegistry(shader.GetShaderId())
-
     if not shaderNode:
         log.warning(
             "Unable to write shadingNode connections for path {0},"
@@ -383,50 +436,66 @@ def WriteShaderConnections(stage, connectionsAttr, materialPath, shader):
 
         inputPort = shader.CreateInput(connectionName, portConnectionSdfType)
 
-        # need to specify the output type of the source, or it inherits the input type
+        # need to specify the output type of the source, or it inherits the
+        # input type
         inputPort.ConnectToSource(
             inputShader, str(inputShaderPortName),
             UsdShade.AttributeType.Output, sourceSdfType)
 
-def OverWriteMaterialInterfaces(stage, parametersAttr, materialPath, material,
-                                parentMaterial):
+def OverwriteMaterialInterfaces(parametersAttr, material, parentMaterial):
+    """
+    For child materials, this method overwrites the material interface values
+    rather than creating anything new from the attributes. Called by
+    L{WriteChildMaterial}.
+
+    @type parametersAttr: C{FnAttribute.GroupAttribute}
+    @type material: C{UsdShade.Material}
+    @type parentMaterial: C{UsdShade.Material}
+    @param parametersAttr: The ``material.parameters`` attribute from the
+        current Katana location.
+    @param material: The child material to write the new values for the
+        material interface
+    @param parentMaterial: The parent material to read the interface attribute
+        information from, including its type. This must be the highest level
+        parent material.
+    """
     # Not techincally the parent in USD, but it is the parent from Katana.
     parentInputs = parentMaterial.GetInputs()
     for parameterIndex in xrange(parametersAttr.getNumberOfChildren()):
         parameterName = parametersAttr.getChildName(parameterIndex)
         parameterAttr = parametersAttr.getChildByIndex(parameterIndex)
-        #Because the parameter interface may have a group namespace, but
+        # Because the parameter interface may have a group namespace, but
         # the parameterName does not contain this, we need to try and find
-        # the related input.
+        # the related shaderInput.
         matchingParamFullName = None
         paramSdfType = None
-        for input in parentInputs:
-            inputName = input.GetFullName()
+        for shaderInput in parentInputs:
+            inputName = shaderInput.GetFullName()
             inputParamName = inputName.split(":")[-1]
             if inputParamName == parameterName:
                 matchingParamFullName = inputName
-                paramSdfType = input.GetTypeName()
+                paramSdfType = shaderInput.GetTypeName()
         if matchingParamFullName and paramSdfType:
-            addParameterToShader(parameterName, parameterAttr, material,
+            AddParameterToShader(parameterName, parameterAttr, material,
                                 sdfType=paramSdfType,
                                 paramName=matchingParamFullName)
 
 
-def WriteMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
+def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
     """
-    Add the parameter interface attributes onto the material, and add
+    Adds the parameter interface attributes onto the material, and add
     connections from the shader to these values. Called by L{WriteMaterial}.
 
+    @type stage: C{Usd.Stage}
+    @type parametersAttr: C{FnAttribute.GroupAttribute}
+    @type interfacesAttr: C{FnAttribute.GroupAttribute}
+    @type material: C{UsdShade.Material}
     @param stage: The Usd Stage to write the new prims and parameters to
     @param parametersAttr: The attribute from materials.parameters. If no
         parametersAttr is provided, this is assumed to then be the default
         value.
     @param interfacesAttr: The attribute from materials.interface
     @param material: The material prim to add the parameter interface to.
-    @type stage: C{Usd.Stage}
-    @type parametersAttr: C{FnAttribute.GroupAttribute}
-    @type interfacesAttr: C{FnAttribute.GroupAttribute}
-    @type material: C{UsdShade.Material}
     """
     for interfaceIndex in xrange(interfacesAttr.getNumberOfChildren()):
         interfaceName = interfacesAttr.getChildName(interfaceIndex)
@@ -453,7 +522,7 @@ def WriteMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
         if parametersAttr:
             paramAttr = parametersAttr.getChildByName(parameterName)
             if paramAttr:
-                materialPort = addParameterToShader(
+                materialPort = AddParameterToShader(
                     sourceParamName, paramAttr, material, shaderId,
                     paramName=interfaceName)
 
@@ -484,7 +553,7 @@ def GetShaderAttrSdfType(shaderType, shaderAttr, isOutput=False):
     Retrieves the SdfType of the attribute of a given Shader.
     This is retrieved from the Usd Shader Registry C{Sdr.Registry}. The shaders
     attempted to be written must be registered to Usd in order to write
-    correctly.  If not found in the Shader Registry, try to do our best to
+    correctly. If not found in the Shader Registry, try to do our best to
     find the type from the RenderInfoPlugin.
 
     @type shaderType: C{str}
@@ -499,48 +568,57 @@ def GetShaderAttrSdfType(shaderType, shaderAttr, isOutput=False):
     """
     shader = GetShaderNodeFromRegistry(shaderType)
     if shader:
-        # From the Docs: Two scenarios can result: an exact mapping from property
-        # type to Sdf type, and an inexact mapping. In the first scenario, the
-        # first element in the pair will be the cleanly-mapped Sdf type, and the
-        # second element, a TfToken, will be empty. In the second scenario, the
-        # Sdf type will be set to Token to indicate an unclean mapping, and the
-        # second element will be set to the original type returned by GetType().
-        # From USD code: (So we know what an SdfTypeIndicator is in the future!)
+        # From the Docs: Two scenarios can result: an exact mapping from
+        # property type to Sdf type, and an inexact mapping. In the first
+        # scenario, the first element in the pair will be the cleanly-mapped
+        # Sdf type, and the second element, a TfToken, will be empty. In the
+        # second scenario, the Sdf type will be set to Token to indicate an
+        # unclean mapping, and the second element will be set to the original
+        # type returned by  GetType().
+        # From USD code: (So we know what an SdfTypeIndicator is in the future)
         # typedef std::pair<SdfValueTypeName, TfToken> SdfTypeIndicator;
         if isOutput:
-            output = shader.GetOutput(shaderAttr)
-            if output:
-                return output.GetTypeAsSdfType()[0]
+            shaderOutput = shader.GetOutput(shaderAttr)
+            if shaderOutput:
+                return shaderOutput.GetTypeAsSdfType()[0]
         else:
-            input =  shader.GetInput(shaderAttr)
-            if input:
-                return input.GetTypeAsSdfType()[0]
+            shaderInput = shader.GetInput(shaderAttr)
+            if shaderInput:
+                return shaderInput.GetTypeAsSdfType()[0]
         return Sdf.ValueTypeNames.Token
     else:
-        #Fallback if we cant find the shaders info in the SdrRegistry
-        for renderer in RenderingAPI.RenderPlugins.GetRendererPluginNames(True):
+        # Fallback if we cant find the shaders info in the SdrRegistry
+        for renderer in RenderingAPI.RenderPlugins.GetRendererPluginNames(
+                True):
             infoPlugin = RenderingAPI.RenderPlugins.GetInfoPlugin(renderer)
             if shaderType in infoPlugin.getRendererObjectNames("shader"):
                 if isOutput:
-                    if shaderAttr in infoPlugin.getShaderOutputNames(shaderType):
+                    if shaderAttr in infoPlugin.getShaderOutputNames(
+                            shaderType):
                         tags = infoPlugin.getShaderOutputTags(shaderType,
                                                               shaderAttr)
                     else:
                         continue
                 else:
-                    if shaderAttr in infoPlugin.getShaderInputNames(shaderType):
+                    if shaderAttr in infoPlugin.getShaderInputNames(
+                            shaderType):
                         tags = infoPlugin.getShaderInputTags(shaderType,
                                                              shaderAttr)
                     else:
                         continue
-                return convertRenderInfoShaderTagsToSdfType(tags)
+                return ConvertRenderInfoShaderTagsToSdfType(tags)
     return Sdf.ValueTypeNames.Token
 
 
 def WriteMaterialAssign(material, overridePrim):
-    """ Expects UsdShade.Material and a UsdPrim
-     Will need to use USD_KATANA_ALLOW_CUSTOM_MATERIAL_SCOPES envar from
-    readPrim.cpp if Katana is not aware of the material scope.
+    """
+    Uses the UsdShade.MaterialBindingAPI to bind the material to the
+    overridePrim.
+
+    @type material: C{UsdShade.Material}
+    @type overridePrim: C{Usd.OverridePrim}
+    @param material: The material to bind.
+    @param overridePrim: The Prim to bind to.
     """
     UsdShade.MaterialBindingAPI(overridePrim.GetPrim()).Bind(material)
 
@@ -551,10 +629,11 @@ def GetShaderNodeFromRegistry(shaderType):
     ways, depending on the usdPlugin.
 
     @type shaderType: C{str}
-    @rtype: C{Sdr.ShaderNode} or C{None}
-    @param shaderType: The type of the shader we want to find from the shading
+    @rtype: C{Sdr.ShaderNode}
+    @param shaderType: The type of the shader to search for in the shading
         registry.
-    @return: The shader from the registry if found or None.
+    @return: The shader from the shader registry which matches the provided
+        type.
     """
     sdrRegistry = Sdr.Registry()
     shader = sdrRegistry.GetNodeByName(shaderType)

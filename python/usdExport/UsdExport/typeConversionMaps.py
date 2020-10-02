@@ -1,16 +1,18 @@
 # Copyright (c) 2020 The Foundry Visionmongers Ltd. All Rights Reserved.
+"""
+Module containing some helpful conversion maps to assist in type conversions.
+"""
 
 import logging
-import os
 
 log = logging.getLogger("UsdExport")
 try:
-    from fnpxr import Gf, Sdf 
+    from fnpxr import Sdf
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
 
-valueTypeCastMethods = {
+ValueTypeCastMethods = {
     Sdf.ValueTypeNames.Asset: str,
     Sdf.ValueTypeNames.Bool: bool,
     Sdf.ValueTypeNames.Double: float,
@@ -39,16 +41,26 @@ RenderInfoShaderTagToSdfMap = {
 }
 
 
-def convertRenderInfoShaderTagsToSdfType(tags):
+def ConvertRenderInfoShaderTagsToSdfType(tags):
+    """
+    Converts the given tags from the relevant Katana RenderInfoPlugin into
+    SdfTypes.
+
+    @type tags: C{list} or C{str}
+    @rtype: C{Sdf.ValueTypeNames} or C{None}
+    @param tags: a list of tags, or a string of tags separated by "or".
+    @return: The closest Sdf type, or None if no match can be found.
+    """
     if isinstance(tags, list):
-        tags_list = tags
+        tagsList = tags
     else:
-        tags_list = tags.split(" or ")
-    if tags_list:
-        tagToUse = tags_list[0]
-        for tag in tags_list:
+        tagsList = tags.split(" or ")
+    if tagsList:
+        tagToUse = tagsList[0]
+        for tag in tagsList:
             if "array_" in tag:
                 tagToUse = tag
         sdfType = RenderInfoShaderTagToSdfMap.get(tagToUse)
         if sdfType is not None:
             return sdfType
+    return None
