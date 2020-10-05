@@ -139,9 +139,9 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
             AddShaderConnections(
                 stage, connectionsAttr, materialPath, shader)
 
-    parameters = materialAttribute.getChildByName("parameters")
     interfaces = materialAttribute.getChildByName("interface")
-    if parameters and interfaces:
+    if interfaces:
+        parameters = materialAttribute.getChildByName("parameters")
         AddMaterialInterfaces(stage, parameters, interfaces, material)
 
     terminals = materialAttribute.getChildByName("terminals")
