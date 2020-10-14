@@ -32,7 +32,9 @@ class VariantsWidget(QtWidgets.QFrame):
 
         # Toolbar to work as heading for Variants widget.
         self.toolbar = QtWidgets.QToolBar(self)
+        self.toolbar.setMovable(False)
         variantsLabel = QtWidgets.QLabel("Variants")
+        variantsLabel.setIndent(6)
         self.toolbar.addWidget(variantsLabel)
 
         # Spacer widget to allow us to align some widgets to the right of the
@@ -55,15 +57,15 @@ class VariantsWidget(QtWidgets.QFrame):
             self.customContextMenu)
         self.listWidget.model().rowsMoved.connect(self.__onRowMoved)
 
-        deleteIcon = UI4.Util.IconManager.GetIcon('Icons/trashCan.png')
-        self.deleteSelectedAction = QtWidgets.QAction(
-            deleteIcon, "Delete", self.listWidget)
+        self.deleteSelectedAction = QtWidgets.QAction('Delete',
+                                                      self.listWidget)
         self.listWidget.addAction(self.deleteSelectedAction)
         self.deleteSelectedAction.triggered.connect(self.deleteSelectedVariant)
         self.deleteSelectedAction.setShortcut(QtCore.Qt.Key_Delete)
 
         # Layout
         layout = QtWidgets.QVBoxLayout()
+        layout.setSpacing(0)
         self.setLayout(layout)
         layout.addWidget(self.toolbar)
         layout.addWidget(self.listWidget)
@@ -101,10 +103,11 @@ class VariantsWidget(QtWidgets.QFrame):
 
     def customContextMenu(self, pos):
         """ Open up a custom context menu. """
-        globalPos = self.mapToGlobal(pos)
+        # pylint: disable=unused-argument
+        self.deleteSelectedAction.setEnabled(self.listWidget.currentRow() > -1)
         menu = QtWidgets.QMenu()
         menu.addAction(self.deleteSelectedAction)
-        menu.exec_(globalPos)
+        menu.exec_(QtGui.QCursor.pos())
 
     # pylint: disable=undefined-variable
     def __onRowMoved(self, parent, start, end, dest, row):
@@ -140,4 +143,5 @@ class VariantsListWidget(QtWidgets.QListWidget):
         self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.setStyleSheet(
-            "QListWidget {padding: 10px;} QListWidget::item { margin: 5px; }")
+            "QListWidget {padding: 6px;} QListWidget::item { margin: 3px; }")
+        self.setUniformItemSizes(True)
