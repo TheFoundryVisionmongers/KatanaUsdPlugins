@@ -1,9 +1,44 @@
 # Change List
 
+## 19.11_fn4
+
+- The UsdExport changes are not compatible with Katana releases older than
+Katana 4.0v1 due to API changes in `LookFileBakeAPI`. Disable the UsdExport
+subdirectory when building for Katana 3. See Github Issue #19:
+https://github.com/TheFoundryVisionmongers/KatanaUsdPlugins/issues/19 for more
+information on upcoming build changes to support building the latest Katana USD
+Plug-ins against older Katana releases.
+- The list of renderers that are available inside NetworkMaterialCreate nodes,
+which can be accessed by pressing the Shift+Tab keyboard shortcut, adds all
+items where their RenderInfoPlugin returns true to
+`isNodeTypeSupported("ShadingNode")`. In order to support the display of USD
+shading nodes, the list now also includes renderers for which render info
+plug-ins, but no render plug-ins are available (viewer-only renderers), if
+they meet this condition.
+- The Katana USD plug-ins used to always use the default renderer as the
+`target` for the shaders. We now use `usd` as the renderer name for shaders
+which start with `Usd`, which includes the shading node designed for
+UsdPreviewSurface.
+- UsdLux light shaders, such as `UsdLuxDiskLight` and `UsdLuxRectLight`, are
+now available for use in `GafferThree` nodes.
+- ID 447533 - The UsdExport Output Format plug-in, which is designed to work
+with UsdMaterialBake nodes, has been hidden from the `outputFormat` parameter
+of LookFileBake nodes using the new `Hidden` class variable introduced in
+feature enhancement ID 448056.
+- ID 447802 - The `USD_KATANA_ALLOW_CUSTOM_MATERIAL_SCOPES` environment
+variable of the Katana USD Plug-ins is now set to true by default. If set to
+false, this will limit material assignments to materials scoped under a Looks
+location.
+- ID 447804 - The `USD_KATANA_ADD_CUSTOM_PROPERTIES` environment variable of the
+Katana USD Plug-ins is now set to true by default. If set to false, this will
+silently ignore custom properties.
+- GitHub Issue #6 - Pull Request #7 - Avoid flattening face-varying primvars
+during import.
+
 ## v19.11_fn3
 
 - TP 420782 - Fixing issues when building inside the Katana build pipeline
-- TP 427390(Issue #3) - Fixed incorrect lib prefix during USD linking using the 
+- TP 427390(Issue #3) - Fixed incorrect lib prefix during USD linking using the
 USE_KATANA_THIRDPARTY_LIBS option
 
 ## v19.11_fn2
