@@ -21,4 +21,6 @@
 # language governing permissions and limitations under the Apache License.
 
 add_subdirectory(nodetypes)
-add_subdirectory(usdExport)
+if (ENABLE_USD_EXPORT)
+    add_subdirectory(usdExport)
+endif()

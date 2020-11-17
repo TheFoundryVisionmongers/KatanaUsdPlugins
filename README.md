@@ -12,3 +12,11 @@ which describes how to go about making your own CMake build scripts.
 
 See the [online documentation](http://openusd.org/docs/Katana-USD-Plugins.html)
 for more details.
+
+## Compatibility
+| Feature                | Katana Version | Build Definition | Default |
+| ---------------------- | ---------------| ---------------  | ------- |
+| UsdExport | 4.0v1+ | ENABLE_USD_EXPORT | ON |
+| Usd Render Info Plugin | 3.5v1+ | ENABLE_USD_RENDER_INFO_PLUGIN | ON |
+
+Please refer to BUILDING.md for more information.

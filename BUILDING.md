@@ -109,6 +109,17 @@ prefixed libraries which we ship with Katana. More info about the
 FindUSD.cmake can be found below in the
 [The FindUSD.cmake helper script](#The-FindUSD.cmake-helper-script) section.
 
+#### ENABLE_USD_EXPORT
+This option allows building the project without UsdExport plugin.
+The default value is `ON`. This might be important if building against
+Katana version lower than 4.0.
+
+#### ENABLE_USD_RENDER_INFO_PLUGIN
+This option allows building the project without UsdRenderInfoPlugin. It
+registers the UsdPreviewSurface shaders and UsdLuxLights, and that support for
+viewing these in **Viewer (Hydra)** tab was added in Katana 4.0v1. The default
+value is `ON`.
+
 ## Advanced Building With CMake
 
 Below we provide some examples of cmake build scripts that can be used to

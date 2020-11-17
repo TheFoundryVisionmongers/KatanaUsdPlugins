@@ -1,5 +1,7 @@
 add_subdirectory(pxrUsdIn)
 add_subdirectory(pxrUsdInPrman)
 add_subdirectory(pxrUsdInShipped)
-add_subdirectory(usdRenderInfoPlugin)
+if (ENABLE_USD_RENDER_INFO_PLUGIN)
+    add_subdirectory(usdRenderInfoPlugin)
+endif()
 
