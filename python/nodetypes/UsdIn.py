@@ -179,6 +179,16 @@ nb.setHintsForParameter('includeProxyForArchive', {
 
 })
 
+gb.set('evaluateUsdSkelBindings', 1)
+nb.setHintsForParameter('evaluateUsdSkelBindings', {
+    'widget' : 'checkBox',
+    'help' : """
+        If enabled the skinning will be applied to each prim that is bound to a
+        skeleton.
+    """,
+    'constant' : True,
+})
+
 nb.setParametersTemplateAttr(gb.build())
 
 #-----------------------------------------------------------------------------
@@ -250,6 +260,9 @@ def buildPxrUsdInOpArgsAtGraphState(self, graphState):
     extra = graphState.getDynamicEntry('var:usdExtraAttributesOrNamespaces')
     if extra:
         gb.set('extraAttributesOrNamespaces', extra)
+
+    gb.set('evaluateUsdSkelBindings', int(self.getParameter(
+        'evaluateUsdSkelBindings').getValue(frameTime)))
 
     argsOverride = graphState.getDynamicEntry('var:pxrUsdInArgs')
     if isinstance(argsOverride, FnAttribute.GroupAttribute):

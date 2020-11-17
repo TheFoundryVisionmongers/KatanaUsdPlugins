@@ -27,6 +27,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#include <vector>
+
 #include "pxr/pxr.h"
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readGprim.h"
@@ -252,13 +254,23 @@ _ConvertGeomAttr(
 
 } // anon namespace
 
-FnKat::Attribute
-PxrUsdKatanaGeomGetPAttr(
+FnKat::Attribute PxrUsdKatanaGeomGetPAttr(
     const UsdGeomPointBased& points,
     const PxrUsdKatanaUsdInPrivateData& data)
 {
+    FnKat::Attribute skinnedPointsAttr;
+    if (data.GetEvaluateUsdSkelBindings())
+    {
+        skinnedPointsAttr = PxrUsdKatanaUtils::ApplySkinningToPoints(
+            points, data.GetCurrentTime());
+    }
+
+    if (skinnedPointsAttr.isValid())
+    {
+        return skinnedPointsAttr;
+    }
     return _ConvertGeomAttr<GfVec3f, FnKat::FloatAttribute>(
-            points.GetPointsAttr(), 3, data);
+        points.GetPointsAttr(), 3, data);
 }
 
 Foundry::Katana::Attribute

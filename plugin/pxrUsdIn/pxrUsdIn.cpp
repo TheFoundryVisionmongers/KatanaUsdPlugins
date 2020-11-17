@@ -748,7 +748,7 @@ public:
             const std::string & rootLocationPath)
     {
         ArgsBuilder ab;
-        
+
         FnKat::StringAttribute usdFileAttr = opArgs.getChildByName("fileName");
         if (!usdFileAttr.isValid()) {
             return ab.buildWithError("UsdIn: USD fileName not specified.");
@@ -976,7 +976,12 @@ public:
             userPropertiesNames.clear();
             userPropertiesNames.push_back("userProperties");
         }
-        
+
+        ab.evaluateUsdSkelBindings = static_cast<bool>(
+            FnKat::IntAttribute(
+                opArgs.getChildByName("evaluateUsdSkelBindings"))
+                .getValue(1, false));
+
         return ab.build();
     }
 

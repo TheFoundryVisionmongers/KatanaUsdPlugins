@@ -54,6 +54,7 @@ PxrUsdKatanaUsdInArgs::PxrUsdKatanaUsdInArgs(
         bool prePopulate,
         bool verbose,
         const std::set<std::string>& outputTargets,
+        const bool evaluateUsdSkelBindings,
         const char * errorMessage) :
     _stage(stage),
     _rootLocation(rootLocation),
@@ -69,6 +70,7 @@ PxrUsdKatanaUsdInArgs::PxrUsdKatanaUsdInArgs(
     _materialBindingPurposes(materialBindingPurposes),
     _prePopulate(prePopulate),
     _verbose(verbose),
+    _evaluateUsdSkelBindings(evaluateUsdSkelBindings),
     _outputTargets(outputTargets)
 {
     if (errorMessage)

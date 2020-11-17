@@ -109,6 +109,7 @@ public:
             bool prePopulate,
             bool verbose,
             const std::set<std::string>& outputTargets,
+            const bool evaluateUsdSkelBindings,
             const char * errorMessage = 0) {
         return TfCreateRefPtr(new PxrUsdKatanaUsdInArgs(
                     stage, 
@@ -126,6 +127,7 @@ public:
                     prePopulate,
                     verbose,
                     outputTargets,
+                    evaluateUsdSkelBindings,
                     errorMessage));
     }
 
@@ -209,28 +211,31 @@ public:
         return _outputTargets;
     }
 
+    bool GetEvaluateUsdSkelBindings() const {
+        return _evaluateUsdSkelBindings;
+    }
+
     const std::string & GetErrorMessage() {
         return _errorMessage;
     }
 private:
-
-    PxrUsdKatanaUsdInArgs(
-            UsdStageRefPtr stage,
-            const std::string& rootLocation,
-            const std::string& isolatePath,
-            const std::string& sessionLocation,
-            FnAttribute::GroupAttribute sessionAttr,
-            const std::string& ignoreLayerRegex,
-            double currentTime,
-            double shutterOpen,
-            double shutterClose,
-            const std::vector<double>& motionSampleTimes,
-            const StringListMap& extraAttributesOrNamespaces,
-            const std::vector<TfToken>& materialBindingPurposes,
-            bool prePopulate,
-            bool verbose,
-            const std::set<std::string>& outputTargets,
-            const char * errorMessage = 0);
+    PxrUsdKatanaUsdInArgs(UsdStageRefPtr stage,
+                          const std::string& rootLocation,
+                          const std::string& isolatePath,
+                          const std::string& sessionLocation,
+                          FnAttribute::GroupAttribute sessionAttr,
+                          const std::string& ignoreLayerRegex,
+                          double currentTime,
+                          double shutterOpen,
+                          double shutterClose,
+                          const std::vector<double>& motionSampleTimes,
+                          const StringListMap& extraAttributesOrNamespaces,
+                          const std::vector<TfToken>& materialBindingPurposes,
+                          bool prePopulate,
+                          bool verbose,
+                          const std::set<std::string>& outputTargets,
+                          bool evaluateUsdSkelBindings,
+                          const char* errorMessage = 0);
 
     ~PxrUsdKatanaUsdInArgs();
 
@@ -264,10 +269,10 @@ private:
     // Cache for accelerating UsdSkel skinning data calculation.
     UsdSkelCache _usdSkelCache;
     
+    bool _evaluateUsdSkelBindings{true};
+
     std::string _errorMessage;
-
 };
-
 
 // utility to make it easier to exit earlier from InitUsdInArgs
 struct ArgsBuilder
@@ -287,15 +292,16 @@ struct ArgsBuilder
     bool prePopulate;
     bool verbose;
     std::set<std::string> outputTargets;
-    const char * errorMessage;
-    
-    
+    bool evaluateUsdSkelBindings;
+    const char* errorMessage;
+
     ArgsBuilder()
     : currentTime(0.0)
     , shutterOpen(0.0)
     , shutterClose(0.0)
     , prePopulate(false)
     , verbose(true)
+    , evaluateUsdSkelBindings(true)
     , errorMessage(0)
     {
     }
@@ -319,6 +325,7 @@ struct ArgsBuilder
             prePopulate,
             verbose,
             outputTargets,
+            evaluateUsdSkelBindings,
             errorMessage);
     }
 
@@ -339,6 +346,7 @@ struct ArgsBuilder
         prePopulate = other->GetPrePopulate();
         verbose = other->IsVerbose();
         outputTargets = other->GetOutputTargets();
+        evaluateUsdSkelBindings = other->GetEvaluateUsdSkelBindings();
         errorMessage = other->GetErrorMessage().c_str();
     }
 

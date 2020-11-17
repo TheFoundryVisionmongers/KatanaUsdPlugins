@@ -109,6 +109,9 @@ public:
         return _shutterClose;
     }
 
+    const bool GetEvaluateUsdSkelBindings() const {
+        return _evaluateUsdSkelBindings;
+    }
 
     const bool hasOutputTarget(const std::string& renderer) const {
         return _outputTargets.find(renderer) != _outputTargets.end();
@@ -217,7 +220,7 @@ private:
     _CollectionQueryCachePtr _collectionQueryCache;
     _BindingsCachePtr _bindingsCache;
 
-
+    bool _evaluateUsdSkelBindings{true};
 };
 
 

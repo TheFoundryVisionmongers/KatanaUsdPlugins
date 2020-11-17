@@ -347,7 +347,7 @@ PxrUsdKatanaUsdInPrivateData::PxrUsdKatanaUsdInPrivateData(
             new UsdShadeMaterialBindingAPI::BindingsCache);
     }
 
-
+    _evaluateUsdSkelBindings = _usdInArgs->GetEvaluateUsdSkelBindings();
 }
 
 const bool

@@ -41,6 +41,7 @@
 #include "pxr/usd/sdf/path.h"
 #include "pxr/usd/sdf/types.h"
 #include "pxr/base/vt/value.h"
+#include "pxr/usd/usdGeom/pointBased.h"
 
 #include <FnAttribute/FnGroupBuilder.h>
 #include <FnAttribute/FnDataBuilder.h>
@@ -199,7 +200,10 @@ struct PxrUsdKatanaUtils {
     /// the given rootPath.
     USDKATANA_API static FnKat::GroupAttribute BuildInstanceMasterMapping(
             const UsdStageRefPtr& stage, const SdfPath &rootPath);
-    
+
+    USDKATANA_API static FnKat::Attribute ApplySkinningToPoints(
+        const UsdGeomPointBased& points,
+        double time);
 };
 
 /// Utility class for building a light list.

@@ -34,6 +34,7 @@
 #include "pxr/base/gf/vec3d.h"
 #include "pxr/base/gf/matrix4d.h"
 #include "pxr/base/arch/demangle.h"
+#include "pxr/base/work/loops.h"
 #include "pxr/usd/kind/registry.h"
 #include "pxr/base/vt/array.h"
 #include "pxr/base/vt/value.h"
@@ -53,6 +54,10 @@
 #include "pxr/usd/usdLux/listAPI.h"
 #include "pxr/usd/usdShade/shader.h"
 #include "pxr/usd/usdShade/material.h"
+#include "pxr/usd/usdSkel/bindingAPI.h"
+#include "pxr/usd/usdSkel/root.h"
+#include "pxr/usd/usdSkel/skeletonQuery.h"
+#include "pxr/usd/usdSkel/skinningQuery.h"
 #include "pxr/usd/usdUtils/pipeline.h"
 
 #include "vtKatana/array.h"
@@ -1594,6 +1599,71 @@ PxrUsdKatanaUtils::BuildInstanceMasterMapping(
     
     
     return gb.build();
+}
+
+FnKat::Attribute PxrUsdKatanaUtils::ApplySkinningToPoints(
+    const UsdGeomPointBased& points,
+    const double time)
+{
+    UsdSkelCache skelCache;
+    const UsdPrim prim{points.GetPrim()};
+    UsdSkelRoot skelRoot = UsdSkelRoot::Find(prim);
+    FnKat::FloatAttribute skinnedPointsAttr;
+    if (skelRoot)
+    {
+        skelCache.Populate(skelRoot);
+        if (UsdSkelSkinningQuery skinningQuery =
+                skelCache.GetSkinningQuery(prim))
+        {
+            // Find the Skeleton that should affect this prim.
+            UsdSkelSkeleton skel =
+                UsdSkelBindingAPI(prim).GetInheritedSkeleton();
+            if (UsdSkelSkeletonQuery skelQuery = skelCache.GetSkelQuery(skel))
+            {
+                // Get the skinning transform from the skeleton.
+                VtMatrix4dArray skinningXforms;
+                skelQuery.ComputeSkinningTransforms(&skinningXforms,
+                                                    time);
+                // Get the prim's points first and then skin them.
+                VtVec3fArray skinnedPoints;
+                points.GetPointsAttr().Get(&skinnedPoints, time);
+                skinningQuery.ComputeSkinnedPoints(
+                    skinningXforms, &skinnedPoints, time);
+
+                // Apply transforms to get the points in mesh prim space instead
+                // of skeleton space.
+                UsdGeomXformCache xformCache(time);
+                const UsdPrim& skelPrim = skelQuery.GetPrim();
+                const GfMatrix4d skelLocalToWorld =
+                    xformCache.GetLocalToWorldTransform(skelPrim);
+                const GfMatrix4d primWorldToLocal =
+                    xformCache.GetLocalToWorldTransform(skinningQuery.GetPrim())
+                        .GetInverse();
+                const GfMatrix4d skelToPrimLocal =
+                    skelLocalToWorld * primWorldToLocal;
+                WorkParallelForN(
+                    skinnedPoints.size(),
+                    [&](size_t start, size_t end) {
+                        for (size_t i = start; i < end; ++i)
+                        {
+                            skinnedPoints[i] =
+                                skelToPrimLocal.Transform(skinnedPoints[i]);
+                        }
+                    },
+                    /*grainSize*/ 1000);
+
+                // Package the points in an attribute.
+                if (!skinnedPoints.empty())
+                {
+                    std::vector<float> attrVec(skinnedPoints.size() * 3);
+                    PxrUsdKatanaUtils::ConvertArrayToVector(skinnedPoints,
+                                                            &attrVec);
+                    skinnedPointsAttr = {attrVec.data(), attrVec.size(), 3};
+                }
+            }
+        }
+    }
+    return skinnedPointsAttr;
 }
 
 namespace {
