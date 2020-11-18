@@ -1658,7 +1658,9 @@ FnKat::Attribute PxrUsdKatanaUtils::ApplySkinningToPoints(
                     std::vector<float> attrVec(skinnedPoints.size() * 3);
                     PxrUsdKatanaUtils::ConvertArrayToVector(skinnedPoints,
                                                             &attrVec);
-                    skinnedPointsAttr = {attrVec.data(), attrVec.size(), 3};
+                    skinnedPointsAttr = {attrVec.data(),
+                                         static_cast<int64_t>(attrVec.size()),
+                                         3};
                 }
             }
         }
