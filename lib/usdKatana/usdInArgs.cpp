@@ -70,8 +70,8 @@ PxrUsdKatanaUsdInArgs::PxrUsdKatanaUsdInArgs(
     _materialBindingPurposes(materialBindingPurposes),
     _prePopulate(prePopulate),
     _verbose(verbose),
-    _evaluateUsdSkelBindings(evaluateUsdSkelBindings),
-    _outputTargets(outputTargets)
+    _outputTargets(outputTargets),
+    _evaluateUsdSkelBindings(evaluateUsdSkelBindings)
 {
     if (errorMessage)
     {

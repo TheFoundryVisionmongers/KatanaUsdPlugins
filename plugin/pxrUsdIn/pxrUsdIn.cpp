@@ -824,15 +824,12 @@ public:
         ab.verbose = FnKat::IntAttribute(
                 opArgs.getChildByName("verbose")).getValue(0, false);
 
-        ab.outputTargets;
-
         typedef FnAttribute::StringAttribute::array_type StringArrayType;
         FnAttribute::StringAttribute outputTargetArgStr = FnAttribute::StringAttribute(opArgs.getChildByName(
             "outputTargets"));
         if (outputTargetArgStr.isValid())
         {
             StringArrayType outputTargetVector = outputTargetArgStr.getNearestSample(0);
-            int i = 0;
             for(StringArrayType::const_iterator it = outputTargetVector.begin() ; 
                 it != outputTargetVector.end() ; 
                 ++it)
