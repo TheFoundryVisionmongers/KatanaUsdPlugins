@@ -59,14 +59,15 @@ function(pxr_katana_python_plugin)
     set(pluginInstallDir ${PXR_INSTALL_SUBDIR}/plugin/${args_PLUGIN_TYPE})
     set(pythonInstallDir ${PXR_INSTALL_SUBDIR}/lib/python)
 
-    install(
-        PROGRAMS ${args_PYTHON_PLUGIN_REGISTRY_FILES}
-        DESTINATION ${pluginInstallDir}
-    )
-    install(
-        PROGRAMS ${args_PYTHON_MODULE_FILES}
-        DESTINATION ${pythonInstallDir}
-    )
+    foreach(file ${args_PYTHON_PLUGIN_REGISTRY_FILES})
+        get_filename_component(dir ${file} DIRECTORY)
+        install(FILES ${file} DESTINATION ${pluginInstallDir}/${dir})
+    endforeach()
+
+    foreach(file ${args_PYTHON_MODULE_FILES})
+        get_filename_component(dir ${file} DIRECTORY)
+        install(FILES ${file} DESTINATION ${pythonInstallDir}/${dir})
+    endforeach()
 
     if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
         if(args_PYTHON_PLUGIN_REGISTRY_FILES)

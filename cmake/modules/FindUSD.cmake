@@ -25,7 +25,9 @@
 set(USD_LIBRARIES
     gf
     hio
+    ndr
     sdf
+    sdr
     tf
     usdGeom
     usdHydra
