@@ -54,8 +54,6 @@
 #include <FnLogging/FnLogging.h>
 #include <pystring/pystring.h>
 
-#include "pxr/usd/usdHydra/tokens.h"
-
 #include <stack>
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -273,32 +271,6 @@ _GatherShadingParameters(
                     PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
         }
     }
-
-    // XXX check for info attrs as they're not strictly parameters but
-    //     necessary for hydra shading (currently)
-    if (targetName == "display")
-    {
-        std::vector<UsdProperty> props =
-                prim.GetPropertiesInNamespace("info");
-
-        for (std::vector<UsdProperty>::const_iterator I =
-                props.begin(), E = props.end(); I != E; ++I)
-        {
-            const UsdProperty & prop = (*I);
-
-            if (UsdAttribute attr = prop.As<UsdAttribute>())
-            {
-                VtValue vtValue;
-                if (!attr.Get(&vtValue, currentTime))
-                {
-                    continue;
-                }
-
-                paramsBuilder.set(attr.GetName().GetString(),
-                        PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
-            }
-        }
-    }
 }
 
 
@@ -470,9 +442,13 @@ _GetMaterialAttr(
         if (rslShader) {
             terminalsBuilder.set("prmanSurface",
                                  FnKat::StringAttribute(handle));
+            terminalsBuilder.set("prmanSurfacePort",
+                                 FnKat::StringAttribute("out"));
         } else {
             terminalsBuilder.set("prmanBxdf",
                                  FnKat::StringAttribute(handle));
+            terminalsBuilder.set("prmanBxdfPort",
+                                 FnKat::StringAttribute("out"));
         }
     }
 
@@ -552,66 +528,6 @@ _GetMaterialAttr(
     }
     // XXX END
 
-    bool foundGlslfxTerminal = false;
-    if (UsdShadeOutput glslfxOut = materialSchema.GetSurfaceOutput(
-                HioGlslfxTokens->glslfx)) {
-        if (flatten ||
-            !glslfxOut.IsSourceConnectionFromBaseMaterial())
-        {
-            UsdShadeConnectableAPI source;
-            TfToken sourceName;
-            UsdShadeAttributeType sourceType;
-            if (glslfxOut.GetConnectedSource(&source, &sourceName,
-                                                &sourceType)) {
-                foundGlslfxTerminal = true;
-                string handle = _CreateShadingNode(
-                    source.GetPrim(), currentTime,
-                    nodesBuilder, interfaceBuilder, "display", flatten);
-
-                terminalsBuilder.set("displayBxdf",
-                                        FnKat::StringAttribute(handle));
-            }
-        }
-    }
-
-    // XXX: This code is deprecated and should be removed soon, along with all
-    // other uses of the deprecated usdHydra API.
-    //
-    // XXX, Because of relationship forwarding, there are possible name
-    //      clashes with the standard prman shading.
-    if (!foundGlslfxTerminal) {
-        if (UsdRelationship bxdfRel = materialPrim.GetRelationship(
-                    UsdHydraTokens->displayLookBxdf)) {
-            if (flatten ||
-                    !PxrUsdKatana_AreRelTargetsFromBaseMaterial(bxdfRel)) {
-                SdfPathVector targetPaths;
-                bxdfRel.GetForwardedTargets(&targetPaths);
-
-                if (targetPaths.size() > 1) {
-                    FnLogWarn("Multiple displayLook bxdf detected on look:" <<
-                        materialPrim.GetPath());
-                }
-                if (targetPaths.size() > 0) {
-                    const SdfPath targetPath = targetPaths[0];
-                    if (UsdPrim bxdfPrim =
-                        stage->GetPrimAtPath(targetPath)) {
-
-                        string handle = _CreateShadingNode(
-                            bxdfPrim, currentTime,
-                            nodesBuilder, interfaceBuilder, "display", flatten);
-
-                        terminalsBuilder.set("displayBxdf",
-                                                FnKat::StringAttribute(handle));
-                    } else {
-                        FnLogWarn("Bxdf does not exist at "
-                                    << targetPath.GetString());
-                    }
-                }
-            }
-        }
-    }
-
-
     // with the current implementation of ris, there are
     // no patterns that are unbound or not connected directly
     // to bxdf's.
@@ -636,7 +552,13 @@ _GetMaterialAttr(
             {
                 continue;
             }
-            if (TfStringStartsWith(katanaTerminalName, "glslfx:"))
+
+            if (TfStringStartsWith(katanaTerminalName, "ri:"))
+            {
+                // Skip since we deal with prman shaders above.
+                continue;
+            }
+            else if (TfStringStartsWith(katanaTerminalName, "glslfx:"))
             {
                 katanaTerminalName = "usd" + katanaTerminalName.substr(7);
                 katanaTerminalName[3] = toupper(katanaTerminalName[3]);
@@ -672,7 +594,7 @@ _GetMaterialAttr(
                 FnKat::StringAttribute(connectedShaderPath.GetName()));
             terminalsBuilder.set(
                 katanaTerminalPortName.c_str(),
-                FnKat::StringAttribute(katanaTerminalName));
+                FnKat::StringAttribute(sourceName.GetString()));
         }
     }
 

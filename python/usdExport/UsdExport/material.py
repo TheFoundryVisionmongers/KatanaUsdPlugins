@@ -213,8 +213,15 @@ def AddTerminals(stage, terminals, material):
     for terminalIndex in xrange(terminals.getNumberOfChildren()):
         terminalAttr = terminals.getChildByIndex(terminalIndex)
         terminalName = terminals.getChildName(terminalIndex)
-        # Ignore the ports as terminals..
+        # Ignore the ports as terminals, we fetch these to create the
+        # shader port name anyway
         if "Port" in terminalName:
+            continue
+
+        portName = terminals.getChildByName(terminalName + "Port")
+        # Must have a port name to be able to know what the output of the
+        # shader should be called.
+        if not portName:
             continue
 
         # Universal (catch all for unrecognized renderers)
@@ -245,14 +252,13 @@ def AddTerminals(stage, terminals, material):
             continue
 
         terminalName = outputPrefix + outputType
-
         terminalShader = str(terminalAttr.getValue())
         materialTerminal = material.CreateOutput(terminalName,
                                                  Sdf.ValueTypeNames.Token)
         materialPath = material.GetPath()
         terminalShaderPath = materialPath.AppendChild(terminalShader)
         terminalShader = UsdShade.Shader.Get(stage, terminalShaderPath)
-        materialTerminal.ConnectToSource(terminalShader, terminalName)
+        materialTerminal.ConnectToSource(terminalShader, portName.getValue())
 
 
 def AddMaterialParameters(parametersAttr, shaderId, shader):
@@ -431,6 +437,9 @@ def AddShaderConnections(stage, connectionsAttr, materialPath, shader):
             "cannot find shaderID {1}".format(
                 materialPath, shader.GetShaderId()))
         return
+
+    portOrder = []
+
     for connectionIndex in xrange(connectionsAttr.getNumberOfChildren()):
         connectionName = connectionsAttr.getChildName(connectionIndex)
         connectionAttr = connectionsAttr.getChildByIndex(connectionIndex)
@@ -461,6 +470,14 @@ def AddShaderConnections(stage, connectionsAttr, materialPath, shader):
         inputPort.ConnectToSource(
             inputShader, str(inputShaderPortName),
             UsdShade.AttributeType.Output, sourceSdfType)
+
+        # Record the order this port appears (USD connections are stored as a
+        # dictionary rather than a list, so this info would be lost).
+        portOrder.append(inputPort.GetFullName())
+
+    # In Katana the order of ports can be important. E.g. NetworkMaterialEdit
+    # and Switch nodes.
+    shader.GetPrim().SetPropertyOrder(portOrder)
 
 def OverwriteMaterialInterfaces(parametersAttr, material, parentMaterial):
     """
