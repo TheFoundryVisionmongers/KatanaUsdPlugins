@@ -55,6 +55,7 @@
 #include "pxr/usd/usdShade/shader.h"
 #include "pxr/usd/usdShade/material.h"
 #include "pxr/usd/usdSkel/bindingAPI.h"
+#include "pxr/usd/usdSkel/blendShapeQuery.h"
 #include "pxr/usd/usdSkel/root.h"
 #include "pxr/usd/usdSkel/skeletonQuery.h"
 #include "pxr/usd/usdSkel/skinningQuery.h"
@@ -72,10 +73,81 @@
 
 FnLogSetup("PxrUsdKatanaUtils");
 
-#include <sstream>
 #include <cmath>
+#include <sstream>
 
 PXR_NAMESPACE_OPEN_SCOPE
+namespace
+{
+void ApplyBlendShapeAnimation(const UsdSkelSkinningQuery& skinningQuery,
+                              const UsdSkelSkeletonQuery& skelQuery,
+                              const double time,
+                              VtVec3fArray& points)
+{
+    const UsdSkelBlendShapeQuery blendShapeQuery =
+        UsdSkelBindingAPI(skinningQuery.GetPrim());
+
+    if (const UsdSkelAnimMapperRefPtr blendShapeMapper =
+            skinningQuery.GetBlendShapeMapper())
+    {
+        VtFloatArray blendShapeWeights;
+        skelQuery.GetAnimQuery().ComputeBlendShapeWeights(&blendShapeWeights,
+                                                          time);
+
+        VtFloatArray weightsForPrim;
+        if (blendShapeMapper->Remap(blendShapeWeights, &weightsForPrim))
+        {
+            VtFloatArray subShapeWeights;
+            VtUIntArray blendShapeIndices, subShapeIndices;
+            if (blendShapeQuery.ComputeSubShapeWeights(
+                    weightsForPrim, &subShapeWeights, &blendShapeIndices,
+                    &subShapeIndices))
+            {
+                const std::vector<VtIntArray> blendShapePointIndices =
+                    blendShapeQuery.ComputeBlendShapePointIndices();
+                const std::vector<VtVec3fArray> subShapePointOffsets =
+                    blendShapeQuery.ComputeSubShapePointOffsets();
+
+                blendShapeQuery.ComputeDeformedPoints(
+                    subShapeWeights, blendShapeIndices, subShapeIndices,
+                    blendShapePointIndices, subShapePointOffsets, points);
+            }
+        }
+    }
+};
+
+void ApplyJointAnimation(const UsdSkelSkinningQuery& skinningQuery,
+                         const UsdSkelSkeletonQuery& skelQuery,
+                         const double time,
+                         VtVec3fArray& points)
+{
+    // Get the skinning transform from the skeleton.
+    VtMatrix4dArray skinningXforms;
+    skelQuery.ComputeSkinningTransforms(&skinningXforms, time);
+    // Get the prim's points first and then skin them.
+    skinningQuery.ComputeSkinnedPoints(skinningXforms, &points, time);
+
+    // Apply transforms to get the points in mesh prim space
+    // instead of skeleton space.
+    UsdGeomXformCache xformCache(time);
+    const UsdPrim& skelPrim = skelQuery.GetPrim();
+    const GfMatrix4d skelLocalToWorld =
+        xformCache.GetLocalToWorldTransform(skelPrim);
+    const GfMatrix4d primWorldToLocal =
+        xformCache.GetLocalToWorldTransform(skinningQuery.GetPrim())
+            .GetInverse();
+    const GfMatrix4d skelToPrimLocal = skelLocalToWorld * primWorldToLocal;
+    WorkParallelForN(
+        points.size(),
+        [&](size_t start, size_t end) {
+            for (size_t i = start; i < end; ++i)
+            {
+                points[i] = skelToPrimLocal.Transform(points[i]);
+            }
+        },
+        /*grainSize*/ 1000);
+};
+}  // namespace
 
 static const std::string&
 _ResolveAssetPath(const SdfAssetPath& assetPath)
@@ -1605,65 +1677,48 @@ FnKat::Attribute PxrUsdKatanaUtils::ApplySkinningToPoints(
     const UsdGeomPointBased& points,
     const double time)
 {
+    FnKat::FloatAttribute skinnedPointsAttr;
+
     UsdSkelCache skelCache;
     const UsdPrim prim{points.GetPrim()};
     UsdSkelRoot skelRoot = UsdSkelRoot::Find(prim);
-    FnKat::FloatAttribute skinnedPointsAttr;
-    if (skelRoot)
+    if (!skelRoot)
     {
-        skelCache.Populate(skelRoot);
-        if (UsdSkelSkinningQuery skinningQuery =
-                skelCache.GetSkinningQuery(prim))
-        {
-            // Find the Skeleton that should affect this prim.
-            UsdSkelSkeleton skel =
-                UsdSkelBindingAPI(prim).GetInheritedSkeleton();
-            if (UsdSkelSkeletonQuery skelQuery = skelCache.GetSkelQuery(skel))
-            {
-                // Get the skinning transform from the skeleton.
-                VtMatrix4dArray skinningXforms;
-                skelQuery.ComputeSkinningTransforms(&skinningXforms,
-                                                    time);
-                // Get the prim's points first and then skin them.
-                VtVec3fArray skinnedPoints;
-                points.GetPointsAttr().Get(&skinnedPoints, time);
-                skinningQuery.ComputeSkinnedPoints(
-                    skinningXforms, &skinnedPoints, time);
+        return skinnedPointsAttr;
+    }
+    skelCache.Populate(skelRoot);
 
-                // Apply transforms to get the points in mesh prim space instead
-                // of skeleton space.
-                UsdGeomXformCache xformCache(time);
-                const UsdPrim& skelPrim = skelQuery.GetPrim();
-                const GfMatrix4d skelLocalToWorld =
-                    xformCache.GetLocalToWorldTransform(skelPrim);
-                const GfMatrix4d primWorldToLocal =
-                    xformCache.GetLocalToWorldTransform(skinningQuery.GetPrim())
-                        .GetInverse();
-                const GfMatrix4d skelToPrimLocal =
-                    skelLocalToWorld * primWorldToLocal;
-                WorkParallelForN(
-                    skinnedPoints.size(),
-                    [&](size_t start, size_t end) {
-                        for (size_t i = start; i < end; ++i)
-                        {
-                            skinnedPoints[i] =
-                                skelToPrimLocal.Transform(skinnedPoints[i]);
-                        }
-                    },
-                    /*grainSize*/ 1000);
+    // Populate skinnedPoints with the points of the rest position
+    VtVec3fArray skinnedPoints;
+    points.GetPointsAttr().Get(&skinnedPoints, time);
 
-                // Package the points in an attribute.
-                if (!skinnedPoints.empty())
-                {
-                    std::vector<float> attrVec(skinnedPoints.size() * 3);
-                    PxrUsdKatanaUtils::ConvertArrayToVector(skinnedPoints,
-                                                            &attrVec);
-                    skinnedPointsAttr = {attrVec.data(),
-                                         static_cast<int64_t>(attrVec.size()),
-                                         3};
-                }
-            }
-        }
+    // Get skinning query
+    const UsdSkelSkinningQuery skinningQuery = skelCache.GetSkinningQuery(prim);
+    if (!skinningQuery)
+    {
+        return skinnedPointsAttr;
+    }
+
+    // Get skeleton query
+    const UsdSkelSkeleton skel = UsdSkelBindingAPI(prim).GetInheritedSkeleton();
+    const UsdSkelSkeletonQuery skelQuery = skelCache.GetSkelQuery(skel);
+    if (!skelQuery)
+    {
+        return skinnedPointsAttr;
+    }
+
+    PXR_INTERNAL_NS::ApplyBlendShapeAnimation(skinningQuery, skelQuery, time,
+                                              skinnedPoints);
+    PXR_INTERNAL_NS::ApplyJointAnimation(skinningQuery, skelQuery, time,
+                                         skinnedPoints);
+
+    // Package the points in an attribute.
+    if (!skinnedPoints.empty())
+    {
+        std::vector<float> attrVec(skinnedPoints.size() * 3);
+        PxrUsdKatanaUtils::ConvertArrayToVector(skinnedPoints, &attrVec);
+        skinnedPointsAttr = {attrVec.data(),
+                             static_cast<int64_t>(attrVec.size()), 3};
     }
     return skinnedPointsAttr;
 }
