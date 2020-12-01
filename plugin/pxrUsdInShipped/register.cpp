@@ -47,6 +47,7 @@
 #include "pxr/usd/usdGeom/subset.h"
 #include "pxr/usd/usdGeom/xform.h"
 #include "pxr/usd/usdShade/material.h"
+#include "pxr/usd/usdSkel/root.h"
 #include "pxr/usd/usdLux/domeLight.h"
 #include "pxr/usd/usdLux/distantLight.h"
 #include "pxr/usd/usdLux/geometryLight.h"
@@ -122,6 +123,7 @@ void registerPlugins()
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomPoints>("PxrUsdInCore_PointsOp");
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomBasisCurves>("PxrUsdInCore_BasisCurvesOp");
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdShadeMaterial>("PxrUsdInCore_LookOp");
+    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdSkelRoot>("PxrUsdInCore_XformOp");
 
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDomeLight>("PxrUsdInCore_LightOp");
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxGeometryLight>("PxrUsdInCore_LightOp");

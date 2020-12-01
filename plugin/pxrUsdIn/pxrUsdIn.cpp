@@ -364,20 +364,27 @@ public:
 
             {
                 std::string opName;
-                if (PxrUsdKatanaUsdInPluginRegistry::FindUsdType(
-                        prim.GetTypeName(), &opName)) {
-                    if (!opName.empty()) {
-                        
+                const TfToken typeName = prim.GetTypeName();
+                if (PxrUsdKatanaUsdInPluginRegistry::FindUsdType(typeName,
+                                                                 &opName))
+                {
+                    if (!opName.empty())
+                    {
                         if (privateData)
                         {
-                            // roughly equivalent to execOp except that we can
-                            // locally override privateData
-                            PxrUsdKatanaUsdInPluginRegistry::ExecuteOpDirectExecFnc(
-                                    opName, *privateData, opArgs, interface);
+                            if ((typeName.GetString() != "SkelRoot") ||
+                                privateData->GetEvaluateUsdSkelBindings())
+                            {
+                                // roughly equivalent to execOp except that we
+                                // can locally override privateData
+                                PxrUsdKatanaUsdInPluginRegistry::
+                                    ExecuteOpDirectExecFnc(opName, *privateData,
+                                                           opArgs, interface);
 
-                            opArgs = privateData->updateExtensionOpArgs(opArgs);
+                                opArgs =
+                                    privateData->updateExtensionOpArgs(opArgs);
+                            }
                         }
-                        
                     }
                 }
             }
