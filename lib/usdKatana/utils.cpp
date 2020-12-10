@@ -86,13 +86,21 @@ void ApplyBlendShapeAnimation(const UsdSkelSkinningQuery& skinningQuery,
 {
     const UsdSkelBlendShapeQuery blendShapeQuery =
         UsdSkelBindingAPI(skinningQuery.GetPrim());
+    if (!blendShapeQuery.IsValid())
+    {
+        return;
+    }
 
     if (const UsdSkelAnimMapperRefPtr blendShapeMapper =
             skinningQuery.GetBlendShapeMapper())
     {
         VtFloatArray blendShapeWeights;
-        skelQuery.GetAnimQuery().ComputeBlendShapeWeights(&blendShapeWeights,
-                                                          time);
+        const auto animQuery = skelQuery.GetAnimQuery();
+        if (!animQuery.IsValid())
+        {
+            return;
+        }
+        animQuery.ComputeBlendShapeWeights(&blendShapeWeights, time);
 
         VtFloatArray weightsForPrim;
         if (blendShapeMapper->Remap(blendShapeWeights, &weightsForPrim))
