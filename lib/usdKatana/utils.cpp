@@ -884,6 +884,12 @@ PxrUsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(
         }
         return;
     }
+    if (val.IsHolding<TfToken>())
+    {
+        *valueAttr = FnKat::StringAttribute(val.Get<TfToken>().GetString());
+        *inputTypeAttr = FnKat::StringAttribute("string");
+        return;
+    }
 
     TF_WARN("Unsupported primvar value type: %s",
             ArchGetDemangled(val.GetTypeid()).c_str());
