@@ -32,10 +32,11 @@ log = logging.getLogger("UsdExport")
 
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
 try:
-    from fnpxr import Usd, UsdShade, Sdf, Gf, Ndr, Sdr
+    from fnpxr import Usd, UsdShade, Sdf, Gf, Ndr, Sdr, Vt
     # These includes also require fnpxr
     from .typeConversionMaps import (ValueTypeCastMethods,
-                                     ConvertRenderInfoShaderTagsToSdfType)
+                                     ConvertRenderInfoShaderTagsToSdfType,
+                                     ConvertToVtVec3fArray)
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
@@ -381,7 +382,10 @@ def ConvertParameterValueToGfType(value, sdfType):
     if gfCast:
         if isinstance(value, PyFnAttribute.ConstVector):
             # Convert Katana's PyFnAttribute.ConstVector to a python list
-            value = [v for v in value]
+            if isinstance(gfCast(), Vt.Vec3fArray):
+                value = ConvertToVtVec3fArray(value)
+            else:
+                value = [v for v in value]
         if isinstance(value, list):
             if len(value) == 1:
                 value = gfCast(value[0])

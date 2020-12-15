@@ -27,7 +27,7 @@ import logging
 
 log = logging.getLogger("UsdExport")
 try:
-    from fnpxr import Sdf
+    from fnpxr import Sdf, Vt
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
@@ -84,3 +84,27 @@ def ConvertRenderInfoShaderTagsToSdfType(tags):
         if sdfType is not None:
             return sdfType
     return None
+
+
+def ConvertToVtVec3fArray(array):
+    """
+    Converts an array into Vt.Vec3fArray.
+
+    @type array: C{List} or C{PyFnAttribute.ConstVector}
+    @rtype: C{Vt.Vec3fArray}
+    @param array: A array to convert to C{Vt.Vec3fArray}.
+    @return: The resulting C{Vt.Vec3fArray} or an empty C{Vt.Vec3fArray}.
+    """
+    arraySize = len(array)
+    isValid = (arraySize % 3) == 0
+    if not isValid:
+        log.error(
+            "Coudln't convert the array to Vt.Vec3fArray because the number of"
+            "elements is not divisible by 3")
+        return Vt.Vec3fArray()
+
+    newarray = []
+    for i in range(0, int(arraySize / 3)):
+        j = i * 3
+        newarray.append((array[j], array[j + 1], array[j + 2]))
+    return Vt.Vec3fArray(newarray)
