@@ -1,5 +1,14 @@
 # Change List
 
+## 19.11_fn5
+
+- The evaluateUsdSkelBindings checkbox was added to the parameter interface of UsdIn nodes, adding support for importing bound and rigged models with the UsdSkel schema. When turned on, the skinning will be applied to each prim that is bound to a skeleton.
+- New options have been added to disable: UsdExport and UsdRenderInfoPlugin. These are described in the BUILDING.md file.
+- TP 458445 - [USD I/O] Fixed narrowing conversion warning/error
+- TP 459446 - Added sdr and ndr dependencies and fixed bundling of some Python files.
+- TP 458445 - Small fixes to remove standalone compilation warnings.
+- TP 455245 - Fixing terminal export and import for shaders.
+
 ## 19.11_fn4
 
 - The UsdExport changes are not compatible with Katana releases older than
