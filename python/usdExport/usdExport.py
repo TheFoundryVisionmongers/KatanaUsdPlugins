@@ -176,7 +176,7 @@ class UsdExport(BaseOutputFormat):
         materialAttribute = attrDict.get("material")
         # Write materialLocations first, as sdfLocationPath may be altered when
         # writing to a child location.
-        if materialAttribute is not None and locationType == "material":
+        if locationType == "material":
             # Important: Here sdfLocationPath is overridden to match
             # the Sdf.Path used for the  the child material. This is such
             # that sdfLocationPath can be re-used regardless as to
@@ -427,7 +427,7 @@ class UsdExport(BaseOutputFormat):
             for location in passDatamaterialDictKeys:
                 (locationType, materialAttribute) = \
                     passData.materialDict[location]
-                if locationType != "material" or not materialAttribute:
+                if locationType != "material":
                     continue
                 # Discard materials if the path is not a valid SdfPath.
                 if not Sdf.Path.IsValidPathString(location):

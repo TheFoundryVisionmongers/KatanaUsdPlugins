@@ -72,8 +72,6 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
     @return: The material created by this method or None if no child material
         was created.
     """
-    if not materialAttribute:
-        return None
     WriteMaterial(stage, materialSdfPath, materialAttribute)
     # Only define the Material prim if it has not already been defined.
     # We write the 'material.nodes' if they exist first, so if these attributes
@@ -106,12 +104,14 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
         katanaLookAPISchema = UsdKatana.LookAPI(materialPrim)
         katanaLookAPISchema.Apply(materialPrim)
         katanaLookAPISchema.CreatePrimNameAttr(childName)
-        parameters = materialAttribute.getChildByName("parameters")
-        # We cant add materialInterfaces to child materials in Katana at
-        # present, therefore we only need to check the oldest parent Material.
-        if parameters:
-            OverwriteMaterialInterfaces(parameters, material,
-                                        oldestParentMaterial)
+        if materialAttribute:
+            parameters = materialAttribute.getChildByName("parameters")
+            # We cant add materialInterfaces to child materials in Katana at
+            # present, therefore we only need to check the oldest
+            # parent Material.
+            if parameters:
+                OverwriteMaterialInterfaces(parameters, material,
+                                            oldestParentMaterial)
         return material
     return None
 
