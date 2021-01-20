@@ -556,8 +556,6 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
         shaderId = sourceShader.GetShaderId()
         #Save the parameter name so we can find it in the parameters attribute.
         parameterName = interfaceName
-        if groupName:
-            interfaceName = groupName + ":" + interfaceName
 
         materialPort = None
         if parametersAttr:
@@ -580,6 +578,12 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
                 shaderNode = GetShaderNodeFromRegistry(shaderId)
                 shaderNodeInput = shaderNode.GetInput(sourceParamName)
                 materialPort.Set(shaderNodeInput.GetDefaultValue())
+
+        if groupName:
+            # For now we need to manually replace "." with ":". In the future
+            # we should use SetNestedDisplayGroups() when avialiable.
+            groupName = groupName.replace(".", ":")
+            materialPort.SetDisplayGroup(groupName)
 
         sourceSdfType = materialPort.GetTypeName()
         sourceShaderPort = sourceShader.CreateInput(sourceParamName,
