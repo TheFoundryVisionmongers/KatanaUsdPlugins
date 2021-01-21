@@ -216,16 +216,25 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
         rootPrimName = node.getParameter("rootPrimName").getValue(frameTime)
         alwaysCreateVariantSet = bool(node.getParameter(
             "alwaysCreateVariantSet").getValue(frameTime) == "Yes")
-        fileName = node.getParameter("fileName").getValue(frameTime)
-        fileFormat = node.getParameter("fileFormat").getValue(frameTime)
-
+        looksFilename = node.getParameter("looksFilename").getValue(frameTime)
+        looksFileFormat = node.getParameter("looksFileFormat").getValue(
+            frameTime)
+        createCompleteUsdAssemblyFile = bool(node.getParameter(
+            "createCompleteUsdAssemblyFile").getValue(frameTime))
+        assemblyFilename = node.getParameter("assemblyFilename").getValue(
+            frameTime)
+        payloadFilename = node.getParameter("payloadFilename").getValue(
+            frameTime)
         createVariantSet = alwaysCreateVariantSet or (len(inputPorts) > 2)
         additionalSettings = {
             "variantSetName": variantSetName,
             "rootPrimName": rootPrimName,
             "createVariantSet": createVariantSet,
-            "fileFormat": fileFormat,
-            "fileName": fileName
+            "looksFileFormat": looksFileFormat,
+            "looksFilename": looksFilename,
+            "createCompleteUsdAssemblyFile": createCompleteUsdAssemblyFile,
+            "assemblyFilename": assemblyFilename,
+            "payloadFilename": payloadFilename,
         }
         # Ensure the interruptWidget is only created in a UI session
         if parentWidget:
@@ -266,14 +275,15 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
             self.__interruptWidget.update("Saving Materials To %s" % assetId,
                                           True)
 
-        baker.bakeAndPublish(
-            referenceOp, passNamesAndOps, rootLocations, assetId)
-
-        if self.__interruptWidget:
-            self.__interruptWidget.close()
-            self.__interruptWidget.setParent(None)
-            self.__interruptWidget.deleteLater()
-            self.__interruptWidget = None
+        try:
+            baker.bakeAndPublish(
+                referenceOp, passNamesAndOps, rootLocations, assetId)
+        finally:
+            if self.__interruptWidget:
+                self.__interruptWidget.close()
+                self.__interruptWidget.setParent(None)
+                self.__interruptWidget.deleteLater()
+                self.__interruptWidget = None
 
     def __progressCallback(self, message=None):
         """
@@ -330,11 +340,14 @@ _parameters_XML = """
             <string_parameter name="i0" value="/root/world"/>
         </stringarray_parameter>
         <string_parameter name="saveTo"/>
-        <string_parameter name='fileName' value='shadingVariants'/>
-        <string_parameter name="fileFormat" value="usd"/>
+        <string_parameter name="looksFilename" value="shadingVariants"/>
+        <string_parameter name="looksFileFormat" value="usd"/>
+        <number_parameter name="createCompleteUsdAssemblyFile" value="0"/>
+        <string_parameter name="assemblyFilename" value="assembly"/>
+        <string_parameter name="payloadFilename" value=""/>
         <string_parameter name="rootPrimName" value="/root"/>
         <string_parameter name="variantSetName" value="shadingVariants"/>
-        <string_parameter name='alwaysCreateVariantSet' value='No'/>
+        <string_parameter name="alwaysCreateVariantSet" value="No"/>
         <stringarray_parameter name="variants" size="0" tupleSize="1"/>
     </group_parameter>
 """
@@ -352,17 +365,42 @@ _ExtraHints = {
     "UsdMaterialBake.variants": {
         "widget": "lookfilebakeinputs",
     },
-    "UsdMaterialBake.fileName": {
+    "UsdMaterialBake.looksFilename": {
         "help": """
             The name of the file to write variant data into if not writing
             variants into separate files.
         """
     },
-    "UsdMaterialBake.fileFormat": {
+    "UsdMaterialBake.looksFileFormat": {
         "widget": "popup",
         "options": ['usd', 'usda', 'usdc'],
         "help": "The type of usd file to write."
     },
+    "UsdMaterialBake.createCompleteUsdAssemblyFile": {
+        "widget": "boolean",
+        "help": """If enabled, An assembly file containing a reference to the
+                    created look file and a payload for the specified payload
+                    asset.
+                """,
+        "constant": True
+    },
+    "UsdMaterialBake.assemblyFilename": {
+        "conditionalVisOps": {
+            "conditionalVisOp": "equalTo",
+            "conditionalVisPath": "../createCompleteUsdAssemblyFile",
+            "conditionalVisValue": "1"},
+        "help": """Specify the filename to use for the assembly. The file will
+                    be written in "usda" format."""
+    },
+    "UsdMaterialBake.payloadFilename": {
+        "conditionalVisOps": {
+            "conditionalVisOp": "equalTo",
+            "conditionalVisPath": "../createCompleteUsdAssemblyFile",
+            "conditionalVisValue": "1"},
+        "help": "Specify the filename of an asset to export as a payload.",
+        "widget": "assetIdInput"
+    },
+
     "UsdMaterialBake.saveTo": {
         "widget": "assetIdInput",
         "dirsOnly": "True",
