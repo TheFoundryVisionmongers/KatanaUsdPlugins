@@ -1,5 +1,10 @@
 # Change List
 
+# 19.11_fn6
+
+- TP 459692 - [USD I/O] Supporting Ramp widgets with UsdExport and Import
+- TP 462544 - TfToken primvar type was not being handled which results in a warning
+
 ## 19.11_fn5
 
 - The evaluateUsdSkelBindings checkbox was added to the parameter interface of UsdIn nodes, adding support for importing bound and rigged models with the UsdSkel schema. When turned on, the skinning will be applied to each prim that is bound to a skeleton.
