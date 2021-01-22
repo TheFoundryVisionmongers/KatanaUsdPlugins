@@ -13,7 +13,6 @@ pxr_plugin(${PXR_PACKAGE}
         usdGeom
         ${vtKatana_LIBRARY}
         Boost::system
-        Boost::date_time
 
     CPPFILES
         pxrUsdIn.cpp
