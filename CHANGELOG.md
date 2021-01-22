@@ -1,5 +1,9 @@
 # Change List
 
+# 20.08_fn1
+
+- TP 462395 - Update KatanaUsdPlugins to use 20.08 compatible API
+
 # 19.11_fn6
 
 - TP 459692 - [USD I/O] Supporting Ramp widgets with UsdExport and Import
