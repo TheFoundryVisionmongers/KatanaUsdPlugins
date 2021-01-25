@@ -32,7 +32,7 @@ log = logging.getLogger("UsdExport")
 
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
 try:
-    from fnpxr import Usd, UsdShade, Sdf, Gf, Ndr, Sdr, Vt
+    from fnpxr import UsdShade, Sdf, Gf, Sdr, Vt, UsdUI
     # These includes also require fnpxr
     from .typeConversionMaps import (ValueTypeCastMethods,
                                      ConvertRenderInfoShaderTagsToSdfType,
@@ -143,6 +143,8 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
         return None
     CreateEmptyShaders(stage, materialNodes, materialPath)
 
+    layoutAttr = materialAttribute.getChildByName("layout")
+
     # Now we have defined all the shaders we can connect them with no
     # issues.
     for materialNodeIndex in xrange(materialNodes.getNumberOfChildren()):
@@ -160,6 +162,10 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
             AddShaderConnections(
                 stage, connectionsAttr, materialPath, shader)
 
+        shaderLayoutAttr = layoutAttr.getChildByName(shaderName)
+        if shaderLayoutAttr:
+            AddShaderLayout(shaderLayoutAttr, shader)
+
     interfaces = materialAttribute.getChildByName("interface")
     if interfaces:
         parameters = materialAttribute.getChildByName("parameters")
@@ -169,6 +175,51 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
     if terminals:
         AddTerminals(stage, terminals, material)
     return material
+
+
+def AddShaderLayout(shaderLayoutAttr, shader):
+    """
+    Adds UsdUI.NodeGraphNodeAPI attributes to C{shader} prim such as:
+    * Position
+    * Color
+    * View State
+
+    @type shaderLayoutAttr: C{FnAttribute.GroupAttribute}
+    @type shader: C{Sdf.Path}
+    @param shaderLayoutAttr: Layout group attribute of the shader.
+    @param shader: The UsdShader shader object from the Usd Stage.
+    """
+    nodeGraphAPI = UsdUI.NodeGraphNodeAPI(shader)
+
+    #Add position
+    nodePositionAttr = shaderLayoutAttr.getChildByName("position")
+    if nodePositionAttr:
+        nodePosition = nodePositionAttr.getNearestSample(0)
+        nodeGraphAPI.CreatePosAttr(ConvertParameterValueToGfType(
+            nodePosition, Sdf.ValueTypeNames.Double2))
+
+    #Add color
+    nodeColorAttr = shaderLayoutAttr.getChildByName("color")
+    if nodeColorAttr:
+        nodeColor = nodeColorAttr.getNearestSample(0)
+        nodeGraphAPI.CreateDisplayColorAttr(ConvertParameterValueToGfType(
+            nodeColor, Sdf.ValueTypeNames.Color3f))
+
+    #Add expansion state
+    nodeViewStateAttr = shaderLayoutAttr.getChildByName("viewState")
+    if nodeViewStateAttr:
+
+        usdExpansionStates = ("closed", "minimized", "open")
+        nodeViewState = nodeViewStateAttr.getValue()
+
+        if not isinstance(nodeViewState, int) or not 0 <= nodeViewState < 3:
+            log.warning("Invalid value for the layout viewState attribute"
+                        " of %s shader node", shader.GetPath())
+            return
+
+        nodeGraphAPI.CreateExpansionStateAttr(ConvertParameterValueToGfType(
+            usdExpansionStates[nodeViewState], Sdf.ValueTypeNames.Token))
+
 
 
 def CreateEmptyShaders(stage, materialNodes, materialPath):
