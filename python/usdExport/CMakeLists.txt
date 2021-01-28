@@ -28,6 +28,7 @@ pxr_katana_python_plugin(
         UsdExport/typeConversionMaps.py
         UsdExport/__init__.py
         UsdExport/material.py
+        UsdExport/prmanStatements.py
     PLUGIN_TYPE Plugins
 )
 

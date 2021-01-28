@@ -38,6 +38,9 @@ try:
     # These includes also require fnpxr
     from UsdExport.material import (WriteMaterial, WriteMaterialAssign,
                                     WriteChildMaterial)
+    from UsdExport.prmanStatements import (
+        WritePrmanStatements, WritePrmanGeomGprims, WritePrmanModel)
+
     pxrImported = True
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
@@ -192,6 +195,15 @@ class UsdExport(BaseOutputFormat):
         if createOverridePrim:
             stage.OverridePrim(sdfLocationPath)
         prim = stage.GetPrimAtPath(sdfLocationPath)
+
+        prmanStatementsAttributes = {
+            key: value for key, value in attrDict.iteritems()
+            if 'prmanStatements' in key}
+        if prmanStatementsAttributes:
+            WritePrmanStatements(prmanStatementsAttributes, prim)
+            WritePrmanGeomGprims(prmanStatementsAttributes, prim)
+            WritePrmanModel(prmanStatementsAttributes, prim)
+
 
         # layout
         layout = attrDict.get("layout")
