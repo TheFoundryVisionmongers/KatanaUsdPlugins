@@ -402,6 +402,7 @@ class UsdExport(BaseOutputFormat):
     def __init__(self, settings):
         super(UsdExport, self).__init__(settings)
         self._settings.materialVariantSetInitialized = False
+        self._settings.assemblyWritten = False
         self._settings.defaultMaterialVariant = None
 
     def writeSinglePass(self, passData):
@@ -467,6 +468,8 @@ class UsdExport(BaseOutputFormat):
             rootPrimName = self._settings["rootPrimName"]
             materialVariantSetInitialized = \
                 self._settings["materialVariantSetInitialized"]
+            assemblyWritten = \
+                self._settings["assemblyWritten"]
             variantSetName = self._settings["variantSetName"]
         except ValueError:
             raise LookFileBakeException("Invalid Settings for UsdExport. "
@@ -518,14 +521,11 @@ class UsdExport(BaseOutputFormat):
 
         # Save the stage
         stage.GetRootLayer().Save()
-
-        if createCompleteUsdAssemblyFile:
+        assemblyWritten = self._settings["assemblyWritten"]
+        if createCompleteUsdAssemblyFile and not assemblyWritten:
             # setup the assembly stage
             assemblyPath = os.path.join(fileDir, assemblyFilename) + ".usda"
-            if createVariantSet and not materialVariantSetInitialized:
-                assemblyStage = _CreateNewStage(assemblyPath, rootPrimName)
-            else:
-                assemblyStage = Usd.Stage.Open(assemblyPath)
+            assemblyStage = _CreateNewStage(assemblyPath, rootPrimName)
             assemblyRootPrim = assemblyStage.GetDefaultPrim()
 
             # add the payload asset
@@ -540,6 +540,7 @@ class UsdExport(BaseOutputFormat):
             assemblyRootPrim.GetReferences().AddReference(
                 './'+ looksFilename, position=Usd.ListPositionBackOfAppendList)
             assemblyStage.GetRootLayer().Save()
+            assemblyWritten = True
 
         return [filePath]
 
