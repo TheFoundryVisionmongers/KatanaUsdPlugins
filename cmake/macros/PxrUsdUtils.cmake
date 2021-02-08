@@ -358,21 +358,27 @@ function(_katana_build_install libTarget installPathSuffix)
     set_target_properties("${libTarget}"
         PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY
-        ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+            ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
         LIBRARY_OUTPUT_DIRECTORY_DEBUG
-        ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+            ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
         LIBRARY_OUTPUT_DIRECTORY_RELEASE
-        ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+            ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
     )
     if(WIN32)
         set_target_properties(${libTarget}
-                                PROPERTIES
-                                RUNTIME_OUTPUT_DIRECTORY
-                                ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
-                                RUNTIME_OUTPUT_DIRECTORY_DEBUG
-                                ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
-                                RUNTIME_OUTPUT_DIRECTORY_RELEASE
-                                ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+            PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY
+                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                RUNTIME_OUTPUT_DIRECTORY_DEBUG
+                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                RUNTIME_OUTPUT_DIRECTORY_RELEASE
+                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                ARCHIVE_OUTPUT_DIRECTORY
+                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                ARCHIVE_OUTPUT_DIRECTORY_DEBUG
+                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                ARCHIVE_OUTPUT_DIRECTORY_RELEASE
+                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
         )
     endif()
 endfunction() # _katana_build_install
