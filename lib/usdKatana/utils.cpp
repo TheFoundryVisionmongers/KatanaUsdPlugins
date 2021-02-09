@@ -60,6 +60,8 @@
 #include "pxr/usd/usdSkel/skeletonQuery.h"
 #include "pxr/usd/usdSkel/skinningQuery.h"
 #include "pxr/usd/usdUtils/pipeline.h"
+#include "pxr/usd/ar/resolver.h"
+#include "pxr/usd/ar/resolverScopedCache.h"
 
 #include "vtKatana/array.h"
 #include "vtKatana/value.h"
@@ -72,6 +74,9 @@
 #include <FnLogging/FnLogging.h>
 
 FnLogSetup("PxrUsdKatanaUtils");
+
+#include "boost/filesystem.hpp"
+#include "boost/regex.hpp"
 
 #include <cmath>
 #include <sstream>
@@ -160,11 +165,56 @@ void ApplyJointAnimation(const UsdSkelSkinningQuery& skinningQuery,
 static const std::string&
 _ResolveAssetPath(const SdfAssetPath& assetPath)
 {
-    if (! assetPath.GetResolvedPath().empty())
+    if (!assetPath.GetResolvedPath().empty())
         return assetPath.GetResolvedPath();
-    if (! assetPath.GetAssetPath().empty())
-        TF_WARN("No resolved path for @%s@", assetPath.GetAssetPath().c_str());
-    return assetPath.GetAssetPath();
+
+    const std::string& rawPath = assetPath.GetAssetPath();
+    size_t udimIdx = rawPath.rfind("<UDIM>");
+    if (udimIdx != std::string::npos)
+    {
+        // assetPath points to a UDIM set.  We find the first tile, with <UDIM>
+        // replaced by an ID 1xxx, resolve that path, and return the resolved
+        // path with 1xxx re-replaced again with <UDIM>.
+        size_t lastSeparator = rawPath.rfind("/");
+        if ((lastSeparator != std::string::npos) &&
+            (lastSeparator != rawPath.size() - 1))
+        {
+            std::string dirPath = rawPath.substr(0, lastSeparator);
+            std::string filter = rawPath;
+            size_t filterSize = filter.size();
+            filter.replace(udimIdx, 6, "1\\d\\d\\d");
+            const boost::regex regexFilter(filter);
+
+            boost::filesystem::directory_iterator beginIt{dirPath};
+            boost::filesystem::directory_iterator endIt;
+            for (auto it = beginIt; it != endIt; ++it)
+            {
+                if (!boost::filesystem::is_regular_file(it->status()))
+                    continue;
+
+                boost::smatch what;
+                const std::string& path = it->path().string();
+                if ((path.size() == (filterSize - 2)) &&
+                    boost::regex_match(path, what, regexFilter))
+                {
+                    ArResolverScopedCache resolverCache;
+                    ArResolver& resolver = ArGetResolver();
+                    std::string resolvedPath = resolver.Resolve(path);
+                    if (resolvedPath.size() > (udimIdx + 4))
+                    {
+                        return resolvedPath.replace(udimIdx, 4, "<UDIM>");
+                    }
+                }
+            }
+        }
+    }
+
+    // There's no resolved path and it's not a UDIM path.
+    if (!rawPath.empty()) {
+        TF_WARN("No resolved path for @%s@", rawPath.c_str());
+    }
+
+    return rawPath;
 }
 
 double
