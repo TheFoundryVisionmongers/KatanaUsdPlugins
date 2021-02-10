@@ -28,6 +28,12 @@
 // language governing permissions and limitations under the Apache License.
 //
 #include "pxr/pxr.h"
+
+#include <FnPluginManager/FnPluginManager.h>
+#include <FnRendererInfo/plugin/RendererInfoBase.h>
+#include <FnRendererInfo/suite/FnRendererInfoSuite.h>
+#include <FnRendererInfo/FnRendererInfoPluginClient.h>
+
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readMaterial.h"
 #include "usdKatana/readPrim.h"
@@ -54,7 +60,9 @@
 #include <FnLogging/FnLogging.h>
 #include <pystring/pystring.h>
 
+#include <map>
 #include <stack>
+#include <utility>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -65,6 +73,8 @@ using std::string;
 using std::vector;
 using FnKat::GroupBuilder;
 
+std::map<std::string, std::string> g_shaderIdToRenderTarget;
+
 static std::string
 _CreateShadingNode(
         UsdPrim shadingNode,
@@ -73,6 +83,12 @@ _CreateShadingNode(
         GroupBuilder& interfaceBuilder,
         const std::string & targetName,
         bool flatten);
+
+std::string
+_GetRenderTarget(const std::string& shaderId);
+
+void
+_FillShaderIdToRenderTarget();
 
 FnKat::Attribute
 _GetMaterialAttr(
@@ -273,6 +289,78 @@ _GatherShadingParameters(
     }
 }
 
+void
+_FillShaderIdToRenderTarget()
+{
+    std::vector<std::string> pluginNames;
+    FnPluginManager::PluginManager::getPluginNames("RendererInfoPlugin",
+                                                   pluginNames, 2);
+
+    for (const auto& pluginName : pluginNames)
+    {
+        FnPluginHandle plugin = FnPluginManager::PluginManager::getPlugin(
+            pluginName, "RendererInfoPlugin", 2);
+        if (!plugin)
+        {
+            FnLogError("Cannot find renderer info plugin '" << pluginName
+                                                            << "'");
+            continue;
+        }
+
+        const RendererInfoPluginSuite_v2* suite =
+            reinterpret_cast<const RendererInfoPluginSuite_v2*>(
+                FnPluginManager::PluginManager::getPluginSuite(plugin));
+        if (!suite)
+        {
+            FnLogError("Error getting renderer info plugin API suite.");
+            continue;
+        }
+
+        FnRendererInfo::FnRendererInfoPlugin* rendererInfoPlugin =
+            new FnRendererInfo::FnRendererInfoPlugin(suite);
+        const char* pluginCharFilepath =
+            FnPluginManager::PluginManager::getPluginPath(plugin);
+        const std::string pluginFilepath =
+            (pluginCharFilepath ? pluginCharFilepath : "");
+        const std::string pluginDir =
+            pystring::os::path::dirname(pluginFilepath);
+        const std::string rootPath = pluginDir + "/..";
+        rendererInfoPlugin->setPluginPath(pluginDir);
+        rendererInfoPlugin->setPluginRootPath(rootPath);
+        rendererInfoPlugin->setKatanaPath(FnConfig::Config::get("KATANA_ROOT"));
+        rendererInfoPlugin->setTmpPath(FnConfig::Config::get("KATANA_TMPDIR"));
+
+        std::string rendererName;
+        rendererInfoPlugin->getRegisteredRendererName(rendererName);
+
+        std::vector<std::string> shaderNames;
+        const std::vector<std::string> typeTags;
+        rendererInfoPlugin->getRendererObjectNames(kFnRendererObjectTypeShader,
+                                                   typeTags, shaderNames);
+        for (const auto& shaderName : shaderNames)
+        {
+            g_shaderIdToRenderTarget[shaderName] = rendererName;
+        }
+    }
+}
+
+std::string
+_GetRenderTarget(const std::string& shaderId)
+{
+    if (g_shaderIdToRenderTarget.empty())
+    {
+        _FillShaderIdToRenderTarget();
+    }
+
+    const auto result = g_shaderIdToRenderTarget.find(shaderId);
+    const auto& end = g_shaderIdToRenderTarget.end();
+
+    if (result != end)
+    {
+        return result->second;
+    }
+    return std::string();
+}
 
 // NOTE: the Ris codepath doesn't use the interfaceBuilder
 std::string
@@ -382,13 +470,10 @@ _CreateShadingNode(
 
     if (validData) {
         std::string target = targetName;
-        if (targetName != "prman")
+        const std::string result = _GetRenderTarget(id.GetString());
+        if (!result.empty())
         {
-            if (!id.IsEmpty() &&
-                id.GetString().rfind("Usd", 0) != std::string::npos)
-            {
-                target = "usd";
-            }
+            target = result;
         }
         if (flatten ||
             !PxrUsdKatana_IsPrimDefFromBaseMaterial(shadingNode)) {
