@@ -162,8 +162,7 @@ void ApplyJointAnimation(const UsdSkelSkinningQuery& skinningQuery,
 };
 }  // namespace
 
-static const std::string&
-_ResolveAssetPath(const SdfAssetPath& assetPath)
+static const std::string& _ResolveAssetPath(const SdfAssetPath& assetPath)
 {
     if (!assetPath.GetResolvedPath().empty())
         return assetPath.GetResolvedPath();
@@ -175,11 +174,10 @@ _ResolveAssetPath(const SdfAssetPath& assetPath)
         // assetPath points to a UDIM set.  We find the first tile, with <UDIM>
         // replaced by an ID 1xxx, resolve that path, and return the resolved
         // path with 1xxx re-replaced again with <UDIM>.
-        size_t lastSeparator = rawPath.rfind("/");
-        if ((lastSeparator != std::string::npos) &&
-            (lastSeparator != rawPath.size() - 1))
+        boost::filesystem::path boostPath(rawPath);
+        boost::filesystem::path dirPath = boostPath.parent_path();
+        if (boost::filesystem::exists(dirPath))
         {
-            std::string dirPath = rawPath.substr(0, lastSeparator);
             std::string filter = rawPath;
             size_t filterSize = filter.size();
             filter.replace(udimIdx, 6, "1\\d\\d\\d");
@@ -210,7 +208,8 @@ _ResolveAssetPath(const SdfAssetPath& assetPath)
     }
 
     // There's no resolved path and it's not a UDIM path.
-    if (!rawPath.empty()) {
+    if (!rawPath.empty())
+    {
         TF_WARN("No resolved path for @%s@", rawPath.c_str());
     }
 
