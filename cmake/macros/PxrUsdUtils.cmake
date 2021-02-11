@@ -1,6 +1,10 @@
 # from USD/cmake/macros/Public.cmake
 function(pxr_katana_nodetypes NODE_TYPES)
-    set(installDir ${PXR_INSTALL_SUBDIR}/plugin/Plugins/NodeTypes)
+    if(PXR_INSTALL_SUBDIR)
+        set(installDir ${PXR_INSTALL_SUBDIR}/plugin/Plugins/${pyModuleName})
+    else()
+        set(installDir plugin/Plugins/${pyModuleName})
+    endif()
 
     set(pyFiles "")
     set(importLines "")
@@ -56,18 +60,14 @@ function(pxr_katana_python_plugin)
         "${multiValueArgs}"
         ${ARGN}
     )
-    set(pluginInstallDir ${PXR_INSTALL_SUBDIR}/plugin/${args_PLUGIN_TYPE})
-    set(pythonInstallDir ${PXR_INSTALL_SUBDIR}/lib/python)
+    if(PXR_INSTALL_SUBDIR)
+        set(pluginInstallDir ${PXR_INSTALL_SUBDIR}/plugin/${args_PLUGIN_TYPE})
+        set(pythonInstallDir ${PXR_INSTALL_SUBDIR}/lib/python)
+    else()
+        set(pluginInstallDir plugin/${args_PLUGIN_TYPE})
+        set(pythonInstallDir lib/python)
+    endif()
 
-    foreach(file ${args_PYTHON_PLUGIN_REGISTRY_FILES})
-        get_filename_component(dir ${file} DIRECTORY)
-        install(FILES ${file} DESTINATION ${pluginInstallDir}/${dir})
-    endforeach()
-
-    foreach(file ${args_PYTHON_MODULE_FILES})
-        get_filename_component(dir ${file} DIRECTORY)
-        install(FILES ${file} DESTINATION ${pythonInstallDir}/${dir})
-    endforeach()
 
     if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
         if(args_PYTHON_PLUGIN_REGISTRY_FILES)
@@ -90,6 +90,17 @@ function(pxr_katana_python_plugin)
                 ${args_PYTHON_MODULE_FILES}
             )
         endif()
+    else()
+        message("INSTALLING PYTHON INTO ${pluginInstallDir}")
+        foreach(file ${args_PYTHON_PLUGIN_REGISTRY_FILES})
+            get_filename_component(dir ${file} DIRECTORY)
+            install(FILES ${file} DESTINATION ${pluginInstallDir}/${dir})
+        endforeach()
+
+        foreach(file ${args_PYTHON_MODULE_FILES})
+            get_filename_component(dir ${file} DIRECTORY)
+            install(FILES ${file} DESTINATION ${pythonInstallDir}/${dir})
+        endforeach()
     endif()
 endfunction() # pxr_katana_lookFileBake
 
@@ -132,7 +143,11 @@ function(_install_python LIBRARY_NAME)
         ${ARGN}
     )
 
-    set(libPythonPrefix ${PXR_INSTALL_SUBDIR}/lib/python)
+    if(PXR_INSTALL_SUBDIR)
+        set(libPythonPrefix ${PXR_INSTALL_SUBDIR}/lib/python)
+    else()
+        set(libPythonPrefix lib/python)
+    endif()
     if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
         set(libPythonPrefix ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib/python)
     endif()
@@ -264,16 +279,14 @@ endfunction() # get_install_dir
 function(_install_resource_files NAME pluginInstallPrefix pluginToLibraryPath)
     # Resource files install into a structure that looks like:
     # lib/
-    #     usd/
-    #         ${NAME}/
-    #             resources/
-    #                 resourceFileA
-    #                 subdir/
-    #                     resourceFileB
-    #                     resourceFileC
-    #                 ...
+    #    resources/
+    #        resourceFileA
+    #        subdir/
+    #            resourceFileB
+    #            resourceFileC
+    #        ...
     #
-    _get_resources_dir(${pluginInstallPrefix} ${NAME} resourcesPath)
+    _get_resources_dir(${pluginInstallPrefix} resourcesPath)
 
     foreach(resourceFile ${ARGN})
         # A resource file may be specified like <src file>:<dst file> to
@@ -334,10 +347,10 @@ function(_get_resources_dir_name output)
         PARENT_SCOPE)
 endfunction() # _get_resources_dir_name
 
-function(_get_resources_dir pluginsPrefix pluginName output)
+function(_get_resources_dir pluginsPrefix output)
     _get_resources_dir_name(resourcesDir)
     set(${output}
-        ${pluginsPrefix}/${pluginName}/${resourcesDir}
+        ${pluginsPrefix}/${resourcesDir}
         PARENT_SCOPE)
 endfunction() # _get_resources_dir
 
@@ -408,5 +421,13 @@ function(pxr_katana_install_plugin_resources)
             FILES
             ${args_FILES}
         )
+    else()
+        if(PXR_INSTALL_SUBDIR)
+            set(installDir ${PXR_INSTALL_SUBDIR}/plugin/${args_PLUGIN_TYPE})
+        else()
+            set(installDir plugin/${args_PLUGIN_TYPE})
+        endif()
+        install(FILES ${args_FILES}
+            DESTINATION ${installDir})
     endif()
 endfunction() # pxr_katana_install_plugin_resources
