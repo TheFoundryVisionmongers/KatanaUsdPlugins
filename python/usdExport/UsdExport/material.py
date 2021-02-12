@@ -498,16 +498,29 @@ def AddShaderConnections(stage, connectionsAttr, materialPath, shader):
     for connectionIndex in xrange(connectionsAttr.getNumberOfChildren()):
         connectionName = connectionsAttr.getChildName(connectionIndex)
         connectionAttr = connectionsAttr.getChildByIndex(connectionIndex)
+
+        # Connections is either a GroupAttribute or a StringAttribute depending
+        # on which renderer the shading node belongs to.
+        while isinstance(connectionAttr, FnAttribute.GroupAttribute) and \
+              connectionAttr.getNumberOfChildren() > 0:
+            connectionAttr = connectionAttr.getChildByIndex(0)
+
+        if not isinstance(connectionAttr, FnAttribute.StringAttribute):
+            continue
+
         # Split the connection, first part is the name of the attribute,
-        # second is the shader it comes from
+        # second is the shader it comes from.
         splitConnection = str(connectionAttr.getValue()).split("@")
-        inputShaderPortName = splitConnection[0]
+        # TODO(gf): A temporary workaround for TP 467244 to allow us to write
+        # out Arnold shaders with port names containing ".".
+        inputShaderPortName = splitConnection[0].replace(".", ":")
         inputShaderName = splitConnection[-1]
 
         connectionshaderPath = materialPath.AppendChild(inputShaderName)
         inputShader = UsdShade.Shader.Get(stage, connectionshaderPath)
         if not inputShader.GetSchemaType():
             continue
+
         sourceSdfType = GetShaderAttrSdfType(inputShader.GetShaderId(),
                                              inputShaderPortName,
                                              isOutput=True)
