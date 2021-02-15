@@ -398,13 +398,6 @@ static void
 _ReadLayoutAttrs(const UsdPrim& shadingNode, const std::string& handle,
                  FnKat::GroupBuilder& layoutBuilder)
 {
-    auto SetAttr = [&](const char* name, FnAttribute::Attribute attr)
-    {
-        // We must also set on layout.nodeShapeAttributes so NME picks them up.
-        layoutBuilder.set(handle + "." + name, attr);
-        layoutBuilder.set(handle + ".nodeShapeAttributes." + name, attr);
-    };
-
     UsdUINodeGraphNodeAPI nodeApi(shadingNode);
 
     // Read displayColor.
@@ -415,7 +408,14 @@ _ReadLayoutAttrs(const UsdPrim& shadingNode, const std::string& handle,
         if (displayColorAttr.Get(&color))
         {
             float value[3] = { color[0], color[1], color[2] };
-            SetAttr("color", FnKat::FloatAttribute(value, 3, 3));
+            layoutBuilder.set(handle + ".color",
+                              FnKat::FloatAttribute(value, 3, 3));
+            layoutBuilder.set(handle + ".nodeShapeAttributes.colorr",
+                              FnKat::FloatAttribute(value[0]));
+            layoutBuilder.set(handle + ".nodeShapeAttributes.colorg",
+                              FnKat::FloatAttribute(value[1]));
+            layoutBuilder.set(handle + ".nodeShapeAttributes.colorb",
+                              FnKat::FloatAttribute(value[2]));
         }
     }
 
@@ -427,7 +427,8 @@ _ReadLayoutAttrs(const UsdPrim& shadingNode, const std::string& handle,
         if (posAttr.Get(&pos))
         {
             double value[2] = { pos[0], pos[1] };
-            SetAttr("position", FnKat::DoubleAttribute(value, 2, 2));
+            layoutBuilder.set(handle + ".position",
+                              FnKat::DoubleAttribute(value, 2, 2));
         }
     }
 
@@ -454,7 +455,10 @@ _ReadLayoutAttrs(const UsdPrim& shadingNode, const std::string& handle,
 
             if (value >= 0)
             {
-                SetAttr("viewState", FnKat::IntAttribute(value));
+                layoutBuilder.set(handle + ".viewState",
+                                  FnKat::IntAttribute(value));
+                layoutBuilder.set(handle + ".nodeShapeAttributes.viewState",
+                                  FnKat::FloatAttribute(value));
             }
         }
     }
