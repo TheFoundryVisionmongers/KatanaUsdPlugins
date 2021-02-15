@@ -162,7 +162,7 @@ void ApplyJointAnimation(const UsdSkelSkinningQuery& skinningQuery,
 };
 }  // namespace
 
-static const std::string& _ResolveAssetPath(const SdfAssetPath& assetPath)
+static const std::string _ResolveAssetPath(const SdfAssetPath& assetPath)
 {
     if (!assetPath.GetResolvedPath().empty())
         return assetPath.GetResolvedPath();
