@@ -423,7 +423,7 @@ _ReadLayoutAttrs(const UsdPrim& shadingNode, const std::string& handle,
         {
             double value[2] = { pos[0], pos[1] };
             layoutBuilder.set(handle + ".position",
-                              FnKat::DoubleAttribute(value, 2, 2));
+                              FnKat::DoubleAttribute(value, 2, 1));
         }
     }
 
