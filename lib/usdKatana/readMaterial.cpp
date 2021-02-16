@@ -61,15 +61,13 @@
 #include <pystring/pystring.h>
 
 #include <map>
+#include <mutex>
 #include <stack>
 #include <utility>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-
 FnLogSetup("PxrUsdKatanaReadMaterial");
-
-std::map<std::string, std::string> g_shaderIdToRenderTarget;
 
 static std::string
 _CreateShadingNode(
@@ -83,9 +81,6 @@ _CreateShadingNode(
 
 std::string
 _GetRenderTarget(const std::string& shaderId);
-
-void
-_FillShaderIdToRenderTarget();
 
 FnKat::Attribute
 _GetMaterialAttr(
@@ -466,8 +461,8 @@ _ReadLayoutAttrs(const UsdPrim& shadingNode, const std::string& handle,
     layoutBuilder.set(handle + ".parent", FnKat::StringAttribute("USD"));
 }
 
-void
-_FillShaderIdToRenderTarget()
+static void
+_FillShaderIdToRenderTarget(std::map<std::string, std::string>& output)
 {
     std::vector<std::string> pluginNames;
     FnPluginManager::PluginManager::getPluginNames("RendererInfoPlugin",
@@ -516,7 +511,7 @@ _FillShaderIdToRenderTarget()
                                                    typeTags, shaderNames);
         for (const auto& shaderName : shaderNames)
         {
-            g_shaderIdToRenderTarget[shaderName] = rendererName;
+            output[shaderName] = rendererName;
         }
     }
 }
@@ -524,19 +519,19 @@ _FillShaderIdToRenderTarget()
 std::string
 _GetRenderTarget(const std::string& shaderId)
 {
-    if (g_shaderIdToRenderTarget.empty())
-    {
-        _FillShaderIdToRenderTarget();
-    }
+    // A static map from shader ID to renderer target name.
+    static std::map<std::string, std::string> s_shaderIdToRenderTarget;
 
-    const auto result = g_shaderIdToRenderTarget.find(shaderId);
-    const auto& end = g_shaderIdToRenderTarget.end();
+    // If the map has not been filled, do so now; take care to do this exactly
+    // once from exactly one thread (since UsdIn is multithreaded).
+    static std::once_flag s_onceFlag;
+    std::call_once(
+        s_onceFlag,
+        [&]() { _FillShaderIdToRenderTarget(s_shaderIdToRenderTarget); });
 
-    if (result != end)
-    {
-        return result->second;
-    }
-    return std::string();
+    // Other threads can only get here once the lucky thread has filled the map.
+    auto it = s_shaderIdToRenderTarget.find(shaderId);
+    return (it == s_shaderIdToRenderTarget.end()) ? std::string() : it->second;
 }
 
 // NOTE: the Ris codepath doesn't use the interfaceBuilder

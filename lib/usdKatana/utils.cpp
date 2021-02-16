@@ -194,7 +194,7 @@ static const std::string _ResolveAssetPath(const SdfAssetPath& assetPath)
                     continue;
 
                 boost::smatch what;
-                const std::string& path = it->path().string();
+                const std::string path = it->path().string();
                 const std::string filename = it->path().filename().string();
                 if ((filename.size() == (filterSize - 2)) &&
                     boost::regex_match(filename, what, regexFilter))
