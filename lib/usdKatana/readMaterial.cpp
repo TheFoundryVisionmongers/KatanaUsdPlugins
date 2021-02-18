@@ -197,6 +197,12 @@ _GetKatanaTerminalName(const std::string& terminalName)
         offset = strlen("nsi:");
         prefix = "dl";
     }
+    else
+    {
+        // terminalName -> usdTerminalName.
+        offset = 0;
+        prefix = "usd";
+    }
 
     std::string result = prefix + terminalName.substr(offset);
     if (!prefix.empty())
@@ -297,11 +303,23 @@ _ProcessShaderConnections(
                 targetName,
                 flatten);
 
+            // These targets are local, so include them.
             if (createConnections)
             {
-                // These targets are local, so include them.
-                std::string connAttrName = _DecodeUsdExportTerminalName(
-                    _GetKatanaTerminalName(connectionId));
+                bool validData = false;
+                UsdShadeShader shaderSchema = UsdShadeShader(prim);
+                if (shaderSchema)
+                {
+                    validData = true;
+                }
+                // Only assume the connection needs terminal decoding if
+                // it is for an invalid node. I.e the NetworkMaterial node.
+                std::string connAttrName = connectionId;
+                if (!validData)
+                {
+                    connAttrName = _DecodeUsdExportTerminalName(
+                        _GetKatanaTerminalName(connectionId));
+                }
 
                 // In the case of multiple input connections for array
                 // types, we append a ":idx" to the name.
@@ -310,12 +328,14 @@ _ProcessShaderConnections(
                     connAttrName += ":" + std::to_string(connectionIdx);
                     connectionIdx++;
                 }
-
-                std::string sourceStr = _DecodeUsdExportTerminalName(
-                    sourceName.GetString());
+                std::string sourceStr = sourceName.GetString();
+                if (!validData)
+                {
+                    sourceStr = _DecodeUsdExportTerminalName(sourceStr);
+                }
                 sourceStr += '@' + targetHandle;
-                connectionsBuilder.set(
-                    connAttrName, FnKat::StringAttribute(sourceStr));
+                connectionsBuilder.set(connAttrName,
+                                       FnKat::StringAttribute(sourceStr));
             }
         }
     }
