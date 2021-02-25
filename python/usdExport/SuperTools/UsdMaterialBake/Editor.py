@@ -67,11 +67,18 @@ class UsdMaterialBakeEditor(QtWidgets.QFrame):
         widgets.append(self.__widgetFactory.buildWidget(
             self, self.__rootPolicy.getChildByName('saveTo')))
         widgets.append(self.__widgetFactory.buildWidget(
-            self, self.__rootPolicy.getChildByName('fileName')))
+            self, self.__rootPolicy.getChildByName('looksFilename')))
         widgets.append(self.__widgetFactory.buildWidget(
-            self, self.__rootPolicy.getChildByName('fileFormat')))
+            self, self.__rootPolicy.getChildByName('looksFileFormat')))
         widgets.append(self.__widgetFactory.buildWidget(
             self, self.__rootPolicy.getChildByName('alwaysCreateVariantSet')))
+        widgets.append(self.__widgetFactory.buildWidget(
+            self, self.__rootPolicy.getChildByName(
+                'createCompleteUsdAssemblyFile')))
+        widgets.append(self.__widgetFactory.buildWidget(
+            self, self.__rootPolicy.getChildByName('assemblyFilename')))
+        widgets.append(self.__widgetFactory.buildWidget(
+            self, self.__rootPolicy.getChildByName('payloadFilename')))
         widgets.append(self.__widgetFactory.buildWidget(
             self, self.__rootPolicy.getChildByName('rootPrimName')))
         widgets.append(self.__widgetFactory.buildWidget(

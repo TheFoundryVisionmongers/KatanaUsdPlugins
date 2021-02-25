@@ -21,7 +21,7 @@ endif()
 message(STATUS "KATANA_API_SOURCE_DIR is ${KATANA_API_SOURCE_DIR}")
 message(STATUS "GEOLIB_API_SOURCE_DIR is ${GEOLIB_API_SOURCE_DIR}")
 
-set(PXR_INSTALL_SUBDIR "third_party/katana")
+set(PXR_INSTALL_SUBDIR "")
 
 option(ENABLE_USD_EXPORT "Enables building and installing the \
     UsdExport subdirectory and supporting logic." ON)

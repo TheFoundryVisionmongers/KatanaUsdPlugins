@@ -30,7 +30,7 @@ function(add_boost_interface)
         set(Boost_NAMESPACE Fnboost)
         set(Boost_USE_STATIC_LIBS OFF)
     endif()
-    find_package(Boost COMPONENTS python thread system regex REQUIRED)
+    find_package(Boost COMPONENTS filesystem python thread system regex REQUIRED)
 endfunction(add_boost_interface) #add_python_interface
 
 

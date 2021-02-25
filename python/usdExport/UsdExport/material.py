@@ -32,7 +32,7 @@ log = logging.getLogger("UsdExport")
 
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
 try:
-    from fnpxr import Usd, UsdShade, Sdf, Gf, Ndr, Sdr, Vt
+    from fnpxr import UsdShade, Sdf, Gf, Sdr, Vt, UsdUI
     # These includes also require fnpxr
     from .typeConversionMaps import (ValueTypeCastMethods,
                                      ConvertRenderInfoShaderTagsToSdfType,
@@ -72,8 +72,6 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
     @return: The material created by this method or None if no child material
         was created.
     """
-    if not materialAttribute:
-        return None
     WriteMaterial(stage, materialSdfPath, materialAttribute)
     # Only define the Material prim if it has not already been defined.
     # We write the 'material.nodes' if they exist first, so if these attributes
@@ -106,12 +104,14 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
         katanaLookAPISchema = UsdKatana.LookAPI(materialPrim)
         katanaLookAPISchema.Apply(materialPrim)
         katanaLookAPISchema.CreatePrimNameAttr(childName)
-        parameters = materialAttribute.getChildByName("parameters")
-        # We cant add materialInterfaces to child materials in Katana at
-        # present, therefore we only need to check the oldest parent Material.
-        if parameters:
-            OverwriteMaterialInterfaces(parameters, material,
-                                        oldestParentMaterial)
+        if materialAttribute:
+            parameters = materialAttribute.getChildByName("parameters")
+            # We cant add materialInterfaces to child materials in Katana at
+            # present, therefore we only need to check the oldest
+            # parent Material.
+            if parameters:
+                OverwriteMaterialInterfaces(parameters, material,
+                                            oldestParentMaterial)
         return material
     return None
 
@@ -143,6 +143,8 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
         return None
     CreateEmptyShaders(stage, materialNodes, materialPath)
 
+    layoutAttr = materialAttribute.getChildByName("layout")
+
     # Now we have defined all the shaders we can connect them with no
     # issues.
     for materialNodeIndex in xrange(materialNodes.getNumberOfChildren()):
@@ -160,6 +162,10 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
             AddShaderConnections(
                 stage, connectionsAttr, materialPath, shader)
 
+        shaderLayoutAttr = layoutAttr.getChildByName(shaderName)
+        if shaderLayoutAttr:
+            AddShaderLayout(shaderLayoutAttr, shader)
+
     interfaces = materialAttribute.getChildByName("interface")
     if interfaces:
         parameters = materialAttribute.getChildByName("parameters")
@@ -169,6 +175,51 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
     if terminals:
         AddTerminals(stage, terminals, material)
     return material
+
+
+def AddShaderLayout(shaderLayoutAttr, shader):
+    """
+    Adds UsdUI.NodeGraphNodeAPI attributes to C{shader} prim such as:
+    * Position
+    * Color
+    * View State
+
+    @type shaderLayoutAttr: C{FnAttribute.GroupAttribute}
+    @type shader: C{Sdf.Path}
+    @param shaderLayoutAttr: Layout group attribute of the shader.
+    @param shader: The UsdShader shader object from the Usd Stage.
+    """
+    nodeGraphAPI = UsdUI.NodeGraphNodeAPI(shader)
+
+    #Add position
+    nodePositionAttr = shaderLayoutAttr.getChildByName("position")
+    if nodePositionAttr:
+        nodePosition = nodePositionAttr.getNearestSample(0)
+        nodeGraphAPI.CreatePosAttr(ConvertParameterValueToGfType(
+            nodePosition, Sdf.ValueTypeNames.Double2))
+
+    #Add color
+    nodeColorAttr = shaderLayoutAttr.getChildByName("color")
+    if nodeColorAttr:
+        nodeColor = nodeColorAttr.getNearestSample(0)
+        nodeGraphAPI.CreateDisplayColorAttr(ConvertParameterValueToGfType(
+            nodeColor, Sdf.ValueTypeNames.Color3f))
+
+    #Add expansion state
+    nodeViewStateAttr = shaderLayoutAttr.getChildByName("viewState")
+    if nodeViewStateAttr:
+
+        usdExpansionStates = ("closed", "minimized", "open")
+        nodeViewState = nodeViewStateAttr.getValue()
+
+        if not isinstance(nodeViewState, int) or not 0 <= nodeViewState < 3:
+            log.warning("Invalid value for the layout viewState attribute"
+                        " of %s shader node", shader.GetPath())
+            return
+
+        nodeGraphAPI.CreateExpansionStateAttr(ConvertParameterValueToGfType(
+            usdExpansionStates[nodeViewState], Sdf.ValueTypeNames.Token))
+
 
 
 def CreateEmptyShaders(stage, materialNodes, materialPath):
@@ -447,16 +498,29 @@ def AddShaderConnections(stage, connectionsAttr, materialPath, shader):
     for connectionIndex in xrange(connectionsAttr.getNumberOfChildren()):
         connectionName = connectionsAttr.getChildName(connectionIndex)
         connectionAttr = connectionsAttr.getChildByIndex(connectionIndex)
+
+        # Connections is either a GroupAttribute or a StringAttribute depending
+        # on which renderer the shading node belongs to.
+        while isinstance(connectionAttr, FnAttribute.GroupAttribute) and \
+              connectionAttr.getNumberOfChildren() > 0:
+            connectionAttr = connectionAttr.getChildByIndex(0)
+
+        if not isinstance(connectionAttr, FnAttribute.StringAttribute):
+            continue
+
         # Split the connection, first part is the name of the attribute,
-        # second is the shader it comes from
+        # second is the shader it comes from.
         splitConnection = str(connectionAttr.getValue()).split("@")
-        inputShaderPortName = splitConnection[0]
+        # TODO(gf): A temporary workaround for TP 467244 to allow us to write
+        # out Arnold shaders with port names containing ".".
+        inputShaderPortName = splitConnection[0].replace(".", ":")
         inputShaderName = splitConnection[-1]
 
         connectionshaderPath = materialPath.AppendChild(inputShaderName)
         inputShader = UsdShade.Shader.Get(stage, connectionshaderPath)
         if not inputShader.GetSchemaType():
             continue
+
         sourceSdfType = GetShaderAttrSdfType(inputShader.GetShaderId(),
                                              inputShaderPortName,
                                              isOutput=True)
@@ -556,8 +620,6 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
         shaderId = sourceShader.GetShaderId()
         #Save the parameter name so we can find it in the parameters attribute.
         parameterName = interfaceName
-        if groupName:
-            interfaceName = groupName + ":" + interfaceName
 
         materialPort = None
         if parametersAttr:
@@ -580,6 +642,12 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
                 shaderNode = GetShaderNodeFromRegistry(shaderId)
                 shaderNodeInput = shaderNode.GetInput(sourceParamName)
                 materialPort.Set(shaderNodeInput.GetDefaultValue())
+
+        if groupName:
+            # For now we need to manually replace "." with ":". In the future
+            # we should use SetNestedDisplayGroups() when avialiable.
+            groupName = groupName.replace(".", ":")
+            materialPort.SetDisplayGroup(groupName)
 
         sourceSdfType = materialPort.GetTypeName()
         sourceShaderPort = sourceShader.CreateInput(sourceParamName,

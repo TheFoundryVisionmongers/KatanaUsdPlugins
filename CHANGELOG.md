@@ -4,6 +4,30 @@
 
 - TP 462395 - Update KatanaUsdPlugins to use 20.08 compatible API
 
+# 19.11_fn7
+
+## Feature Enhancements
+- UsdMaterialBake nodes now also export **prmanStatements.attributes** set on a location.
+- The following changes have been made in the parameter interface of UsdMaterialBake nodes:
+    - The **fileName** parameter was renamed to **looksFilename** (note the lower-case `n`).
+    - The **fileFormat** parameter was renamed to **looksFileFormat**.
+    - The **createCompleteUsdAssemblyFile** parameter was added, which controls whether a USD assembly file is written alongside the baked material looks file. The USD assembly file references the looks file (**looksFilename**) and a particular payload file (see **payloadFilename** below). Defaults to No. When set to Yes, the following additional parameters appear:
+        - **assemblyFilename** -- the name of the assembly file to write.
+        - **payloadFilename** -- the name of a file to reference as a payload in the assembly file to write.
+
+    **Warning**: The changes in parameter inferface of UsdMaterailBake nodes are not compatible with earlier releases, meaning that attemping to open a Katana project with the new nodes with an earlier plugin results in Python exceptions being raised.
+- UsdIn nodes will now import **material.layout** attributes, allowing for the shading nodes to be edited inside of NetworkMaterialEdit nodes, retaining any positional, color or viewstate information relating to USD's `UsdUINodeGraphNodeAPI`.
+- Boost::filesystem added as a dependency onto usdKatana library for bugfix ID 462435.
+
+## Bug Fixes
+- ID 440214 - Issue #11: (Windows only) `.lib` files were not installed along with `.dll` files for the **usdKatana** and **vtKatana** libraries in `plugins\Resources\Usd\lib\` and the shipped plug-ins in `plugins\Resources\Usd\plugin\Libs\`.
+- ID 440218 - Issue #9: When installing the Katana USD Plug-ins, public class headers were not installed correctly in `plugins/Resources/Usd/include/<library name>/`.
+- ID 446328 - When exporting and then importing a material via UsdMaterialBake and UsdIn nodes, the grouping of parameters in pages was not restored correctly.
+- ID 453346 - When exporting material information using a UsdMaterialBake node, child material locations with no local change were not exported.
+- ID 462435 - When using UsdIn nodes to load USD assets that use textures containing `<UDIM>` tokens in their filenames, spurious warning messages about unresolved asset paths were logged.
+- ID 462544 - When loading a USD asset that made use of a `TfToken` primvar into the Hydra Viewer, a warning message was logged, and the primvar was ignored.
+- ID 463889 - When creating shading nodes from USD, a wrong target renderer was set in certain cases.
+
 # 19.11_fn6
 
 - TP 459692 - [USD I/O] Supporting Ramp widgets with UsdExport and Import

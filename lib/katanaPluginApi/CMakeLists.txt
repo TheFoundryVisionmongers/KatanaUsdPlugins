@@ -26,6 +26,7 @@ file(GLOB cppFiles
     ${GEOLIB_API_SOURCE_DIR}/FnPluginSystem/*.cpp
     ${GEOLIB_API_SOURCE_DIR}/FnRender/plugin/*.cpp
     ${GEOLIB_API_SOURCE_DIR}/FnRendererInfo/plugin/*.cpp
+    ${GEOLIB_API_SOURCE_DIR}/FnRendererInfo/client/*.cpp
     ${GEOLIB_API_SOURCE_DIR}/FnRenderOutputLocation/client/*.cpp
     ${GEOLIB_API_SOURCE_DIR}/FnRenderOutputLocation/plugin/*.cpp
     ${GEOLIB_API_SOURCE_DIR}/FnRenderOutputUtils/client/*.cpp

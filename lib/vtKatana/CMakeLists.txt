@@ -12,8 +12,10 @@ pxr_shared_library(${PXR_PACKAGE}
         array
         traits
         value
-
         bootstrap
+
+    PUBLIC_HEADERS
+        api.h
 
     PRIVATE_CLASSES
         internalTraits
