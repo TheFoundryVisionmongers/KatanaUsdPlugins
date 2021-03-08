@@ -528,8 +528,10 @@ def AddShaderConnections(stage, connectionsAttr, materialPath, shader):
         # the input type is more specific than the type it connects to
         # i.e. the connection may deliver POD but the semantics of its use
         # are in the input type
-        portConnectionSdfType = shaderNode.GetInput(
-            connectionName).GetTypeAsSdfType()[0]
+        shaderNodeInput = shaderNode.GetInput(connectionName)
+        if not shaderNodeInput:
+            continue
+        portConnectionSdfType = shaderNodeInput.GetTypeAsSdfType()[0]
 
         inputPort = shader.CreateInput(connectionName, portConnectionSdfType)
 
