@@ -71,6 +71,11 @@ PxrUsdKatanaGeomGetVelocityAttr(
     const UsdGeomPointBased& points,
     const PxrUsdKatanaUsdInPrivateData& data);
 
+Foundry::Katana::Attribute
+PxrUsdKatanaGeomGetAccelerationAttr(
+    const UsdGeomPointBased& points,
+    const PxrUsdKatanaUsdInPrivateData& data);
+
 
 
 PXR_NAMESPACE_CLOSE_SCOPE

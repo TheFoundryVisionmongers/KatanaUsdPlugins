@@ -216,6 +216,14 @@ PxrUsdKatanaReadBasisCurves(
         attrs.set("geometry.point.v", velocityAttr);
     }
 
+    // acceleration
+    FnKat::Attribute accelAttr =
+        PxrUsdKatanaGeomGetAccelerationAttr(basisCurves, data);
+    if (accelAttr.isValid())
+    {
+        attrs.set("geometry.point.accel", accelAttr);
+    }
+
     // Add SPT_HwColor primvar
     attrs.set("geometry.arbitrary.SPT_HwColor", 
               PxrUsdKatanaGeomGetDisplayColorAttr(basisCurves, data));

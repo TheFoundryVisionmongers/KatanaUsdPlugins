@@ -100,6 +100,14 @@ PxrUsdKatanaReadPoints(
         attrs.set("geometry.point.v", velocitiesAttr);
     }
 
+    // acceleration
+    FnKat::Attribute accelAttr =
+        PxrUsdKatanaGeomGetAccelerationAttr(points, data);
+    if (accelAttr.isValid())
+    {
+        attrs.set("geometry.point.accel", accelAttr);
+    }
+
     // normals
     FnKat::Attribute normalsAttr = PxrUsdKatanaGeomGetNormalAttr(points, data);
     if (normalsAttr.isValid())
