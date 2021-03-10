@@ -48,6 +48,7 @@
 #include "pxr/usd/usdGeom/xform.h"
 #include "pxr/usd/usdShade/material.h"
 #include "pxr/usd/usdSkel/root.h"
+#include "pxr/usd/usdLux/cylinderLight.h"
 #include "pxr/usd/usdLux/domeLight.h"
 #include "pxr/usd/usdLux/distantLight.h"
 #include "pxr/usd/usdLux/geometryLight.h"
@@ -125,6 +126,7 @@ void registerPlugins()
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdShadeMaterial>("PxrUsdInCore_LookOp");
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdSkelRoot>("PxrUsdInCore_XformOp");
 
+    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxCylinderLight>("PxrUsdInCore_LightOp");
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDomeLight>("PxrUsdInCore_LightOp");
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxGeometryLight>("PxrUsdInCore_LightOp");
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDistantLight>("PxrUsdInCore_LightOp");
