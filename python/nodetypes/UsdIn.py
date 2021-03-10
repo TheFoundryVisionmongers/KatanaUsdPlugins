@@ -452,9 +452,8 @@ def buildOpChain(self, interface):
     
     variantSetName = ''
     if self.getParameter("args.variantSetName.enable").getValue(frameTime):
-        variantSetName = self.getParameter("args.variantSetName.value").getValue(
-                frameTime)
-    
+        variantSetName = str(self.getParameter("args.variantSetName.value")
+                             .getValue(frameTime))
     
     variantSelection = None
     if self.getParameter("args.variantSelection.enable").getValue(frameTime):
@@ -462,8 +461,8 @@ def buildOpChain(self, interface):
                 "args.variantSelection.value").getValue(frameTime)
     
     if location and variantSetName and variantSelection is not None:
-        entryName = FnAttribute.DelimiterEncode(location)
-        entryPath = "variants." + entryName + "." + variantSetName
+        entryName = FnAttribute.DelimiterEncode(str(location))
+        entryPath = "variants." + entryName + "." + str(variantSetName)
         
         valueAttr = FnAttribute.StringAttribute(variantSelection)
         gb = FnAttribute.GroupBuilder()
@@ -473,7 +472,7 @@ def buildOpChain(self, interface):
                 'additionalLocations').getChildren():
             location = addLocParam.getValue(frameTime)
             if location:
-                entryName = FnAttribute.DelimiterEncode(location)
+                entryName = FnAttribute.DelimiterEncode(str(location))
                 entryPath = "variants." + entryName + "." + variantSetName
                 gb.set(entryPath, valueAttr)
         
@@ -593,7 +592,7 @@ def buildOpChain(self, interface):
 
         for loc in locations.getChildren():
             gb.set("overrides." + FnAttribute.DelimiterEncode(
-                    loc.getValue(frameTime)) + ".motionSampleTimes",
+                    str(loc.getValue(frameTime))) + ".motionSampleTimes",
                     FnAttribute.IntAttribute(1))
 
         existingValue = (
@@ -676,7 +675,8 @@ def buildOpChain(self, interface):
             gb2 = FnAttribute.GroupBuilder()
 
             for loc in locations.getChildren():
-                encodedLoc = FnAttribute.DelimiterEncode(loc.getValue(frameTime))
+                encodedLoc = FnAttribute.DelimiterEncode(
+                    str(loc.getValue(frameTime)))
                 if encodedLoc:
                     gb2.set('overrides.' + encodedLoc, overridesAttr)
 
@@ -730,7 +730,7 @@ def buildOpChain(self, interface):
 
         for loc in locations.getChildren():
             gb.set("activations." + FnAttribute.DelimiterEncode(
-                    loc.getValue(frameTime)), state)
+                    str(loc.getValue(frameTime))), state)
 
         existingValue = (
                 interface.getGraphState().getDynamicEntry("var:pxrUsdInSession"))
@@ -883,7 +883,7 @@ def buildOpChain(self, interface):
                 
                 if typeValue == 'listOp':
                     gb.set("metadata.%s.prim.%s" % (
-                        FnAttribute.DelimiterEncode(loc), attrName,),
+                        FnAttribute.DelimiterEncode(str(loc)), attrName,),
                         entryGroup)
 
                     
@@ -891,7 +891,7 @@ def buildOpChain(self, interface):
                 
             else:
                 gb.set("attrs.%s.%s" % (
-                        FnAttribute.DelimiterEncode(loc), attrName,),
+                        FnAttribute.DelimiterEncode(str(loc)), attrName,),
                         entryGroup)
 
         existingValue = (
