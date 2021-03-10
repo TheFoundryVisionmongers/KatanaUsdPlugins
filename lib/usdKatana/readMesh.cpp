@@ -276,6 +276,14 @@ PxrUsdKatanaReadMesh(
         attrs.set("geometry.point.v", velocityAttr);
     }
 
+    // acceleration
+    FnKat::Attribute accelAttr =
+        PxrUsdKatanaGeomGetAccelerationAttr(mesh, data);
+    if (accelAttr.isValid())
+    {
+        attrs.set("geometry.point.accel", accelAttr);
+    }
+
     FnKat::GroupAttribute polyAttr = _GetPolyAttr(mesh, currentTime);
     
     attrs.set("geometry.poly", polyAttr);
