@@ -161,10 +161,10 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
         if connectionsAttr:
             AddShaderConnections(
                 stage, connectionsAttr, materialPath, shader)
-
-        shaderLayoutAttr = layoutAttr.getChildByName(shaderName)
-        if shaderLayoutAttr:
-            AddShaderLayout(shaderLayoutAttr, shader)
+        if layoutAttr:
+            shaderLayoutAttr = layoutAttr.getChildByName(shaderName)
+            if shaderLayoutAttr:
+                AddShaderLayout(shaderLayoutAttr, shader)
 
     interfaces = materialAttribute.getChildByName("interface")
     if interfaces:
