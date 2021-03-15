@@ -524,6 +524,8 @@ def AddShaderConnections(stage, connectionsAttr, materialPath, shader):
         sourceSdfType = GetShaderAttrSdfType(inputShader.GetShaderId(),
                                              inputShaderPortName,
                                              isOutput=True)
+        if sourceSdfType is None:
+            continue
 
         # the input type is more specific than the type it connects to
         # i.e. the connection may deliver POD but the semantics of its use
