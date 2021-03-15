@@ -90,6 +90,15 @@ typename VtKatana_GetKatanaAttrType<T>::type VtKatanaMapOrCopy(
     const std::vector<float>& times,
     const typename std::vector<VtArray<T>>& values);
 
+/// Create a map containing VtArrays of all motion samples contained
+/// by \p attribute.
+///
+/// \sa VtKatanaMapOrCopy(const typename VtKatana_GetKatanaAttrType<T>::type&,
+/// float)
+template <typename T>
+std::map<float, VtArray<T>> VtKatanaMapOrCopy(
+    const typename VtKatana_GetKatanaAttrType<T>::type& attribute);
+
 /// Maps \p timeToValueMap to a Katana attribute, minimizing
 /// intermediate copies.
 ///
@@ -150,7 +159,7 @@ typename VtKatana_GetKatanaAttrType<T>::type VtKatanaCopy(
 /// number of time samples in general is small, so this shouldn't be
 /// an issue, but if this is of concern, use VtKatanaCopy instead.
 template <typename T>
-const VtArray<T> VtKatanaMapOrCopy(
+VtArray<T> VtKatanaMapOrCopy(
         const typename VtKatana_GetKatanaAttrType<T>::type& attr,
         float sample = 0.0f);
 
@@ -158,36 +167,51 @@ const VtArray<T> VtKatanaMapOrCopy(
 /// intermediate copies, but disallowing any Zero Copy features the type
 /// might support.
 template <typename T>
-const VtArray<T> VtKatanaCopy(
+VtArray<T> VtKatanaCopy(
     const typename VtKatana_GetKatanaAttrType<T>::type& attr,
     float sample = 0.0f);
 
+
+/// Copy ALL time samples from a Katana attribute to a map of VtArrays,
+/// minimizing intermediate copies, but disallowing any Zero Copy features
+/// the type might support.
+template <typename T>
+std::map<float, VtArray<T>> VtKatanaCopy(
+    const typename VtKatana_GetKatanaAttrType<T>::type& attr);
+
+
 #if defined(ARCH_OS_WINDOWS)
 #define VTKATANA_EXPORT_MAP_AND_COPY(T)                                    \
-    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type     \
         VtKatanaMapOrCopy<T>(                                              \
             const VtArray<T>& value);                                      \
-    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type     \
         VtKatanaMapOrCopy<T>(                                              \
             const std::vector<float>& times,                               \
             const typename std::vector<VtArray<T>>& values);               \
-    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type     \
         VtKatanaMapOrCopy<T>(                                              \
             const typename std::map<float, VtArray<T>>&);                  \
-    template VTKATANA_API const VtArray<T> VtKatanaMapOrCopy<T>(                        \
+    template VTKATANA_API VtArray<T> VtKatanaMapOrCopy<T>(                 \
         const typename VtKatana_GetKatanaAttrType<T>::type&, float);       \
-    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+    template VTKATANA_API typename std::map<float, VtArray<T>>             \
+        VtKatanaMapOrCopy<T>(                                              \
+            const typename VtKatana_GetKatanaAttrType<T>::type&);          \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type     \
         VtKatanaCopy<T>(                                                   \
             const VtArray<T>& value);                                      \
-    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type     \
         VtKatanaCopy<T>(                                                   \
             const std::vector<float>& times,                               \
             const typename std::vector<VtArray<T>>& values);               \
-    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type                  \
+    template VTKATANA_API typename VtKatana_GetKatanaAttrType<T>::type     \
         VtKatanaCopy<T>(                                                   \
             const typename std::map<float, VtArray<T>>&);                  \
-    template VTKATANA_API const VtArray<T> VtKatanaCopy<T>(                             \
+    template VTKATANA_API VtArray<T> VtKatanaCopy<T>(                      \
         const typename VtKatana_GetKatanaAttrType<T>::type&, float);       \
+    template VTKATANA_API typename std::map<float, VtArray<T>>             \
+        VtKatanaCopy<T>(const typename                                     \
+            VtKatana_GetKatanaAttrType<T>::type&);                         \
 
 // Defines for copy
 // Integral Types
