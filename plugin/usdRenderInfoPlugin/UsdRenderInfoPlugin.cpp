@@ -286,7 +286,7 @@ void UsdRenderInfoPlugin::fillShaderInputNames(
     const std::string& shaderName) const
 {
     SdrShaderNodeConstPtr shader =
-        m_sdrRegistry.GetShaderNodeByName(shaderName);
+        m_sdrRegistry.GetShaderNodeByNameAndType(shaderName, TfToken("glslfx"));
     if (!shader)
     {
         return;
@@ -305,7 +305,7 @@ void UsdRenderInfoPlugin::fillShaderInputTags(
     const std::string& inputName) const
 {
     SdrShaderNodeConstPtr shader =
-        m_sdrRegistry.GetShaderNodeByName(shaderName);
+        m_sdrRegistry.GetShaderNodeByNameAndType(shaderName, TfToken("glslfx"));
     if (!shader)
     {
         return;
@@ -384,7 +384,7 @@ void UsdRenderInfoPlugin::fillShaderOutputNames(
     const std::string& shaderName) const
 {
     SdrShaderNodeConstPtr shader =
-        m_sdrRegistry.GetShaderNodeByName(shaderName);
+        m_sdrRegistry.GetShaderNodeByNameAndType(shaderName, TfToken("glslfx"));
     if (!shader)
     {
         return;
@@ -403,7 +403,7 @@ void UsdRenderInfoPlugin::fillShaderOutputTags(
     const std::string& outputName) const
 {
     SdrShaderNodeConstPtr shader =
-        m_sdrRegistry.GetShaderNodeByName(shaderName);
+        m_sdrRegistry.GetShaderNodeByNameAndType(shaderName, TfToken(TfToken("glslfx")));
     if (!shader)
     {
         return;
@@ -446,7 +446,8 @@ bool UsdRenderInfoPlugin::buildRendererObjectInfo(
             std::vector<std::string>(typeTags.begin(), typeTags.end()), name,
             name, kFnRendererObjectValueTypeUnknown, containerHintsAttr);
 
-        SdrShaderNodeConstPtr shader = m_sdrRegistry.GetShaderNodeByName(name);
+        SdrShaderNodeConstPtr shader = m_sdrRegistry.GetShaderNodeByNameAndType(
+            name, TfToken("glslfx"));
         if (shader)
         {
             const NdrTokenVec inputNames = shader->GetInputNames();
