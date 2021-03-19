@@ -98,6 +98,9 @@ function(pxr_library NAME)
             POSITION_INDEPENDENT_CODE ON
             PUBLIC_HEADER "${args_PUBLIC_HEADERS}"
         )
+        if(CMAKE_BUILD_TYPE MATCHES Debug AND WIN32)
+            target_compile_options(${NAME} PRIVATE "/bigobj")
+        endif()
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
         _get_install_dir("lib/usd" pluginInstallPrefix)
 
