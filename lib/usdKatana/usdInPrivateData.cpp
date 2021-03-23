@@ -63,15 +63,15 @@ PxrUsdKatanaUsdInPrivateData::PxrUsdKatanaUsdInPrivateData(
     //
     if (prim.IsInstance())
     {
-        if (prim.IsInMaster() && parentData)
+        if (prim.IsInMaster() && parentData &&
+            parentData->GetInstancePath() != SdfPath::EmptyPath())
         {
-            SdfPath descendentPrimPath = 
-                prim.GetPath().ReplacePrefix(
-                    prim.GetPath().GetPrefixes()[0], 
-                    SdfPath::ReflexiveRelativePath());
+            SdfPath descendentPrimPath =
+                prim.GetPath().ReplacePrefix(prim.GetPath().GetPrefixes()[0],
+                                             SdfPath::ReflexiveRelativePath());
 
-            _instancePath = parentData->GetInstancePath().AppendPath(
-                descendentPrimPath);
+            _instancePath =
+                parentData->GetInstancePath().AppendPath(descendentPrimPath);
         }
         else
         {
