@@ -644,8 +644,9 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
                 materialPort.Set(value)
             else:
                 shaderNode = GetShaderNodeFromRegistry(shaderId)
-                shaderNodeInput = shaderNode.GetInput(sourceParamName)
-                materialPort.Set(shaderNodeInput.GetDefaultValue())
+                if shaderNode:
+                    shaderNodeInput = shaderNode.GetInput(sourceParamName)
+                    materialPort.Set(shaderNodeInput.GetDefaultValue())
 
         if groupName:
             # For now we need to manually replace "." with ":". In the future
@@ -698,27 +699,24 @@ def GetShaderAttrSdfType(shaderType, shaderAttr, isOutput=False):
             shaderInput = shader.GetInput(shaderAttr)
             if shaderInput:
                 return shaderInput.GetTypeAsSdfType()[0]
-        return Sdf.ValueTypeNames.Token
+        log.warning('Unable to read input {} from Shader  {} in the '
+            'Sdr.Registry. Trying to guess via the RenderInfoPlugin '
+            'information'.format(shaderAttr, shaderType))
     else:
-        # Fallback if we cant find the shaders info in the SdrRegistry
-        for renderer in RenderingAPI.RenderPlugins.GetRendererPluginNames(
-                True):
-            infoPlugin = RenderingAPI.RenderPlugins.GetInfoPlugin(renderer)
-            if shaderType in infoPlugin.getRendererObjectNames("shader"):
-                if isOutput:
-                    if shaderAttr in infoPlugin.getShaderOutputNames(
-                            shaderType):
-                        tags = infoPlugin.getShaderOutputTags(shaderType,
-                                                              shaderAttr)
-                    else:
-                        continue
-                else:
-                    if shaderAttr in infoPlugin.getShaderInputNames(
-                            shaderType):
-                        tags = infoPlugin.getShaderInputTags(shaderType,
-                                                             shaderAttr)
-                    else:
-                        continue
+        log.warning('Unable to read input Shader {} in the Sdr.Registry. '
+            'Trying to guess via the RenderInfoPlugin information'.format(
+            shaderType))
+
+    # Fallback if we cant find the shaders info in the SdrRegistry
+    for renderer in RenderingAPI.RenderPlugins.GetRendererPluginNames(
+            True):
+        infoPlugin = RenderingAPI.RenderPlugins.GetInfoPlugin(renderer)
+        if shaderType in infoPlugin.getRendererObjectNames("shader"):
+            if isOutput:
+                tags = infoPlugin.getShaderOutputTags(shaderType, shaderAttr)
+            else:
+                tags = infoPlugin.getShaderInputTags(shaderType, shaderAttr)
+            if tags:
                 return ConvertRenderInfoShaderTagsToSdfType(tags)
     return Sdf.ValueTypeNames.Token
 
