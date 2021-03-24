@@ -207,7 +207,8 @@ _GetKatanaTerminalName(const std::string& terminalName)
     std::string result = prefix + terminalName.substr(offset);
     if (!prefix.empty())
     {
-        result[prefix.size()] = toupper(result[prefix.size()]);
+        result[prefix.size()] = static_cast<char>(
+            toupper(result[prefix.size()]));
     }
 
     return result;
@@ -215,15 +216,31 @@ _GetKatanaTerminalName(const std::string& terminalName)
 
 // Helper to revert encodings made in UsdExport/material.py.
 static std::string
-_DecodeUsdExportTerminalName(const std::string& terminalName)
+_DecodeUsdExportPortName(const std::string& portName, bool isTerminal)
 {
-    // Dots were replaced with colons.
-    std::string result = TfStringReplace(terminalName, ":", ".");
-
-    // "prmanBxdf" was replaced with "prmanSurface".
-    if (result == "prmanSurface")
+    if (isTerminal)
     {
-        result = "prmanBxdf";
+        // The "prmanBxdf" terminal was replaced with "prmanSurface".
+        if (portName == "prmanSurface")
+        {
+            return "prmanBxdf";
+        }
+    }
+
+    // Individual component ports of the form "port.x" were replaced with
+    // "port_x".  We assume we'll only ever see components rgbaxyz.
+    std::string result = portName;
+    if (result.size() > 2)
+    {
+        char& penultimate = result[result.size() - 2];
+        if (penultimate == ':')
+        {
+            int last = std::tolower(result.back());
+            if (strchr("rgbaxyz", last))
+            {
+                penultimate = '.';
+            }
+        }
     }
 
     return result;
@@ -241,6 +258,7 @@ _ProcessShaderConnections(
     FnKat::GroupBuilder& interfaceBuilder,
     FnKat::GroupBuilder& layoutBuilder,
     FnKat::GroupBuilder& connectionsBuilder,
+    std::vector<std::string>& connectionsList,
     const std::string& targetName,
     bool flatten)
 {
@@ -312,14 +330,14 @@ _ProcessShaderConnections(
                 {
                     validData = true;
                 }
+
                 // Only assume the connection needs terminal decoding if
                 // it is for an invalid node. I.e the NetworkMaterial node.
-                std::string connAttrName = connectionId;
-                if (!validData)
-                {
-                    connAttrName = _DecodeUsdExportTerminalName(
-                        _GetKatanaTerminalName(connectionId));
-                }
+                bool isTerminal = !validData;
+                std::string connAttrName = isTerminal
+                    ? _GetKatanaTerminalName(connectionId) : connectionId;
+                connAttrName = _DecodeUsdExportPortName(
+                    connAttrName, isTerminal);
 
                 // In the case of multiple input connections for array
                 // types, we append a ":idx" to the name.
@@ -328,14 +346,14 @@ _ProcessShaderConnections(
                     connAttrName += ":" + std::to_string(connectionIdx);
                     connectionIdx++;
                 }
-                std::string sourceStr = sourceName.GetString();
-                if (!validData)
-                {
-                    sourceStr = _DecodeUsdExportTerminalName(sourceStr);
-                }
+
+                std::string sourceStr = _DecodeUsdExportPortName(
+                    sourceName.GetString(), isTerminal);
                 sourceStr += '@' + targetHandle;
+
                 connectionsBuilder.set(connAttrName,
                                        FnKat::StringAttribute(sourceStr));
+                connectionsList.push_back(connAttrName + ':' + sourceStr);
             }
         }
     }
@@ -384,6 +402,7 @@ _GatherShadingParameters(
     FnKat::GroupBuilder& interfaceBuilder,
     FnKat::GroupBuilder& layoutBuilder,
     FnKat::GroupBuilder& connectionsBuilder,
+    std::vector<std::string>& connectionsList,
     const std::string & targetName,
     bool flatten)
 {
@@ -396,7 +415,7 @@ _GatherShadingParameters(
         _ProcessShaderConnections(
             prim, *shaderInputIter, handle, currentTime, nodesBuilder,
             paramsBuilder, interfaceBuilder, layoutBuilder, connectionsBuilder,
-            targetName, flatten);
+            connectionsList, targetName, flatten);
     }
 
     std::vector<UsdShadeOutput> shaderOutputs = shaderSchema.GetOutputs();
@@ -405,7 +424,7 @@ _GatherShadingParameters(
         _ProcessShaderConnections(
             prim, *shaderOutputIter, handle, currentTime, nodesBuilder,
             paramsBuilder, interfaceBuilder, layoutBuilder, connectionsBuilder,
-            targetName, flatten);
+            connectionsList, targetName, flatten);
     }
 }
 
@@ -470,10 +489,11 @@ _ReadLayoutAttrs(const UsdPrim& shadingNode, const std::string& handle,
 
             if (value >= 0)
             {
+                float fvalue = static_cast<float>(value);
                 layoutBuilder.set(handle + ".viewState",
                                   FnKat::IntAttribute(value));
                 layoutBuilder.set(handle + ".nodeShapeAttributes.viewState",
-                                  FnKat::FloatAttribute(value));
+                                  FnKat::FloatAttribute(fvalue));
             }
         }
     }
@@ -623,14 +643,17 @@ _CreateShadingNode(
     }
 
     // We gather shading parameters even if shaderSchema is invalid; we need to
-    // get connection attributes for the enclosing network material.
+    // get connection attributes for the enclosing network material.  Moreover
+    // we need the hierarchical connection list, for the nodes attribute, and
+    // the flattened list, for the layout attribute.
     FnKat::GroupBuilder paramsBuilder;
     FnKat::GroupBuilder connectionsBuilder;
+    std::vector<std::string> connectionsList;
 
     _GatherShadingParameters(
         shaderSchema, handle, currentTime, nodesBuilder, paramsBuilder,
-        interfaceBuilder, layoutBuilder, connectionsBuilder, targetName,
-        flatten);
+        interfaceBuilder, layoutBuilder, connectionsBuilder, connectionsList,
+        targetName, flatten);
 
     FnKat::GroupAttribute paramsAttr = paramsBuilder.build();
     if (paramsAttr.getNumberOfChildren() > 0) {
@@ -641,22 +664,12 @@ _CreateShadingNode(
     if (connectionsAttr.getNumberOfChildren() > 0)
     {
         shdNodeBuilder.set("connections", connectionsAttr);
+    }
 
-        // We also have to write connections to layout, but as a flattened attr.
-        std::vector<std::string> connections;
-        connections.reserve(connectionsAttr.getNumberOfChildren());
-        for (int64_t i = 0; i < connectionsAttr.getNumberOfChildren(); ++i)
-        {
-            FnKat::StringAttribute c = connectionsAttr.getChildByIndex(i);
-            if (c.isValid())
-            {
-                const std::string& name = connectionsAttr.getChildName(i);
-                connections.push_back(name + ':' + c.getValue());
-            }
-        }
-
+    if (!connectionsList.empty())
+    {
         FnKat::StringAttribute layoutConns(
-            connections.data(), connections.size(), 1);
+            connectionsList.data(), connectionsList.size(), 1);
         layoutBuilder.set(handle + ".connections", layoutConns);
     }
 
@@ -704,7 +717,7 @@ _CreateShadingNode(
     if (validData)
     {
         nodeType = target + "ShadingNode";
-        nodeType[0] = toupper(nodeType[0]);
+        nodeType[0] = static_cast<char>(std::toupper(nodeType[0]));
     }
     else
     {

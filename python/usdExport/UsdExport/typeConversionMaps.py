@@ -47,6 +47,8 @@ ValueTypeCastMethods = {
 
 RenderInfoShaderTagToSdfMap = {
     "color": Sdf.ValueTypeNames.Color3f,
+    "rgb": Sdf.ValueTypeNames.Color3f,
+    "rgba": Sdf.ValueTypeNames.Color4f,
     "array_color": Sdf.ValueTypeNames.Color3fArray,
     "point": Sdf.ValueTypeNames.Color3fArray,
     "string": Sdf.ValueTypeNames.String,
@@ -87,12 +89,15 @@ def ConvertRenderInfoShaderTagsToSdfType(tags):
         for tag in tagsList:
             if "array_" in tag:
                 tagToUse = tag
-        sdfType = RenderInfoShaderTagToSdfMap.get(tagToUse)
+        if " or " in tagToUse:
+            tagToUse = tagToUse.split(" or ")
+            sdfType = ConvertRenderInfoShaderTagsToSdfType(tagToUse)
+        else:
+            sdfType = RenderInfoShaderTagToSdfMap.get(tagToUse)
         if sdfType is not None:
             return sdfType
 
-    log.error("Unhandled shader type tags: %s", tagsList)
-    return None
+    return Sdf.ValueTypeNames.Token
 
 
 def ConvertToVtVec3fArray(array):

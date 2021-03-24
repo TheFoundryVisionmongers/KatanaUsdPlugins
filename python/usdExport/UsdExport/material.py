@@ -157,10 +157,12 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
 
         if parametersAttr:
             AddMaterialParameters(parametersAttr, shaderId, shader)
+
         connectionsAttr = materialNode.getChildByName("connections")
         if connectionsAttr:
             AddShaderConnections(
                 stage, connectionsAttr, materialPath, shader)
+
         if layoutAttr:
             shaderLayoutAttr = layoutAttr.getChildByName(shaderName)
             if shaderLayoutAttr:
@@ -466,7 +468,160 @@ def ConvertParameterValueToGfType(value, sdfType):
                 value = gfCast(value[0], value[1], value[2], value[3])
     return value
 
-def AddShaderConnections(stage, connectionsAttr, materialPath, shader):
+
+def _EncodePortName(name):
+    """
+    Encodes a shader port name, returning a string that is safe to output as a
+    UsdShade connection.
+
+    @type name: C{str}
+    @rtype: C{str}
+    @param name: The port name to encode.
+    @return: The encoded port name.
+    """
+    return name.replace(".", ":")
+
+
+def _DecodePortName(name):
+    """
+    Decode a shader port name, returning a string that is safe to use to search
+    the RenderInfoPlugins.
+
+    @type name: C{str}
+    @rtype: C{str}
+    @param name: The port name to encode.
+    @return: The encoded port name.
+    """
+    return name.replace(":", ".")
+
+
+def _GetConnectionInputPort(shaderNode, portName):
+    """
+    Returns the input port name for a (maybe dot-delimited) port name, or
+    C{None} if the input cannot be found.
+
+    @type shaderNode: C{UsdShade.Shader}
+    @type portName: C{str}
+    @rtype: C{UsdShade.Input} or C{None}
+    @param shaderNode: The shader on which to search for ports.
+    @param portName: The name of the port to return.
+    @return: The found port.
+    """
+    # Some renderers do not publish the dot-delimited names to the SDR, only
+    # making the base name available; in this case, we iteratively remove name
+    # components until we find a matching port.
+    while portName:
+        inputPort = shaderNode.GetInput(portName)
+        if inputPort:
+            return inputPort
+        elif "." in portName:
+            portName = portName[0:portName.rindex(".")]
+        else:
+            break
+
+    return None
+
+
+def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shaderPath,
+                          shaderNode, connectionPrefix=None):
+    """
+    Adds the shader connections from C{connectionsAttr}, recursing if necessary
+    to handle channel components.
+
+    @type stage: C{Usd.Stage}
+    @type connectionsAttr: C{FnAttribute.GroupAttribute}
+    @type materialPath: C{Sdf.Path}
+    @type shaderPath: C{Sdf.Path}
+    @type shaderNode: C{UsdShade.Shader}
+    @type connectionPrefix: C{str} or C{None}
+    @rtype: C{list} of C{str}
+    @param stage: The USD stage to write into.
+    @param connectionsAttr: The C{GroupAttribute} to read connections from.
+    @param materialPath: The USD path for the material containing
+        ``shaderNode``.
+    @param shaderPath: The USD path for the shader to add connections to.
+    @param shaderNode: The USD shader node at ``shaderPath``.
+    @param connectionPrefix: A string prepended to port names when recursing.
+    @return: The port order for ``shaderNode``.
+    """
+    if not isinstance(connectionsAttr, FnAttribute.GroupAttribute):
+        log.warning("Connections attribute for '%s' is malformed.",
+                    materialPath)
+        return
+
+    portOrder = []
+    for childName, childAttr in connectionsAttr.childList():
+        if connectionPrefix:
+            connectionName = "%s.%s" % (connectionPrefix, childName)
+        else:
+            connectionName = childName
+
+        # childAttr may itself be a GroupAttribute, if we have connections to
+        # the individual components of ports.
+        if isinstance(childAttr, FnAttribute.GroupAttribute):
+            portOrder.extend(
+                _ReadConnectionsGroup(stage, childAttr, materialPath,
+                                      shaderPath, shaderNode, connectionName))
+        elif isinstance(childAttr, FnAttribute.StringAttribute):
+            connection = childAttr.getValue()
+
+            # Split the connection; the first part is the input port name and
+            # the second part is the input shader name.
+            splitConnection = connection.split("@")
+            if len(splitConnection) != 2:
+                log.warning("Connection '%s' is malformed.", connection)
+                continue
+
+            outputPortName = _EncodePortName(splitConnection[0])
+            outputShaderName = splitConnection[1]
+            connectionShaderPath = materialPath.AppendChild(outputShaderName)
+            outputShader = UsdShade.Shader.Get(stage, connectionShaderPath)
+            if not outputShader or not outputShader.GetSchemaType():
+                continue
+
+            inputPort = shaderNode.GetInput(connectionName)
+            if not inputPort and "." in connectionName:
+                # Currently we cannot be sure that the connectionName such as
+                # out.r is in the SdrRegistry.
+                portConnectionSdfType = GetShaderAttrSdfType(
+                    shaderPath.GetShaderId(), connectionName, isOutput=False)
+            else:
+
+                if not inputPort:
+                    log.warning(
+                        "Unable to find input port for connection '%s'.",
+                        connection)
+                    continue
+
+                # The input port type is more specific than the type it
+                # connects to, i.e. the connection may deliver POD but the
+                # semantics of its use are in the input type.
+                portConnectionSdfType = inputPort.GetTypeAsSdfType()[0]
+            connectionName = _EncodePortName(connectionName)
+            inputPort = shaderPath.CreateInput(
+                connectionName, portConnectionSdfType)
+
+            # We need to specify the output type of the source, or it inherits
+            # the input type.
+            sourceSdfType = GetShaderAttrSdfType(outputShader.GetShaderId(),
+                                                 outputPortName,
+                                                 isOutput=True)
+            inputPort.ConnectToSource(
+                outputShader, str(outputPortName),
+                UsdShade.AttributeType.Output, sourceSdfType)
+
+            # Record the order this port appears (USD connections are stored as
+            # a dictionary rather than a list, so this info would be lost).
+            portOrder.append(inputPort.GetFullName())
+        else:
+            log.warning(
+                "Connections attribute for '%s' is malformed; expected a "
+                "StringAttribute or a GroupuAttribute.", materialPath)
+
+    return portOrder
+
+
+def AddShaderConnections(stage, connectionsAttr, materialPath, shaderPath):
     """
     Adds the connections between the shaders from the
     C{material.nodes.<nodeName>.connections} attribute. The shaders must be
@@ -477,79 +632,28 @@ def AddShaderConnections(stage, connectionsAttr, materialPath, shader):
     @type stage: C{Usd.Stage}
     @type connectionsAttr: C{FnAttribute.GroupAttribute}
     @type materialPath: C{Sdf.Path}
-    @type shader: C{Sdf.Path}
+    @type shaderPath: C{Sdf.Path}
     @param stage: The Usd stage to write to.
-    @param connectionsAttr: The material.nodes.<nodeName>connections Katana
+    @param connectionsAttr: The material.nodes.<nodeName>.connections Katana
         attribute to read the connection information from.
     @param materialPath: The USD path for the material for this shader and the
         shader it will connect to.
-    @param shader: The shader to add the connection to.
+    @param shaderPath: The USD path for the shader to add the connection to.
     """
-    shaderNode = GetShaderNodeFromRegistry(shader.GetShaderId())
+    shaderId = shaderPath.GetShaderId()
+    shaderNode = GetShaderNodeFromRegistry(shaderId)
     if not shaderNode:
         log.warning(
-            "Unable to write shadingNode connections for path {0},"
-            "cannot find shaderID {1}".format(
-                materialPath, shader.GetShaderId()))
+            "Unable to write shadingNode connections for path '%s'; cannot "
+            "find shaderId %s.", materialPath, shaderId)
         return
 
-    portOrder = []
-
-    for connectionIndex in xrange(connectionsAttr.getNumberOfChildren()):
-        connectionName = connectionsAttr.getChildName(connectionIndex)
-        connectionAttr = connectionsAttr.getChildByIndex(connectionIndex)
-
-        # Connections is either a GroupAttribute or a StringAttribute depending
-        # on which renderer the shading node belongs to.
-        while isinstance(connectionAttr, FnAttribute.GroupAttribute) and \
-              connectionAttr.getNumberOfChildren() > 0:
-            connectionAttr = connectionAttr.getChildByIndex(0)
-
-        if not isinstance(connectionAttr, FnAttribute.StringAttribute):
-            continue
-
-        # Split the connection, first part is the name of the attribute,
-        # second is the shader it comes from.
-        splitConnection = str(connectionAttr.getValue()).split("@")
-        # TODO(gf): A temporary workaround for TP 467244 to allow us to write
-        # out Arnold shaders with port names containing ".".
-        inputShaderPortName = splitConnection[0].replace(".", ":")
-        inputShaderName = splitConnection[-1]
-
-        connectionshaderPath = materialPath.AppendChild(inputShaderName)
-        inputShader = UsdShade.Shader.Get(stage, connectionshaderPath)
-        if not inputShader.GetSchemaType():
-            continue
-
-        sourceSdfType = GetShaderAttrSdfType(inputShader.GetShaderId(),
-                                             inputShaderPortName,
-                                             isOutput=True)
-        if sourceSdfType is None:
-            continue
-
-        # the input type is more specific than the type it connects to
-        # i.e. the connection may deliver POD but the semantics of its use
-        # are in the input type
-        shaderNodeInput = shaderNode.GetInput(connectionName)
-        if not shaderNodeInput:
-            continue
-        portConnectionSdfType = shaderNodeInput.GetTypeAsSdfType()[0]
-
-        inputPort = shader.CreateInput(connectionName, portConnectionSdfType)
-
-        # need to specify the output type of the source, or it inherits the
-        # input type
-        inputPort.ConnectToSource(
-            inputShader, str(inputShaderPortName),
-            UsdShade.AttributeType.Output, sourceSdfType)
-
-        # Record the order this port appears (USD connections are stored as a
-        # dictionary rather than a list, so this info would be lost).
-        portOrder.append(inputPort.GetFullName())
-
-    # In Katana the order of ports can be important. E.g. NetworkMaterialEdit
+    # In Katana, the order of ports can be important, e.g. NetworkMaterialEdit
     # and Switch nodes.
-    shader.GetPrim().SetPropertyOrder(portOrder)
+    portOrder = _ReadConnectionsGroup(
+        stage, connectionsAttr, materialPath, shaderPath, shaderNode)
+    shaderPath.GetPrim().SetPropertyOrder(portOrder)
+
 
 def OverwriteMaterialInterfaces(parametersAttr, material, parentMaterial):
     """
@@ -699,13 +803,18 @@ def GetShaderAttrSdfType(shaderType, shaderAttr, isOutput=False):
             shaderInput = shader.GetInput(shaderAttr)
             if shaderInput:
                 return shaderInput.GetTypeAsSdfType()[0]
-        log.warning('Unable to read input {} from Shader  {} in the '
-            'Sdr.Registry. Trying to guess via the RenderInfoPlugin '
-            'information'.format(shaderAttr, shaderType))
+        log.debug('Unable to read input %s from shader %s in the '
+                  'Sdr.Registry; trying to infer type via the '
+                  'RenderInfoPlugin RenderInfoPlugin information.',
+                  shaderAttr, shaderType)
     else:
-        log.warning('Unable to read input Shader {} in the Sdr.Registry. '
-            'Trying to guess via the RenderInfoPlugin information'.format(
-            shaderType))
+        log.debug('Unable to read input shader %s in the Sdr.Registry. '
+                  'Trying to infer type via the RenderInfoPlugin '
+                  'information', shaderType)
+
+    # We might need to decode a port name if it was encoded from "."
+    # delimitors
+    shaderAttr = _DecodePortName(shaderAttr)
 
     # Fallback if we cant find the shaders info in the SdrRegistry
     for renderer in RenderingAPI.RenderPlugins.GetRendererPluginNames(
