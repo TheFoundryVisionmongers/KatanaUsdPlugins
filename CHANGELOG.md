@@ -37,6 +37,9 @@
  - ID 470839 - Adding `/bigobj` flag to Windows Debug build
  - ID 430007 - Wrap attribute values in `str()` when mixed with `DelimiterEncode()` for Python 3 compatibility.
 
+# 20.08_fn1
+
+- TP 462395 - Update KatanaUsdPlugins to use 20.08 compatible API
 
 # 19.11_fn7
 

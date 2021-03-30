@@ -210,7 +210,7 @@ function(pxr_library NAME)
     )
 
     # make a separate shared library for the Python wrapper
-    if(args_PYMODULE_CPPFILES)
+    if(args_PYMODULE_CPPFILES AND ENABLE_KATANAUSD_PYTHON_PLUGINS)
         set(pythonWrapperModuleName "_${NAME}")
         _get_python_module_name(${NAME} pyModuleName)
 
@@ -261,7 +261,7 @@ function(pxr_library NAME)
         install(TARGETS ${pythonWrapperModuleName} DESTINATION "${pyModuleInstallDir}")
         unset(pyModuleInstallDir)
 
-        if(args_PYMODULE_FILES)
+        if(args_PYMODULE_FILES AND ENABLE_KATANAUSD_PYTHON_PLUGINS)
             _install_python(
                 ${pythonWrapperModuleName}
                 FILES ${args_PYMODULE_FILES}

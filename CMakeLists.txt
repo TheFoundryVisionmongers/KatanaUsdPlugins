@@ -29,6 +29,14 @@ option(ENABLE_USD_EXPORT "Enables building and installing the \
 option(ENABLE_USD_RENDER_INFO_PLUGIN "Enables building and installing the \
     UsdRenderInfoPlugin subdirectory and supporting logic." ON)
 
+option(ENABLE_KATANAUSD_PYTHON_PLUGINS "Enabled building features which \
+    require the Python modules from USD, these include UsdExport and the \
+    usdKatana python module" OFF)
+
+if(NOT ENABLE_KATANAUSD_PYTHON_PLUGINS)
+    set(ENABLE_USD_EXPORT OFF)
+endif()
+
 add_subdirectory(lib)
 add_subdirectory(plugin)
 add_subdirectory(python)
