@@ -23,6 +23,7 @@
 #include "UsdRenderInfoPlugin.h"
 #include "usdKatana/utils.h"
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -129,54 +130,79 @@ void ApplyCustomStringHints(const std::string& shader,
                    {"black", "clamp", "mirror", "repeat", "useMetadata"}));
 }
 
-std::string GetWidgetTypeFromShaderInputProperty(
+struct ShaderWidgetInfo
+{
+    std::string type;
+    float min;  // Used if widgetType == "number".
+    float max;
+};
+
+ShaderWidgetInfo GetWidgetInfoFromShaderInputProperty(
     const std::string& shaderName,
     SdrShaderPropertyConstPtr shaderInput)
 {
+    ShaderWidgetInfo info = {};
     if (!shaderInput)
     {
-        return std::string();
+        return info;
     }
 
-    static const std::map<std::string, std::string> widgetTypes = {
-        {"std::string", "string"},
-        {"SdfAssetPath", "assetIdInput"},
-        {"float", "number"},
-        {"int", "number"}};
+    std::string inputName = shaderInput->GetImplementationName();
+    std::string key = GetParameterKey(shaderName, inputName);
+    if ((key == "UsdPrimvarReader_int.fallback") ||
+        (key == "UsdPrimvarReader_float.fallback"))
+    {
+        return info;
+    };
 
-    const auto inputName = shaderInput->GetImplementationName();
-    const auto key = GetParameterKey(shaderName, inputName);
-
-    // check for a custom widget definition for this particular input
+    // Check for a custom widget definition for this particular input.
     if (key == "UsdPreviewSurface.useSpecularWorkflow")
     {
-        return "checkBox";
+        info.type = "checkBox";
     }
-    else if (key == "UsdUVTexture.wrapS" || key == "UsdUVTexture.wrapT")
+    else if ((key == "UsdUVTexture.wrapS") || (key == "UsdUVTexture.wrapT"))
     {
-        return "popup";
+        info.type = "popup";
     }
-    else if (key == "UsdPrimvarReader_int.fallback" ||
-        key == "UsdPrimvarReader_float.fallback")
+    else
     {
-        return std::string();
+        SdfTypeIndicator sdfTypePair = shaderInput->GetTypeAsSdfType();
+        std::string shaderInputType = sdfTypePair.first.GetCPPTypeName();
+
+        static const std::map<std::string, std::string> widgetTypes = {
+            {"std::string", "string"},
+            {"SdfAssetPath", "assetIdInput"},
+            {"float", "number"},
+            {"int", "number"}};
+
+        auto elementIter = widgetTypes.find(shaderInputType);
+        if (elementIter != widgetTypes.end())
+        {
+            info.type = elementIter->second;
+        }
     }
 
-    // color needs to be handled specifically
+    // Color needs to be handled specially.
     if (shaderInput->GetType().GetString() == "color")
     {
-        return "color";
+        info.type = "color";
     }
 
-    SdfTypeIndicator sdfTypePair = shaderInput->GetTypeAsSdfType();
-    const std::string shaderInputType = sdfTypePair.first.GetCPPTypeName();
-    auto element = widgetTypes.find(shaderInputType);
-    if (element != widgetTypes.end())
+    // Assign custom min/max values.
+    // XXX(gf): We should probably read first from shaderInput->GetHints() here,
+    // but this seems to be empty for all USD shading nodes, so let's ignore it.
+    if (key == "UsdTransform2d.rotation")
     {
-        return element->second;
+        info.min = 0.0f;
+        info.max = 360.0f;
+    }
+    else
+    {
+        info.min = 0.0f;
+        info.max = 1.0f;
     }
 
-    return std::string();
+    return info;
 }
 
 UsdRenderInfoPlugin::UsdRenderInfoPlugin()
@@ -465,24 +491,27 @@ bool UsdRenderInfoPlugin::buildRendererObjectInfo(
                 EnumPairVector enumValues;
                 FnAttribute::GroupBuilder hintsGroupBuilder;
 
-                const std::string widgetType =
-                    GetWidgetTypeFromShaderInputProperty(name, shaderInput);
-                if (!widgetType.empty())
+                const ShaderWidgetInfo widgetInfo =
+                    GetWidgetInfoFromShaderInputProperty(name, shaderInput);
+                if (!widgetInfo.type.empty())
                 {
                     hintsGroupBuilder.set(
-                        "widget", FnAttribute::StringAttribute(widgetType));
-                    if (widgetType == "number")  // candidate for a slider
+                        "widget", FnAttribute::StringAttribute(
+                            widgetInfo.type));
+                    if (widgetInfo.type == "number")  // candidate for a slider
                     {
                         hintsGroupBuilder.set(
-                            "slider", FnAttribute::FloatAttribute(1.0f));
+                            "slider", FnAttribute::IntAttribute(1));
                         hintsGroupBuilder.set(
-                            "min", FnAttribute::FloatAttribute(0.0f));
+                            "min", FnAttribute::FloatAttribute(widgetInfo.min));
                         hintsGroupBuilder.set(
-                            "max", FnAttribute::FloatAttribute(1.0f));
+                            "max", FnAttribute::FloatAttribute(widgetInfo.max));
                         hintsGroupBuilder.set(
-                            "slidermin", FnAttribute::FloatAttribute(0.0f));
+                            "slidermin", FnAttribute::FloatAttribute(
+                                widgetInfo.min));
                         hintsGroupBuilder.set(
-                            "slidermax", FnAttribute::FloatAttribute(1.0f));
+                            "slidermax", FnAttribute::FloatAttribute(
+                                widgetInfo.max));
                     }
                 }
 
