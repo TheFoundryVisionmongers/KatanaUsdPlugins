@@ -1,5 +1,25 @@
 # Change List
 
+# 19.11_fn8
+
+## Feature Enhancements
+- ID 462957 - Integrated updates made to KatanaUsdPlugins by Pixar in USD 20.02:Fixed incorrect geometry.instanceSource attribute for nested instances. (PR#1015)
+    - VtKatanaMapOrCopy(FnAttribute) now returns a map of all motion samples.
+    - Removed support for deprecated USD format usdb.
+- ID 463829 - Issue #21: Support for cylinder lights (UsdLuxCylinderLight) has been added to UsdIn.
+- ID 463832 - Issue #18: Nested instances can now be imported via the as sources and instances option of the instanceMode parameter of a UsdIn node
+
+## Bug Fixes
+
+ - ID 445637 - Issue #13: When importing point-based prims via UsdIn, the accelerations attribute was not read. (PR #14)
+ - ID 465844 - When baking out materials containing PxrLayer nodes using UsdMaterialBake, an error was raised and the material would not be baked correctly.
+ - ID 466070 - When attempting to export a network material containing a ShadingNodeArrayConnector node using UsdMaterialBake, an exception was raised. (Currently, ShadingNodeArrayConnector nodes are not supported by UsdMaterialBake.)
+ - ID 466547 - Registering multiple shaders in the USD SdrRegistry with the same name caused issues when finding default parameters for the Hydra Viewer and the usd renderer info plug-in.
+ - ID 470257 - When attempting to export a material without layout attributes using UsdMaterialBake, an exception was raised.
+ - ID 470839 - Adding `/bigobj` flag to Windows Debug build
+ - ID 430007 - Wrap attribute values in `str()` when mixed with `DelimiterEncode()` for Python 3 compatibility.
+
+
 # 19.11_fn7
 
 ## Feature Enhancements
