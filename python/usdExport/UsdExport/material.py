@@ -32,7 +32,7 @@ log = logging.getLogger("UsdExport")
 
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
 try:
-    from fnpxr import UsdShade, Sdf, Gf, Sdr, Vt, UsdUI
+    from fnpxr import UsdShade, Sdf, Gf, Sdr, Vt, UsdUI, Tf
     # These includes also require fnpxr
     from .typeConversionMaps import (ValueTypeCastMethods,
                                      ConvertRenderInfoShaderTagsToSdfType,
@@ -150,7 +150,8 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
     for materialNodeIndex in xrange(materialNodes.getNumberOfChildren()):
         materialNode = materialNodes.getChildByIndex(materialNodeIndex)
         shaderName = materialNodes.getChildName(materialNodeIndex)
-        shaderPath = materialPath.AppendChild(shaderName)
+        shaderPath = materialPath.AppendChild(
+            Tf.MakeValidIdentifier(shaderName))
         shader = UsdShade.Shader.Get(stage, shaderPath)
         parametersAttr = materialNode.getChildByName("parameters")
         shaderId = str(shader.GetShaderId())
@@ -244,7 +245,8 @@ def CreateEmptyShaders(stage, materialNodes, materialPath):
     # connected.
     for materialNodeIndex in xrange(materialNodes.getNumberOfChildren()):
         materialNode = materialNodes.getChildByIndex(materialNodeIndex)
-        shaderName = materialNodes.getChildName(materialNodeIndex)
+        shaderName = Tf.MakeValidIdentifier(
+            materialNodes.getChildName(materialNodeIndex))
         shaderPath = materialPath.AppendChild(shaderName)
         shader = UsdShade.Shader.Define(stage, shaderPath)
         shaderIdAttr = materialNode.getChildByName("type")
@@ -306,7 +308,7 @@ def AddTerminals(stage, terminals, material):
             continue
 
         terminalName = outputPrefix + outputType
-        terminalShader = str(terminalAttr.getValue())
+        terminalShader = Tf.MakeValidIdentifier(str(terminalAttr.getValue()))
         materialTerminal = material.CreateOutput(terminalName,
                                                  Sdf.ValueTypeNames.Token)
         materialPath = material.GetPath()
