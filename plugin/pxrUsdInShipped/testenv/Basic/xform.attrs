@@ -6,7 +6,7 @@
   </attr>
   <attr inheritChildren="false" name="xform" type="GroupAttr">
     <attr name="matrix" tupleSize="4" type="DoubleAttr">
-      <sample size="16" time="0" value="0.13460099697113037 0 0 0 0 0.13460099697113037 0 0 0 0 0.13460099697113037 0 0.43237221689847 2.3332982478933602 1.3095051153350901 1 "/>
+      <sample size="16" time="0" value="0.13460099697113037 0 0 0 0 0.13460099697113037 0 0 0 0 0.13460099697113037 0 0.43237221689847 2.3332982478933602 1.3095051153350901 1"/>
     </attr>
   </attr>
 </attr>

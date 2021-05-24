@@ -1,7 +1,7 @@
 <attr type="GroupAttr">
   <attr name="geometry" type="GroupAttr">
     <attr name="faces" tupleSize="1" type="IntAttr">
-      <sample size="4" time="0" value="0 3 12 15 "/>
+      <sample size="4" time="0" value="0 3 12 15"/>
     </attr>
   </attr>
   <attr name="info" type="GroupAttr">

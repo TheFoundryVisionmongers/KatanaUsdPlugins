@@ -14,7 +14,7 @@
         </attr>
         <attr name="parameters" type="GroupAttr">
           <attr name="anisotropic" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="binMembership" tupleSize="1" type="StringAttr">
             <sample size="1" time="0">
@@ -22,31 +22,31 @@
             </sample>
           </attr>
           <attr name="bumpNormal" tupleSize="3" type="FloatAttr">
-            <sample size="3" time="0" value="0 0 0 "/>
+            <sample size="3" time="0" value="0 0 0"/>
           </attr>
           <attr name="caching" tupleSize="1" type="IntAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="clearcoat" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="clearcoatGloss" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="1 "/>
+            <sample size="1" time="0" value="1"/>
           </attr>
           <attr name="color" tupleSize="3" type="FloatAttr">
-            <sample size="3" time="0" value="0 0 0 "/>
+            <sample size="3" time="0" value="0 0 0"/>
           </attr>
           <attr name="emitColor" tupleSize="3" type="FloatAttr">
-            <sample size="3" time="0" value="0 0 0 "/>
+            <sample size="3" time="0" value="0 0 0"/>
           </attr>
           <attr name="inputAOV" tupleSize="1" type="IntAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="isHistoricallyInteresting" tupleSize="1" type="IntAttr">
-            <sample size="1" time="0" value="2 "/>
+            <sample size="1" time="0" value="2"/>
           </attr>
           <attr name="metallic" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="nodeState" tupleSize="1" type="StringAttr">
             <sample size="1" time="0">
@@ -54,37 +54,37 @@
             </sample>
           </attr>
           <attr name="outColor" tupleSize="3" type="FloatAttr">
-            <sample size="3" time="0" value="0 0 0 "/>
+            <sample size="3" time="0" value="0 0 0"/>
           </attr>
           <attr name="presence" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="1 "/>
+            <sample size="1" time="0" value="1"/>
           </attr>
           <attr name="roughness" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0.25 "/>
+            <sample size="1" time="0" value="0.25"/>
           </attr>
           <attr name="sheen" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="sheenTint" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0.5 "/>
+            <sample size="1" time="0" value="0.5"/>
           </attr>
           <attr name="shininess" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="100 "/>
+            <sample size="1" time="0" value="100"/>
           </attr>
           <attr name="specular" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0.5 "/>
+            <sample size="1" time="0" value="0.5"/>
           </attr>
           <attr name="specularColor" tupleSize="3" type="FloatAttr">
-            <sample size="3" time="0" value="1 1 1 "/>
+            <sample size="3" time="0" value="1 1 1"/>
           </attr>
           <attr name="specularTint" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="subsurface" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="subsurfaceColor" tupleSize="3" type="FloatAttr">
-            <sample size="3" time="0" value="0 0 0 "/>
+            <sample size="3" time="0" value="0 0 0"/>
           </attr>
         </attr>
         <attr name="connections" type="GroupAttr">
@@ -123,16 +123,16 @@
             </sample>
           </attr>
           <attr name="caching" tupleSize="1" type="IntAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="color1" tupleSize="3" type="FloatAttr">
-            <sample size="3" time="0" value="0.52344298 0.177094 0.0088922698 "/>
+            <sample size="3" time="0" value="0.52344298 0.177094 0.0088922698"/>
           </attr>
           <attr name="color2" tupleSize="3" type="FloatAttr">
-            <sample size="3" time="0" value="0.101631 0.41539499 0.79691702 "/>
+            <sample size="3" time="0" value="0.101631 0.41539499 0.79691702"/>
           </attr>
           <attr name="isHistoricallyInteresting" tupleSize="1" type="IntAttr">
-            <sample size="1" time="0" value="2 "/>
+            <sample size="1" time="0" value="2"/>
           </attr>
           <attr name="nodeState" tupleSize="1" type="StringAttr">
             <sample size="1" time="0">
@@ -140,16 +140,16 @@
             </sample>
           </attr>
           <attr name="resultB" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="resultG" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="resultR" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="resultRGB" tupleSize="3" type="FloatAttr">
-            <sample size="3" time="0" value="1 1 1 "/>
+            <sample size="3" time="0" value="1 1 1"/>
           </attr>
         </attr>
         <attr name="connections" type="GroupAttr">
@@ -188,25 +188,25 @@
             </sample>
           </attr>
           <attr name="caching" tupleSize="1" type="IntAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="dimension" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="1 "/>
+            <sample size="1" time="0" value="1"/>
           </attr>
           <attr name="erosion" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="frequency" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="1.1011236 "/>
+            <sample size="1" time="0" value="1.1011236"/>
           </attr>
           <attr name="isHistoricallyInteresting" tupleSize="1" type="IntAttr">
-            <sample size="1" time="0" value="2 "/>
+            <sample size="1" time="0" value="2"/>
           </attr>
           <attr name="lacunarity" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="2 "/>
+            <sample size="1" time="0" value="2"/>
           </attr>
           <attr name="layers" tupleSize="1" type="IntAttr">
-            <sample size="1" time="0" value="6 "/>
+            <sample size="1" time="0" value="6"/>
           </attr>
           <attr name="manifold" tupleSize="1" type="StringAttr">
             <sample size="1" time="0">
@@ -219,10 +219,10 @@
             </sample>
           </attr>
           <attr name="resultF" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
           <attr name="variation" tupleSize="1" type="FloatAttr">
-            <sample size="1" time="0" value="0 "/>
+            <sample size="1" time="0" value="0"/>
           </attr>
         </attr>
         <attr name="name" tupleSize="1" type="StringAttr">
@@ -261,7 +261,7 @@
       </sample>
     </attr>
     <attr name="pbsNetworkMaterialVersion" tupleSize="1" type="IntAttr">
-      <sample size="1" time="0" value="1 "/>
+      <sample size="1" time="0" value="1"/>
     </attr>
   </attr>
   <attr name="type" tupleSize="1" type="StringAttr">
