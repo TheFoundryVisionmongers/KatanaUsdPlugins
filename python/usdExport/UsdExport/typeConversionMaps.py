@@ -97,7 +97,7 @@ def ConvertRenderInfoShaderTagsToSdfType(tags):
         if sdfType is not None:
             return sdfType
 
-    return Sdf.ValueTypeNames.Token
+    return None
 
 
 def ConvertToVtVec3fArray(array):
