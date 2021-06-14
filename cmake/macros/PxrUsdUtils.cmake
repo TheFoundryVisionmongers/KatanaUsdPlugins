@@ -186,7 +186,7 @@ function(_install_python LIBRARY_NAME)
                 set(pythonexe ${BIN_BUNDLE_PATH}/python)
               else()
                 # assuming Linux
-                set(pythonexe ${BIN_BUNDLE_PATH}/python2.7/bin/python)
+                set(pythonexe ${BIN_BUNDLE_PATH}/python.sh)
               endif()
             else()
               set(pythonexe ${Python_EXECUTABLE})

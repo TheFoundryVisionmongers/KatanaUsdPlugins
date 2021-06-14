@@ -40,27 +40,18 @@ function(add_python_interface)
     endif()
 
     if(USE_KATANA_PYTHON)
+        include(${KATANA_API_LOCATION}/plugin_apis/cmake/python-variables.cmake)
+
         add_library(Python::Python INTERFACE IMPORTED)
         # Parent_scope required for Python_EXECUTABLE variable is used in
         # the parent cmake files.
-        if(UNIX)
-            set(KATANA_PYTHON_INSTALL_PATH
-                ${KATANA_API_LOCATION}/bin/python2.7)
-            set(Python_EXECUTABLE
-                    ${KATANA_PYTHON_INSTALL_PATH}/bin/python
-                PARENT_SCOPE)
-            set(Python_LIBRARIES
-                    ${KATANA_PYTHON_INSTALL_PATH}/lib/libpython2.7.so)
-            set(Python_INCLUDE_DIRS
-                ${KATANA_PYTHON_INSTALL_PATH}/include/python2.7)
-            unset(KATANA_PYTHON_INSTALL_PATH)
-        elseif(WIN32)
-            set(Python_EXECUTABLE ${KATANA_API_LOCATION}/bin/python.exe
-                PARENT_SCOPE)
-            set(Python_LIBRARIES ${KATANA_API_LOCATION}/bin/python27.lib)
-            set(Python_INCLUDE_DIRS
-                ${KATANA_API_LOCATION}/bin/include/include)
-        endif()
+        set(Python_EXECUTABLE
+            ${KATANA_API_LOCATION}/bin/${KATANA_PYTHON_EXECUTABLE}
+            PARENT_SCOPE)
+        set(Python_LIBRARIES
+            ${KATANA_API_LOCATION}/bin/${KATANA_PYTHON_LIB})
+        set(Python_INCLUDE_DIRS
+            ${KATANA_API_LOCATION}/bin/${KATANA_PYTHON_INCLUDE_FOLDER})
         set_target_properties(Python::Python
             PROPERTIES
                 INTERFACE_INCLUDE_DIRECTORIES "${Python_INCLUDE_DIRS}"
