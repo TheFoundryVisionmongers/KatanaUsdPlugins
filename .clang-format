@@ -5,6 +5,7 @@ BreakBeforeBraces:       Allman # Always break before braces.
 PointerAlignment:        Left   # "int& count", "char* str", etc.
 DerivePointerAlignment:  false  # Otherwise it may do things like "int &count",
                                 # depending on the rest of the file.
+ColumnLimit:             100
 
 AccessModifierOffset:    -4
 ContinuationIndentWidth:  4
