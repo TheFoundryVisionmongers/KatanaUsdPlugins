@@ -10,6 +10,7 @@
       "type": "cpplint",
       "bin": ["../../Resources/DevTools/bin/cpplint", "cpplint"],
       "include": ["(\\.(c|h|cpp)$)"],
+      "flags": ["--linelength=100"],
       "severity": {
         "build/c++11": "disabled",
         "build/header_guard": "disabled",
@@ -21,7 +22,6 @@
         "whitespace/braces": "disabled",
         "whitespace/end_of_line": "disabled",
         "whitespace/indent": "disabled",
-        "whitespace/line_length": "disabled",
         "whitespace/newline": "disabled"
       }
     },
@@ -59,6 +59,7 @@
       "type": "text",
       "exclude": [
         "(CMakeLists\\.txt$|\\.cmake$)",
+        "(\\.(c|h|cpp)$)",
         "(\\.py$)",
         "(\\.(xml|xsd|qrc|args)$)",
         "(\\.(conf|ini)$)"
