@@ -104,27 +104,22 @@ PxrUsdKatanaGeomGetWindingOrderAttr(
         const UsdGeomGprim& gprim,
         const PxrUsdKatanaUsdInPrivateData& data)
 {
-    // XXX(USD) From sgg_tidScene/tidSceneContext.cpp:
-    //
-    // NOTE: this logic may seem reversed, in that "leftHanded"
-    // orientation would normally be clockwise. However, something
-    // in Katana is backward, in that by default they apply a -1 scale
-    // to Z for their lights, which is behavior assumed in their light
-    // shaders. We disable this behavior, because our light shaders
-    // don't expect that. This leads to a confusion of terminology
-    // between what right vs. left, clockwise vs. counter-clockwise
-    // means. This only affects the GL viewer, not render output.
-    //
     TfToken orientation = UsdGeomTokens->rightHanded;
     gprim.GetOrientationAttr().Get(&orientation);
 
+    // Due to an inconsistency in Katana versions <4.5, this function reversed orientations.
+    // For compatibility, preserve that reversal when building against older versions.
+#if ((KATANA_VERSION_MAJOR == 4) && (KATANA_VERSION_MINOR >= 5)) || (KATANA_VERSION_MAJOR > 4)
     if (orientation == UsdGeomTokens->leftHanded)
+#else
+    if (orientation == UsdGeomTokens->rightHanded)
+#endif
     {
-        return FnKat::StringAttribute("counterclockwise");
+        return FnKat::StringAttribute("clockwise");
     }
     else
     {
-        return FnKat::StringAttribute("clockwise");
+        return FnKat::StringAttribute("counterclockwise");
     }
 }
 
