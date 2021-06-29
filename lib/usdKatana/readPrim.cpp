@@ -842,9 +842,10 @@ PxrUsdKatanaGeomGetPrimvarGroup(
             }
         } else {
             scopeAttr = FnKat::StringAttribute(
-                    (interpolation == UsdGeomTokens->varying)    ? "point" :
-                    (interpolation == UsdGeomTokens->vertex)     ? "point" /*see below*/ :
-                    (interpolation == UsdGeomTokens->uniform)    ? "face" :
+                    (interpolation == UsdGeomTokens->faceVarying) ? "vertex" :
+                    (interpolation == UsdGeomTokens->varying)     ? "point" :
+                    (interpolation == UsdGeomTokens->vertex)      ? "point" /*see below*/ :
+                    (interpolation == UsdGeomTokens->uniform)     ? "face" :
                     "primitive" );
         }
 
