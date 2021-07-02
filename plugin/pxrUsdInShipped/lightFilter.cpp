@@ -56,7 +56,7 @@ void
 lightListFnc(PxrUsdKatanaUtilsLightListAccess& lightList)
 {
     UsdPrim prim = lightList.GetPrim();
-    if (prim.IsA<UsdLuxLightFilter>()) {
+    if (prim && prim.IsA<UsdLuxLightFilter>()) {
         UsdLuxLightFilter filter(prim);
         lightList.Set("path", lightList.GetLocation());
         lightList.Set("type", "light filter");

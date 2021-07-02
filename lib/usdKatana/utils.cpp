@@ -996,6 +996,9 @@ _Traverse(const UsdPrim &prim,
           std::set<SdfPath, SdfPath::FastLessThan> &seen,
           SdfPathVector *lights)
 {
+    if (!prim)
+        return;
+
     // If requested, check lightList cache.
     if (mode == UsdLuxListAPI::ComputeModeConsultModelHierarchyCache &&
         prim.GetPath().IsPrimPath() /* no cache on pseudoRoot */) {
@@ -1453,7 +1456,7 @@ PxrUsdKatanaUtils::ModelGroupNeedsProxy(const UsdPrim &prim)
 bool
 PxrUsdKatanaUtils::IsModelAssemblyOrComponent(const UsdPrim& prim)
 {
-    if (!prim.IsModel() || prim.IsInMaster()) {
+    if (!prim || !prim.IsModel() || prim.IsInMaster()) {
         return false;
     }
 
@@ -1586,6 +1589,9 @@ PxrUsdKatanaUtils::GetAssetName(const UsdPrim& prim)
 bool
 PxrUsdKatanaUtils::IsBoundable(const UsdPrim& prim)
 {
+    if (!prim)
+        return false;
+
     if (prim.IsModel() &&
         ((!prim.IsGroup()) || PxrUsdKatanaUtils::ModelGroupIsAssembly(prim)))
         return true;

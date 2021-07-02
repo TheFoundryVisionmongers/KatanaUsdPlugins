@@ -949,6 +949,10 @@ _GetMaterialAttr(
         UsdPrim curr = dfs.top();
         dfs.pop();
 
+        if (!curr) {
+            continue;
+        }
+
         std::string paramPrefix;
         if (curr != materialPrim) {
             if (curr.IsA<UsdShadeShader>()) {
