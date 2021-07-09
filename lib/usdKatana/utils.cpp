@@ -1763,7 +1763,7 @@ FnKat::Attribute PxrUsdKatanaUtils::ApplySkinningToPoints(
     {
         return skinnedPointsAttr;
     }
-    skelCache.Populate(skelRoot);
+    skelCache.Populate(skelRoot, UsdTraverseInstanceProxies());
 
     // Populate skinnedPoints with the points of the rest position
     VtVec3fArray skinnedPoints;
