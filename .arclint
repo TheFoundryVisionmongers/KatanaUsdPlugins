@@ -87,18 +87,6 @@
         "10": "warning"
       }
     },
-    "text-python": {
-      "type": "text",
-      "include": ["(\\.py$)"],
-      "exclude": ["((FnAddDependency|SCons).*\\.py$)"],
-      "text.max-line-length": 79,
-      "severity": {
-        "2": "warning",
-        "4": "autofix",
-        "5": "warning",
-        "10": "warning"
-      }
-    },
     "xml": {
       "type": "xml",
       "include": ["(\\.(xml|xsd|qrc|args)$)"]
