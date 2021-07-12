@@ -1083,6 +1083,10 @@ PxrUsdKatanaUtils::ConvertUsdPathToKatLocation(
     // absolute path: starts with '/'
     std::string pathString = path.GetString();
     if (!isolatePathString.empty()) {
+        if (pathString.size() == 1 && pathString[0] == '/')
+        {
+            return rootPathString;
+        }
         if (pathString.rfind(isolatePathString, 0) == 0) {
             pathString = pathString.substr(isolatePathString.size());
         } else {
