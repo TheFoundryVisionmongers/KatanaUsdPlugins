@@ -900,9 +900,13 @@ public:
             FnKat::IntAttribute(opArgs.getChildByName("prePopulate"))
                         .getValue(1 /* default prePopulate=yes */ , false);
 
+        ab.isolatePath = FnKat::StringAttribute(
+            opArgs.getChildByName("isolatePath")).getValue("", false);
+
         ab.stage =  UsdKatanaCache::GetInstance().GetStage(
                 fileName, 
                 sessionAttr, sessionLocation,
+                ab.isolatePath,
                 ab.ignoreLayerRegex, 
                 ab.prePopulate);
 
@@ -919,9 +923,6 @@ public:
                 PxrUsdKatanaUtils::BuildInstanceMasterMapping(ab.stage,
                                       SdfPath::AbsoluteRootPath()), true);
         }
-        
-        ab.isolatePath = FnKat::StringAttribute(
-            opArgs.getChildByName("isolatePath")).getValue("", false);
 
         // if the specified isolatePath is not a valid prim, clear it out
         if (!ab.isolatePath.empty() && !ab.stage->GetPrimAtPath(

@@ -93,9 +93,10 @@ MaterialReferenceAttrFncCache::createValue(
     FnAttribute::GroupAttribute sessionAttr;
     std::string sessionLocation = "";
     std::string ignoreLayerRegex = "";
+    std::string isolatePath = "";
     UsdStageRefPtr stage = UsdKatanaCache::GetInstance().GetStage(
         asset, 
-        sessionAttr, sessionLocation,
+        sessionAttr, sessionLocation, isolatePath,
         ignoreLayerRegex, 
         true /* forcePopulate */);
 
@@ -176,9 +177,10 @@ LibraryMaterialNamesAttrFncCache::createValue(
     FnAttribute::GroupAttribute sessionAttr;
     std::string sessionLocation = "";
     std::string ignoreLayerRegex = "";
+    std::string isolatePath = "";
     UsdStageRefPtr stage = UsdKatanaCache::GetInstance().GetStage(
         asset, 
-        sessionAttr, sessionLocation,
+        sessionAttr, sessionLocation, isolatePath,
         ignoreLayerRegex, 
         true /* forcePopulate */);
 

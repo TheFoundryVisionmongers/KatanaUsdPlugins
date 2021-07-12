@@ -1083,7 +1083,7 @@ PxrUsdKatanaUtils::ConvertUsdPathToKatLocation(
     // absolute path: starts with '/'
     std::string pathString = path.GetString();
     if (!isolatePathString.empty()) {
-        if (pathString.find(isolatePathString) == 0) {
+        if (pathString.rfind(isolatePathString, 0) == 0) {
             pathString = pathString.substr(isolatePathString.size());
         } else {
             // no good guess about the katana target location:

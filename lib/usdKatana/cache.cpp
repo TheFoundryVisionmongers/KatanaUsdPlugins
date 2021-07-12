@@ -626,6 +626,7 @@ private:
 void FillPopulationMaskFromSessionAttr(
         FnAttribute::GroupAttribute sessionAttr,
         const std::string & sessionRootLocation,
+        const std::string & isolatePath,
         UsdStagePopulationMask & mask)
 {
     FnAttribute::StringAttribute maskAttr =
@@ -646,6 +647,16 @@ void FillPopulationMaskFromSessionAttr(
             
             std::string primPath = pystring::slice(i,
                     sessionRootLocation.size());
+            // If We have an isolatepath set, we must prefix it
+            if (!isolatePath.empty() && isolatePath[0] == '/')
+            {
+                if (primPath[0] == '/')
+                {
+                    primPath = isolatePath + primPath;
+                } else {
+                    primPath = isolatePath + "/" + primPath;
+                }
+            }
             
             mask.Add(SdfPath(primPath));
         }
@@ -662,6 +673,7 @@ UsdStageRefPtr UsdKatanaCache::GetStage(
         std::string const& fileName, 
         FnAttribute::GroupAttribute sessionAttr,
         const std::string & sessionRootLocation,
+        const std::string & isolatePath,
         std::string const& ignoreLayerRegex,
         bool forcePopulate)
 {
@@ -678,7 +690,7 @@ UsdStageRefPtr UsdKatanaCache::GetStage(
 
         UsdStagePopulationMask mask;
         FillPopulationMaskFromSessionAttr(
-                sessionAttr, sessionRootLocation, mask);
+                sessionAttr, sessionRootLocation, isolatePath, mask);
         
         const UsdStage::InitialLoadSet load = 
             (forcePopulate ? UsdStage::LoadAll : UsdStage::LoadNone);
@@ -735,6 +747,7 @@ UsdStageRefPtr
 UsdKatanaCache::GetUncachedStage(std::string const& fileName, 
                             FnAttribute::GroupAttribute sessionAttr,
                             const std::string & sessionRootLocation,
+                            const std::string & isolatePath,
                             std::string const& ignoreLayerRegex,
                             bool forcePopulate)
 {
@@ -749,9 +762,7 @@ UsdKatanaCache::GetUncachedStage(std::string const& fileName,
         
         
         UsdStagePopulationMask mask;
-        FillPopulationMaskFromSessionAttr(sessionAttr, sessionRootLocation,
-                mask);
-        
+        FillPopulationMaskFromSessionAttr(sessionAttr, sessionRootLocation, isolatePath, mask);
 
         const UsdStage::InitialLoadSet load = 
             (forcePopulate ? UsdStage::LoadAll : UsdStage::LoadNone);

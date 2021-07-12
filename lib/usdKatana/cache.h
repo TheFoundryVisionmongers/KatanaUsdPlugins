@@ -100,6 +100,7 @@ public:
     USDKATANA_API UsdStageRefPtr GetStage(std::string const& fileName, 
                             FnAttribute::GroupAttribute sessionAttr,
                             const std::string & sessionRootLocation,
+                            const std::string & isolatePath,
                             std::string const& ignoreLayerRegex,
                             bool forcePopulate);
     
@@ -107,6 +108,7 @@ public:
     UsdStageRefPtr GetUncachedStage(std::string const& fileName, 
                             FnAttribute::GroupAttribute sessionAttr,
                             const std::string & sessionRootLocation,
+                            const std::string & isolatePath,
                             std::string const& ignoreLayerRegex,
                             bool forcePopulate);
 
