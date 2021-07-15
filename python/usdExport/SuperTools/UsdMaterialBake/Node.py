@@ -262,7 +262,7 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
             sourceFile = NodegraphAPI.GetSourceFile()
         sourceAsset = NodegraphAPI.GetKatanaSceneName()
 
-        #When updating to the later version of the LookFileBakeAPI, dont
+        # When updating to the later version of the LookFileBakeAPI, dont
         # forget to update require3DInput from the Node.py
         baker = LookFileBaker("UsdExport")
         baker.progressCallback = self.__progressCallback

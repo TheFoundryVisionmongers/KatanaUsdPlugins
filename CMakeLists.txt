@@ -31,7 +31,7 @@ option(ENABLE_USD_RENDER_INFO_PLUGIN "Enables building and installing the \
 
 option(ENABLE_KATANAUSD_PYTHON_PLUGINS "Enabled building features which \
     require the Python modules from USD, these include UsdExport and the \
-    usdKatana python module" OFF)
+    usdKatana python module" ON)
 
 if(NOT ENABLE_KATANAUSD_PYTHON_PLUGINS)
     set(ENABLE_USD_EXPORT OFF)

@@ -123,13 +123,12 @@ UsdKatanaCache::_FindOrCreateSessionLayer(
     std::string cacheKey = _ComputeCacheKey(sessionAttr, rootLocation);
     
     // Open the usd stage
-    SdfLayerRefPtr sessionLayer;
     
     if (_sessionKeyCache.find(cacheKey) == _sessionKeyCache.end())
     {
         boost::upgrade_to_unique_lock<boost::upgrade_mutex>
                     writerLock(readerLock);
-        sessionLayer = SdfLayer::CreateAnonymous();
+        SdfLayerRefPtr sessionLayer = SdfLayer::CreateAnonymous(".usda");
         _sessionKeyCache[cacheKey] = sessionLayer;
         
         

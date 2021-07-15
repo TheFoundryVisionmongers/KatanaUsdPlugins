@@ -27,7 +27,7 @@ import logging
 
 log = logging.getLogger("UsdExport")
 try:
-    from fnpxr import Sdf, Vt
+    from pxr import Sdf, Vt
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)

@@ -32,7 +32,7 @@ log = logging.getLogger("UsdExport")
 
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
 try:
-    from fnpxr import UsdShade, Sdf, Gf, Sdr, Vt, UsdUI, Tf
+    from pxr import UsdShade, Sdf, Gf, Sdr, Vt, UsdUI, Tf
     # These includes also require fnpxr
     from .typeConversionMaps import (ValueTypeCastMethods,
                                      ConvertRenderInfoShaderTagsToSdfType,
@@ -314,7 +314,9 @@ def AddTerminals(stage, terminals, material):
         materialPath = material.GetPath()
         terminalShaderPath = materialPath.AppendChild(terminalShader)
         terminalShader = UsdShade.Shader.Get(stage, terminalShaderPath)
-        materialTerminal.ConnectToSource(terminalShader, portName.getValue())
+        terminalShaderConnectableApi = UsdShade.ConnectableAPI(terminalShader)
+        materialTerminal.ConnectToSource(terminalShaderConnectableApi,
+                                         portName.getValue())
 
 
 def AddMaterialParameters(parametersAttr, shaderId, shader):
@@ -607,8 +609,10 @@ def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shaderPath,
                     'Unable to find output port for connection "%s".',
                     connection)
                 continue
+
+            outputShaderConnectableApi = UsdShade.ConnectableAPI(outputShader)
             inputPort.ConnectToSource(
-                outputShader, str(outputPortName),
+                outputShaderConnectableApi, str(outputPortName),
                 UsdShade.AttributeType.Output, sourceSdfType)
 
             # Record the order this port appears (USD connections are stored as
@@ -761,8 +765,10 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
         sourceSdfType = materialPort.GetTypeName()
         sourceShaderPort = sourceShader.CreateInput(sourceParamName,
                                                     sourceSdfType)
+
+        materialConnectableApi = UsdShade.ConnectableAPI(material)
         sourceShaderPort.ConnectToSource(
-            material, interfaceName,
+            materialConnectableApi, interfaceName,
             UsdShade.AttributeType.Input, sourceSdfType)
 
 

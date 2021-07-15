@@ -34,7 +34,7 @@ log = logging.getLogger("UsdExport")
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
 pxrImported = False
 try:
-    from fnpxr import Usd, UsdShade, Sdf
+    from pxr import Usd, UsdShade, Sdf
     # These includes also require fnpxr
     from UsdExport.material import (WriteMaterial, WriteMaterialAssign,
                                     WriteChildMaterial)

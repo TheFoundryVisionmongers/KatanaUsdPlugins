@@ -28,7 +28,7 @@ log = logging.getLogger("UsdExport")
 
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
 try:
-    from fnpxr import UsdRi, Tf, UsdGeom, Usd
+    from pxr import UsdRi, Tf, UsdGeom, Usd
 
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '

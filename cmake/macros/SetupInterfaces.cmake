@@ -29,9 +29,15 @@ function(add_boost_interface)
         set(Boost_NO_SYSTEM_PATHS ON)
         set(Boost_NAMESPACE Fnboost)
         set(Boost_USE_STATIC_LIBS OFF)
+        add_compile_definitions(Boost_NAMESPACE=foundryboost)
+        if(NOT DEFINED Python_VERSION_MAJOR)
+            message(ERROR "Unable to read Python_VERSION_MAJOR from Python "
+                "FindPackage, therefore unable to build Boost_PYTHON_COMPONENT")
+        endif()
+        set(Boost_PYTHON_COMPONENT python${Python_VERSION_MAJOR}${Python_VERSION_MINOR})
     endif()
-    find_package(Boost COMPONENTS filesystem python thread system regex REQUIRED)
-endfunction(add_boost_interface) #add_python_interface
+    find_package(Boost COMPONENTS filesystem ${Boost_PYTHON_COMPONENT} thread system regex REQUIRED)
+endfunction(add_boost_interface) # add_boost_interface
 
 
 function(add_python_interface)
