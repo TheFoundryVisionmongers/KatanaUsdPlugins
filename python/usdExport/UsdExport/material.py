@@ -194,28 +194,34 @@ def AddShaderLayout(shaderLayoutAttr, shader):
     """
     nodeGraphAPI = UsdUI.NodeGraphNodeAPI(shader)
 
-    #Add position
+    # Add position
     nodePositionAttr = shaderLayoutAttr.getChildByName("position")
     if nodePositionAttr:
         nodePosition = nodePositionAttr.getNearestSample(0)
         nodeGraphAPI.CreatePosAttr(ConvertParameterValueToGfType(
             nodePosition, Sdf.ValueTypeNames.Double2))
 
-    #Add color
+    # Add color
     nodeColorAttr = shaderLayoutAttr.getChildByName("color")
     if nodeColorAttr:
         nodeColor = nodeColorAttr.getNearestSample(0)
         nodeGraphAPI.CreateDisplayColorAttr(ConvertParameterValueToGfType(
             nodeColor, Sdf.ValueTypeNames.Color3f))
 
-    #Add expansion state
+    # Add expansion state
     nodeViewStateAttr = shaderLayoutAttr.getChildByName("viewState")
     if nodeViewStateAttr:
+        # The following are valid Katana expansion states:
+        #   0 - closed, i.e. show only the node name
+        #   1 - show only connected ports, as a flat list
+        #   2 - show only connect ports, preserving group headers
+        #   3 - expanded, i.e. show everything
+        # Unfortunately we must map both 1 and 2 to USD's "minimized".
+        usdExpansionStates = ("closed", "minimized", "minimized", "open")
 
-        usdExpansionStates = ("closed", "minimized", "open")
         nodeViewState = nodeViewStateAttr.getValue()
-
-        if not isinstance(nodeViewState, int) or not 0 <= nodeViewState < 3:
+        if (not isinstance(nodeViewState, int) or
+                not 0 <= nodeViewState < len(usdExpansionStates)):
             log.warning('Invalid value for the layout viewState attribute '
                         'of "%s" shader node', shader.GetPath())
             return
