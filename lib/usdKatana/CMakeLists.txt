@@ -10,9 +10,9 @@ pxr_shared_library(${PXR_PACKAGE}
         vt
         sdf
         usdHydra
-        usdImagingGL
         usdSkel
         usdGeom
+        usdImaging
         usdRi
         usdUI
         usdUtils

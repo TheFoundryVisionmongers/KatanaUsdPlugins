@@ -33,7 +33,6 @@
 #include "pxr/pxr.h"
 #include "pxr/usd/usd/stage.h"
 #include "pxr/usd/sdf/declareHandles.h"
-#include "pxr/usdImaging/usdImagingGL/engine.h"
 #include "pxr/base/tf/singleton.h"
 
 #include <boost/shared_ptr.hpp>
@@ -51,7 +50,6 @@ PXR_NAMESPACE_OPEN_SCOPE
 // Forward declare pointers.
 SDF_DECLARE_HANDLES(SdfLayer);
 typedef TfRefPtr<class UsdStage> UsdStageRefPtr;
-typedef boost::shared_ptr<class UsdImagingGLEngine> UsdImagingGLEngineSharedPtr;
 class SdfPath;
 class UsdPrim;
 
@@ -60,7 +58,7 @@ class UsdPrim;
  * The stage returned by this cache helper is meant to be read only. The
  * session layer will be locked for editing.
  */
-class UsdKatanaCache : public TfSingleton<UsdKatanaCache> 
+class UsdKatanaCache : public TfSingleton<UsdKatanaCache>
 {
     friend class TfSingleton<UsdKatanaCache>;
 
@@ -69,21 +67,17 @@ class UsdKatanaCache : public TfSingleton<UsdKatanaCache>
     /// Construct a session layer from the groupAttr encoding of variants
     /// and deactivations -- or return a previously created one
     SdfLayerRefPtr& _FindOrCreateSessionLayer(
-            FnAttribute::GroupAttribute sessionAttr, 
+            FnAttribute::GroupAttribute sessionAttr,
             const std::string& rootLocation);
-
 
     /// Mute layers by name
     static void _SetMutedLayers(
         const UsdStageRefPtr &stage, const std::string &layerRegex);
 
-    typedef std::map<std::string, UsdImagingGLEngineSharedPtr> _RendererCache;
-
-    std::string _ComputeCacheKey(FnAttribute::GroupAttribute sessionAttr, 
+    std::string _ComputeCacheKey(FnAttribute::GroupAttribute sessionAttr,
         const std::string& rootLocation);
 
     std::map<std::string, SdfLayerRefPtr> _sessionKeyCache;
-    _RendererCache _rendererCache;
 
 public:
 
@@ -94,18 +88,17 @@ public:
     /// Clear all caches
     USDKATANA_API void Flush();
 
-    
     /// Get (or create) a cached usd stage with a sessionLayer containing
     /// variant selections and activations (so far)
-    USDKATANA_API UsdStageRefPtr GetStage(std::string const& fileName, 
+    USDKATANA_API UsdStageRefPtr GetStage(std::string const& fileName,
                             FnAttribute::GroupAttribute sessionAttr,
                             const std::string & sessionRootLocation,
                             const std::string & isolatePath,
                             std::string const& ignoreLayerRegex,
                             bool forcePopulate);
-    
+
     // Equivalent to GetStage above but without caching
-    UsdStageRefPtr GetUncachedStage(std::string const& fileName, 
+    UsdStageRefPtr GetUncachedStage(std::string const& fileName,
                             FnAttribute::GroupAttribute sessionAttr,
                             const std::string & sessionRootLocation,
                             const std::string & isolatePath,
@@ -115,30 +108,17 @@ public:
     /// Flushes an individual stage if present in the cache
     USDKATANA_API void FlushStage(const UsdStageRefPtr & stage);
 
-
-
-
-    /// Get (or create) a cached renderer for a given prim path.
-    USDKATANA_API UsdImagingGLEngineSharedPtr const& GetRenderer(UsdStageRefPtr const& stage,
-                                             UsdPrim const& root,
-                                             std::string const& sessionKey);
-
     /// \brief Find a cached session layer if it exists.  Does NOT create.
     SdfLayerRefPtr FindSessionLayer(
-        FnAttribute::GroupAttribute sessionAttr, 
+        FnAttribute::GroupAttribute sessionAttr,
         const std::string& rootLocation);
-
 
     USDKATANA_API SdfLayerRefPtr FindSessionLayer(
         const std::string& cacheKey) ;
-    
-    
+
     USDKATANA_API SdfLayerRefPtr FindOrCreateSessionLayer(
         const std::string& sessionAttrXML,
         const std::string& rootLocation);
-
-    
-
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

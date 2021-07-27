@@ -31,7 +31,7 @@ set(USD_LIBRARIES
     tf
     usdGeom
     usdHydra
-    usdImagingGL
+    usdImaging
     usdLux
     usdRi
     usdShade

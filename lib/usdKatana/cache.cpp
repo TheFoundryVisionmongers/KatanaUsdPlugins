@@ -34,8 +34,6 @@
 
 #include "pxr/usd/ar/resolver.h"
 
-#include "pxr/usdImaging/usdImagingGL/engine.h"
-
 #include "pxr/usd/usdUtils/stageCache.h"
 #include "pxr/usd/sdf/layer.h"
 #include "pxr/usd/sdf/path.h"
@@ -526,7 +524,6 @@ UsdKatanaCache::Flush()
 
     UsdUtilsStageCache::Get().Clear();
     _sessionKeyCache.clear();
-    _rendererCache.clear();
 }
 
 
@@ -801,70 +798,6 @@ void UsdKatanaCache::FlushStage(const UsdStageRefPtr & stage)
     stageCache.Erase(stage);
 }
 
-
-UsdImagingGLEngineSharedPtr const& 
-UsdKatanaCache::GetRenderer(UsdStageRefPtr const& stage,
-                            UsdPrim const& root,
-                            std::string const& sessionKey)
-{
-    // Grab a reader lock for reading the _rendererCache
-    boost::upgrade_lock<boost::upgrade_mutex>
-                readerLock(UsdKatanaGetRendererCacheLock());
-
-    // First look for a parent renderer object first.
-    std::string const prefix = stage->GetRootLayer()->GetIdentifier() 
-                             + "::" + sessionKey + "::";
-
-    std::string key = prefix + root.GetPath().GetString();
-    {
-        _RendererCache::const_iterator it = _rendererCache.find(key);
-        if (it != _rendererCache.end())
-            return it->second;
-    }
-    
-    // May 2015: In the future, we might want to look for a renderer
-    // cached at the parent prim that we can reuse to render this prim. This
-    // would save some time by not creating a new renderer for every prim.
-    //
-    // UsdImaging does not currently support recycling renderers in this way,
-    // so we can't do it yet. It's a non-issue at the moment because we only
-    // render proxies at components, not at every prim.
-    //
-    // For future reference, here is some example code for re-using the renderer
-    // from the parent prim:
-    //
-    // Look for a renderer cached at the parent.
-    // std::string parentKey = prefix + root.GetParent().GetPath().GetString();
-    // _RendererCache::const_iterator it = _rendererCache.find(parentKey);
-    // if (it != _rendererCache.end()) {
-    //     TF_DEBUG(USDKATANA_CACHE_RENDERER).Msg("{USD RENDER CACHE} "
-    //                         "Inherited renderer '%s' from parent '%s'\n",
-    //                                 key.c_str(),
-    //                                 parentKey.c_str());
-    //     // Protect the _rendererCache for write
-    //     boost::upgrade_to_unique_lock<boost::upgrade_mutex>
-    //                 writerLock(readerLock);
-
-    //     // Chain the child to the parent;
-    //     _rendererCache.insert(std::make_pair(key, it->second));
-    //     return it->second;
-    // } 
-
-    TF_DEBUG(USDKATANA_CACHE_RENDERER).Msg("{USD RENDER CACHE} "
-                                    "New renderer created with key '%s'\n",
-                                    key.c_str());
-
-    // Protect the _rendererCache for write
-    boost::upgrade_to_unique_lock<boost::upgrade_mutex> writerLock(readerLock);
-
-    // Make a new renderer at the requested path
-    SdfPathVector excludedPaths;
-    std::pair<_RendererCache::iterator,bool> res  = 
-        _rendererCache.insert(std::make_pair(key, 
-           UsdImagingGLEngineSharedPtr(new UsdImagingGLEngine(root.GetPath(), 
-                                                             excludedPaths))));
-    return res.first->second;
-}
 
 std::string UsdKatanaCache::_ComputeCacheKey(
     FnAttribute::GroupAttribute sessionAttr,
