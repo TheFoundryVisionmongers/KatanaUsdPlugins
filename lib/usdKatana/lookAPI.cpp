@@ -68,7 +68,12 @@ UsdKatanaLookAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
 
 
 /* virtual */
-UsdSchemaType UsdKatanaLookAPI::_GetSchemaType() const {
+UsdSchemaKind UsdKatanaLookAPI::_GetSchemaKind() const {
+    return UsdKatanaLookAPI::schemaKind;
+}
+
+/* virtual */
+UsdSchemaKind UsdKatanaLookAPI::_GetSchemaType() const {
     return UsdKatanaLookAPI::schemaType;
 }
 
@@ -76,8 +81,10 @@ UsdSchemaType UsdKatanaLookAPI::_GetSchemaType() const {
 UsdKatanaLookAPI
 UsdKatanaLookAPI::Apply(const UsdPrim &prim)
 {
-    return UsdAPISchemaBase::_ApplyAPISchema<UsdKatanaLookAPI>(
-            prim, _schemaTokens->LookAPI);
+    if (prim.ApplyAPI<UsdKatanaLookAPI>()) {
+        return UsdKatanaLookAPI(prim);
+    }
+    return UsdKatanaLookAPI();
 }
 
 /* static */

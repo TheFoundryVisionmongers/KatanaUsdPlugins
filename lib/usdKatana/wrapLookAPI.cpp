@@ -62,6 +62,15 @@ _CreatePrimNameAttr(UsdKatanaLookAPI &self,
         UsdPythonToSdfType(defaultVal, SdfValueTypeNames->String), writeSparsely);
 }
 
+static std::string
+_Repr(const UsdKatanaLookAPI &self)
+{
+    std::string primRepr = TfPyRepr(self.GetPrim());
+    return TfStringPrintf(
+        "UsdKatana.LookAPI(%s)",
+        primRepr.c_str());
+}
+
 } // anonymous namespace
 
 void wrapUsdKatanaLookAPI()
@@ -102,6 +111,7 @@ void wrapUsdKatanaLookAPI()
              (arg("defaultValue")=object(),
               arg("writeSparsely")=false))
 
+        .def("__repr__", ::_Repr)
     ;
 
     _CustomWrapCode(cls);
@@ -131,4 +141,4 @@ namespace {
 WRAP_CUSTOM {
 }
 
-} // anonymous namespace 
+}

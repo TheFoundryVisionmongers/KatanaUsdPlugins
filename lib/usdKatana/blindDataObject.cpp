@@ -81,7 +81,12 @@ UsdKatanaBlindDataObject::Define(
 }
 
 /* virtual */
-UsdSchemaType UsdKatanaBlindDataObject::_GetSchemaType() const {
+UsdSchemaKind UsdKatanaBlindDataObject::_GetSchemaKind() const {
+    return UsdKatanaBlindDataObject::schemaKind;
+}
+
+/* virtual */
+UsdSchemaKind UsdKatanaBlindDataObject::_GetSchemaType() const {
     return UsdKatanaBlindDataObject::schemaType;
 }
 

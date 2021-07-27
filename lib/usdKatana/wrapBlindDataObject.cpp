@@ -76,6 +76,15 @@ _CreateSuppressGroupToAssemblyPromotionAttr(UsdKatanaBlindDataObject &self,
         UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Bool), writeSparsely);
 }
 
+static std::string
+_Repr(const UsdKatanaBlindDataObject &self)
+{
+    std::string primRepr = TfPyRepr(self.GetPrim());
+    return TfStringPrintf(
+        "UsdKatana.BlindDataObject(%s)",
+        primRepr.c_str());
+}
+
 } // anonymous namespace
 
 void wrapUsdKatanaBlindDataObject()
@@ -130,6 +139,7 @@ void wrapUsdKatanaBlindDataObject()
              (arg("defaultValue")=object(),
               arg("writeSparsely")=false))
 
+        .def("__repr__", ::_Repr)
     ;
 
     _CustomWrapCode(cls);
@@ -170,13 +180,11 @@ WRAP_CUSTOM {
                  const std::string &, const SdfValueTypeName &))
              &UsdKatanaBlindDataObject::CreateKbdAttribute,
              (arg("katanaFullName"), arg("usdType")))
-
         .def("GetKbdAttribute",
              (UsdAttribute (UsdKatanaBlindDataObject::*)(
                  const std::string &))
              &UsdKatanaBlindDataObject::GetKbdAttribute,
              (arg("katanaFullName")))
-
         .def("GetKbdAttributes",
              &UsdKatanaBlindDataObject::GetKbdAttributes,
              (arg("nameSpace")=""),
@@ -187,4 +195,4 @@ WRAP_CUSTOM {
         ;
 }
 
-} // anonymous namespace 
+}
