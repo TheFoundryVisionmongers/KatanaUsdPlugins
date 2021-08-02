@@ -23,12 +23,24 @@
 
 #The USD libraries required by the Katana USD Plug-ins
 set(USD_LIBRARIES
+    ar
+    arch
+    cameraUtil
     gf
+    hd
+    hf
     hio
+    js
+    kind
     ndr
+    pcp
+    plug
+    pxOsd
     sdf
     sdr
     tf
+    trace
+    usd
     usdGeom
     usdHydra
     usdImaging
@@ -38,8 +50,55 @@ set(USD_LIBRARIES
     usdSkel
     usdUI
     usdUtils
+    usdVol
     vt
+    work
 )
+
+# Auto generated from pxrTargets.cmake from our build using the script below:
+# ------------------------------------------------------------------------------
+# Provide USD_ROOT as a defenition to where the USD you want to
+# print out dependnecies for is available.
+# include(${USD_ROOT}/cmake/pxrTargets.cmake)
+# set(USD_LIBS
+#    ...
+# )
+# foreach(usd_lib ${USD_LIBS})
+#     get_target_property(dep_list ${usd_lib} INTERFACE_LINK_LIBRARIES)
+#     message("set(USD_${usd_lib}_DEPENDENCIES ${dep_list})")
+# endforeach()
+# ------------------------------------------------------------------------------
+
+set(USD_ar_DEPENDENCIES arch;tf;plug;vt;Boost::python27)
+set(USD_arch_DEPENDENCIES )
+set(USD_cameraUtil_DEPENDENCIES tf;gf)
+set(USD_gf_DEPENDENCIES arch;tf)
+set(USD_hd_DEPENDENCIES plug;tf;trace;vt;work;sdf;cameraUtil;hf;pxOsd;TBB::tbb)
+set(USD_hf_DEPENDENCIES plug;tf;trace)
+set(USD_hio_DEPENDENCIES arch;js;plug;tf;vt;trace;ar;hf)
+set(USD_js_DEPENDENCIES tf)
+set(USD_kind_DEPENDENCIES tf;plug)
+set(USD_ndr_DEPENDENCIES tf;plug;vt;work;ar;sdf;Boost::python27)
+set(USD_pcp_DEPENDENCIES tf;trace;vt;sdf;work;ar;Boost::python27;TBB::tbb)
+set(USD_plug_DEPENDENCIES arch;tf;js;trace;work;Boost::python27;TBB::tbb)
+set(USD_pxOsd_DEPENDENCIES tf;gf;vt;Boost::python27)
+set(USD_sdf_DEPENDENCIES arch;tf;gf;trace;vt;work;ar;Boost::python27)
+set(USD_sdr_DEPENDENCIES tf;vt;ar;ndr;sdf;Boost::python27)
+set(USD_tf_DEPENDENCIES arch;Python::Python;Boost::python27;TBB::tbb)
+set(USD_trace_DEPENDENCIES arch;js;tf;Boost::python27;TBB::tbb)
+set(USD_usd_DEPENDENCIES arch;kind;pcp;sdf;ar;plug;tf;trace;vt;work;Boost::python27;TBB::tbb)
+set(USD_usdGeom_DEPENDENCIES js;tf;plug;vt;sdf;trace;usd;work;Boost::python27;TBB::tbb)
+set(USD_usdHydra_DEPENDENCIES tf;usd;usdShade)
+set(USD_usdImaging_DEPENDENCIES gf;tf;plug;trace;vt;work;hd;pxOsd;sdf;usd;usdGeom;usdLux;usdShade;usdVol;ar;TBB::tbb)
+set(USD_usdLux_DEPENDENCIES tf;vt;ndr;sdf;usd;usdGeom;usdShade)
+set(USD_usdRi_DEPENDENCIES tf;vt;sdf;usd;usdShade;usdGeom;usdLux;Boost::python27)
+set(USD_usdShade_DEPENDENCIES tf;vt;sdf;ndr;sdr;usd;usdGeom)
+set(USD_usdSkel_DEPENDENCIES arch;gf;tf;trace;vt;work;sdf;usd;usdGeom;Boost::python27;TBB::tbb)
+set(USD_usdUI_DEPENDENCIES tf;vt;sdf;usd)
+set(USD_usdUtils_DEPENDENCIES arch;tf;gf;sdf;usd;usdGeom;Boost::python27)
+set(USD_usdVol_DEPENDENCIES tf;usd;usdGeom)
+set(USD_vt_DEPENDENCIES arch;tf;gf;trace;Boost::python27;TBB::tbb)
+set(USD_work_DEPENDENCIES tf;trace;TBB::tbb)
 
 if(NOT DEFINED USD_LIBRARY_DIR)
     if(NOT DEFINED USD_ROOT)
@@ -63,9 +122,6 @@ if(UNIX AND NOT APPLE)
     set(LIB_EXTENSION .so)
 elseif(WIN32)
     set(LIB_EXTENSION .lib)
-else()
-    message(FATAL_ERROR "Unable to find Apple USD libraries,
-        not supported")
 endif()
 
 foreach(lib ${USD_LIBRARIES})
@@ -74,25 +130,13 @@ foreach(lib ${USD_LIBRARIES})
     if(EXISTS ${USD_${lib}_PATH})
         add_library(${lib} INTERFACE IMPORTED)
 
-        # Probably adding more dependencies than are required to some
-        # libraries.
-        set(LIBS ${USD_${lib}_PATH}
-            Boost::${Boost_PYTHON_COMPONENT}
-            Boost::thread
-            Boost::system
-            Boost::regex
-            TBB::tbb
-            Python::Python
-            )
         set_target_properties(${lib}
             PROPERTIES
-            INTERFACE_LINK_LIBRARIES "${LIBS}"
-        )
-        set_target_properties(${lib}
-            PROPERTIES
+            INTERFACE_LINK_LIBRARIES "${USD_${lib}_PATH};${USD_${lib}_DEPENDENCIES}"
             INTERFACE_INCLUDE_DIRECTORIES "${USD_INCLUDE_DIR}"
         )
     else()
-        message(FATAL-ERROR "Unable to add library ${lib}, could not be found in location ${USD_${lib}_PATH}")
+        message(FATAL_ERROR "Unable to add library ${lib}, "
+            "could not be found in location ${USD_${lib}_PATH}")
     endif()
 endforeach()

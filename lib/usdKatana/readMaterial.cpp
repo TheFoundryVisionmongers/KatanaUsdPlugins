@@ -41,7 +41,6 @@
 #include "usdKatana/baseMaterialHelpers.h"
 
 #include "pxr/base/tf/stringUtils.h"
-#include "pxr/imaging/hio/glslfx.h"
 
 #include "pxr/usd/usdGeom/scope.h"
 

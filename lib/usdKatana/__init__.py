@@ -29,7 +29,7 @@
 #
 
 import _usdKatana
-from @PXR_PY_PACKAGE_NAME@ import Tf
+from pxr import Tf
 Tf.PrepareModule(_usdKatana, locals())
 del Tf
 

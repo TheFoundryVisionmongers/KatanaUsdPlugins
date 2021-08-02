@@ -16,7 +16,6 @@ pxr_shared_library(${PXR_PACKAGE}
         usdRi
         usdUI
         usdUtils
-        hio
         katanaPluginApi
         ${vtKatana_LIBRARY}
         Boost::system

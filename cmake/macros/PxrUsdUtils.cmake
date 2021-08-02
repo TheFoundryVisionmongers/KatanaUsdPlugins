@@ -3,7 +3,7 @@ function(pxr_katana_nodetypes NODE_TYPES)
     if(PXR_INSTALL_SUBDIR)
         set(installDir ${PXR_INSTALL_SUBDIR}/plugin/Plugins/${pyModuleName})
     else()
-        set(installDir plugin/Plugins/${pyModuleName})
+        set(installDir ${CMAKE_INSTALL_PREFIX}/plugin/Plugins/${pyModuleName})
     endif()
 
     set(pyFiles "")
@@ -14,30 +14,23 @@ function(pxr_katana_nodetypes NODE_TYPES)
         set(importLines "import ${nodeType}\n")
     endforeach()
 
-    install(
-        PROGRAMS ${pyFiles}
-        DESTINATION ${installDir}
-    )
+    foreach(pyfile ${pyFiles})
+        _replace_root_python_module(
+            ${CMAKE_CURRENT_SOURCE_DIR}/${pyfile}
+            ${installDir}/${pyfile}
+        )
+    endforeach()
 
     # Install a __init__.py that imports all the known node types
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/generated_NodeTypes_init.py"
          "${importLines}")
-    if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
-        bundle_files(
-            TARGET
-            USD.NodeTypes.bundle
-            DESTINATION_FOLDER
-            ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/Plugins/${pyModuleName}
-            FILES
-            ${pyFiles}
+
+    foreach(pyfile ${pyFiles})
+        _replace_root_python_module(
+            ${CMAKE_CURRENT_BINARY_DIR}/generated_NodeTypes_init.py
+            ${installDir}/__init__.py
         )
-    else()
-        install(
-            FILES "${CMAKE_CURRENT_BINARY_DIR}/generated_NodeTypes_init.py"
-            DESTINATION "${installDir}"
-            RENAME "__init__.py"
-        )
-    endif()
+    endforeach()
 endfunction() # pxr_katana_nodetypes
 
 
@@ -64,42 +57,24 @@ function(pxr_katana_python_plugin)
         set(pluginInstallDir ${PXR_INSTALL_SUBDIR}/plugin/${args_PLUGIN_TYPE})
         set(pythonInstallDir ${PXR_INSTALL_SUBDIR}/lib/python)
     else()
-        set(pluginInstallDir plugin/${args_PLUGIN_TYPE})
-        set(pythonInstallDir lib/python)
+        set(pluginInstallDir ${CMAKE_INSTALL_PREFIX}/plugin/${args_PLUGIN_TYPE})
+        set(pythonInstallDir ${CMAKE_INSTALL_PREFIX}/lib/python)
     endif()
 
-
-    if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
-        if(args_PYTHON_PLUGIN_REGISTRY_FILES)
-            bundle_files(
-                TARGET
-                ${args_MODULE_NAME}
-                DESTINATION_FOLDER
-                ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin/${args_PLUGIN_TYPE}
-                FILES
-                ${args_PYTHON_PLUGIN_REGISTRY_FILES}
+    if(args_PYTHON_PLUGIN_REGISTRY_FILES)
+        foreach(plugin_registry_file ${args_PYTHON_PLUGIN_REGISTRY_FILES})
+            _replace_root_python_module(
+                ${CMAKE_CURRENT_SOURCE_DIR}/${plugin_registry_file}
+                ${pluginInstallDir}/${plugin_registry_file}
             )
-        endif()
-        if(args_PYTHON_MODULE_FILES)
-            bundle_files(
-                TARGET
-                ${args_MODULE_NAME}.python
-                DESTINATION_FOLDER
-                ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib/python
-                FILES
-                ${args_PYTHON_MODULE_FILES}
-            )
-        endif()
-    else()
-        message("INSTALLING PYTHON INTO ${pluginInstallDir}")
-        foreach(file ${args_PYTHON_PLUGIN_REGISTRY_FILES})
-            get_filename_component(dir ${file} DIRECTORY)
-            install(FILES ${file} DESTINATION ${pluginInstallDir}/${dir})
         endforeach()
-
-        foreach(file ${args_PYTHON_MODULE_FILES})
-            get_filename_component(dir ${file} DIRECTORY)
-            install(FILES ${file} DESTINATION ${pythonInstallDir}/${dir})
+    endif()
+    if(args_PYTHON_MODULE_FILES)
+        foreach(py_module_file ${args_PYTHON_MODULE_FILES})
+            _replace_root_python_module(
+                ${CMAKE_CURRENT_SOURCE_DIR}/${py_module_file}
+                ${pythonInstallDir}/${py_module_file}
+            )
         endforeach()
     endif()
 endfunction() # pxr_katana_lookFileBake
@@ -119,16 +94,6 @@ function(_get_python_module_name LIBRARY_FILENAME MODULE_NAME)
     )
 endfunction() # _get_python_module_name
 
-# Function to replace the root module name for the python bindings of USD
-# Provided an input and an output file path,  we check if the input file is
-# newer than the output file.  If it is, we run the replace method.
-function(_replace_root_python_module INPUT_FILE OUTPUT_FILE)
-    configure_file(${INPUT_FILE} ${OUTPUT_FILE} COPYONLY)
-    file(READ ${OUTPUT_FILE} filedata)
-    string(REPLACE "\@PXR_PY_PACKAGE_NAME\@" "${PXR_PY_PACKAGE_NAME}" filedata "${filedata}")
-    file(WRITE ${OUTPUT_FILE} "${filedata}")
-endfunction()
-
 # from USD/cmake/macros/Private.cmake
 # Install compiled python files alongside the python object,
 # e.g. lib/python/${PXR_PY_PACKAGE_NAME}/Ar/__init__.pyc
@@ -146,10 +111,7 @@ function(_install_python LIBRARY_NAME)
     if(PXR_INSTALL_SUBDIR)
         set(libPythonPrefix ${PXR_INSTALL_SUBDIR}/lib/python)
     else()
-        set(libPythonPrefix lib/python)
-    endif()
-    if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
-        set(libPythonPrefix ${PLUGINS_RES_BUNDLE_PATH}/Usd/lib/python)
+        set(libPythonPrefix ${CMAKE_INSTALL_PREFIX}/lib/python)
     endif()
     _get_python_module_name(${LIBRARY_NAME} LIBRARY_INSTALLNAME)
 
@@ -271,7 +233,7 @@ function(_get_install_dir path out)
     if (PXR_INSTALL_SUBDIR)
         set(${out} ${PXR_INSTALL_SUBDIR}/${path} PARENT_SCOPE)
     else()
-        set(${out} ${path} PARENT_SCOPE)
+        set(${out} ${CMAKE_INSTALL_PREFIX}/${path} PARENT_SCOPE)
     endif()
 endfunction() # get_install_dir
 
@@ -341,6 +303,68 @@ function(_install_resource_files NAME pluginInstallPrefix pluginToLibraryPath)
     endforeach()
 endfunction() # _install_resource_files
 
+# Function to automatically replace pxr python module usage with the specified
+# PXR_PY_PACKAGE_NAME module name. E.g `from pxr` becomes `from fnpxr`.
+function(_replace_root_python_module INPUT_FILE OUTPUT_FILE)
+    if(${PXR_PY_PACKAGE_NAME} STREQUAL "pxr")
+        # We must always configure file, since some methods rely on the output
+        # file being valid and present. However, we do not need to perform
+        # any replacements.
+        configure_file(${INPUT_FILE} ${OUTPUT_FILE} COPYONLY)
+        return()
+    endif()
+
+    # We want to restrict how much we write the output files, since the
+    # compiler will regenerate objects if the output file is re-written to
+    # again.
+    if(EXISTS ${OUTPUT_FILE})
+        get_filename_component(out_ext ${INPUT_FILE} EXT)
+        if(out_ext)
+            if((${out_ext} STREQUAL ".py"))
+                set(force_run_replace ON)
+            else()
+                set(force_run_replace OFF)
+            endif()
+        else()
+            set(force_run_replace OFF)
+        endif()
+        unset(out_ext)
+    else()
+        set(force_run_replace ON)
+    endif()
+
+    file(READ ${INPUT_FILE} filedata)
+    # Some simple regex to replace usage of the default pxr with our
+    # defined ${PXR_PY_PACKAGE_NAME}.  We must always have two regex groups
+    # here as there are instances where we want to keep prefixes and suffixes
+    # of the expressions used to find precise python related uses of pxr.
+    set(regex_replacements
+        "(\")pxr(\\.)"
+        "(')pxr(\\.)"
+        "(import )pxr()"
+        "(from )pxr()")
+    foreach(regex_replace ${regex_replacements})
+        string(REGEX REPLACE
+            ${regex_replace}
+            "\\1${PXR_PY_PACKAGE_NAME}\\2"
+            filedata "${filedata}")
+    endforeach()
+
+    # Check the output file to see if it matches the same as we are about to
+    # write. We don't want to write if they are the same, as this will cause
+    # recompilation even if the code hasnt changed.
+    # Return early if we did not need to update the output file.
+    if(NOT force_run_replace)
+        file(READ ${OUTPUT_FILE} filedata_comp)
+        if(filedata_comp STREQUAL filedata)
+            return()
+        endif()
+    endif()
+
+    # Either the output file didn't exist, or there's been other changes
+    file(WRITE ${OUTPUT_FILE} "${filedata}")
+endfunction()
+
 function(_get_resources_dir_name output)
     set(${output}
         resources
@@ -371,27 +395,27 @@ function(_katana_build_install libTarget installPathSuffix)
     set_target_properties("${libTarget}"
         PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY
-            ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+            ${PXR_INSTALL_SUBDIR}/${installPathSuffix}
         LIBRARY_OUTPUT_DIRECTORY_DEBUG
-            ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+            ${PXR_INSTALL_SUBDIR}/${installPathSuffix}
         LIBRARY_OUTPUT_DIRECTORY_RELEASE
-            ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+            ${PXR_INSTALL_SUBDIR}/${installPathSuffix}
     )
     if(WIN32)
         set_target_properties(${libTarget}
             PROPERTIES
                 RUNTIME_OUTPUT_DIRECTORY
-                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                    ${PXR_INSTALL_SUBDIR}/${installPathSuffix}
                 RUNTIME_OUTPUT_DIRECTORY_DEBUG
-                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                    ${PXR_INSTALL_SUBDIR}/${installPathSuffix}
                 RUNTIME_OUTPUT_DIRECTORY_RELEASE
-                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                    ${PXR_INSTALL_SUBDIR}/${installPathSuffix}
                 ARCHIVE_OUTPUT_DIRECTORY
-                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                    ${PXR_INSTALL_SUBDIR}/${installPathSuffix}
                 ARCHIVE_OUTPUT_DIRECTORY_DEBUG
-                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                    ${PXR_INSTALL_SUBDIR}/${installPathSuffix}
                 ARCHIVE_OUTPUT_DIRECTORY_RELEASE
-                    ${PLUGINS_RES_BUNDLE_PATH}/${installPathSuffix}
+                    ${PXR_INSTALL_SUBDIR}/${installPathSuffix}
         )
     endif()
 endfunction() # _katana_build_install
@@ -412,21 +436,22 @@ function(pxr_katana_install_plugin_resources)
         "${multiValueArgs}"
         ${ARGN}
     )
+
+    if(PXR_INSTALL_SUBDIR)
+        set(installDir ${PXR_INSTALL_SUBDIR}/plugin/${args_PLUGIN_TYPE})
+    else()
+        set(installDir ${CMAKE_INSTALL_PREFIX}/plugin/${args_PLUGIN_TYPE})
+    endif()
     if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
         bundle_files(
             TARGET
             ${args_MODULE_NAME}
             DESTINATION_FOLDER
-            ${PLUGINS_RES_BUNDLE_PATH}/Usd/plugin
+            ${installDir}
             FILES
             ${args_FILES}
         )
     else()
-        if(PXR_INSTALL_SUBDIR)
-            set(installDir ${PXR_INSTALL_SUBDIR}/plugin/${args_PLUGIN_TYPE})
-        else()
-            set(installDir plugin/${args_PLUGIN_TYPE})
-        endif()
         install(FILES ${args_FILES}
             DESTINATION ${installDir})
     endif()

@@ -22,21 +22,41 @@
 
 
 function(add_boost_interface)
+    if(NOT DEFINED Python_VERSION_MAJOR)
+    message(FATL_ERROR "Unable to read Python_VERSION_MAJOR from Python "
+        "FindPackage, therefore unable to build Boost_PYTHON_COMPONENT")
+    endif()
+    set(Boost_PYTHON_COMPONENT
+            python${Python_VERSION_MAJOR}${Python_VERSION_MINOR})
+    set(Boost_PYTHON_COMPONENT ${Boost_PYTHON_COMPONENT} PARENT_SCOPE)
     if(USE_KATANA_BOOST)
         # Setup the variables to use the Katana builds.
         set(BOOST_LIBRARYDIR ${KATANA_API_LOCATION}/bin)
-        set(BOOST_INCLUDEDIR ${KATANA_API_LOCATION}/external/FnBoost/include)
+        set(BOOST_INCLUDEDIR ${KATANA_API_LOCATION}/external/foundryboost/include)
+
         set(Boost_NO_SYSTEM_PATHS ON)
-        set(Boost_NAMESPACE Fnboost)
+        set(Boost_NO_BOOST_CMAKE ON)
+        set(Boost_USE_MULTITHREADED ON)
+        set(Boost_USE_RELEASE_LIBS ON)
+        set(Boost_USE_DEBUG_LIBS OFF)
+        set(Boost_NAMESPACE foundryboost)
         set(Boost_USE_STATIC_LIBS OFF)
-        add_compile_definitions(Boost_NAMESPACE=foundryboost)
-        if(NOT DEFINED Python_VERSION_MAJOR)
-            message(ERROR "Unable to read Python_VERSION_MAJOR from Python "
-                "FindPackage, therefore unable to build Boost_PYTHON_COMPONENT")
+        if(MSVC)
+            add_definitions(-DBOOST_ALL_NO_LIB)
+            add_definitions(-DBOOST_ALL_DYN_LINK)
+            set(Boost_ARCHITECTURE -x64)
+            set(Boost_COMPILER -vc141)
         endif()
-        set(Boost_PYTHON_COMPONENT python${Python_VERSION_MAJOR}${Python_VERSION_MINOR})
+        add_compile_definitions(Boost_NAMESPACE=${Boost_NAMESPACE})
     endif()
-    find_package(Boost COMPONENTS filesystem ${Boost_PYTHON_COMPONENT} thread system regex REQUIRED)
+    find_package(Boost 1.70.0
+        COMPONENTS
+            filesystem
+            ${Boost_PYTHON_COMPONENT}
+            thread
+            system
+            regex
+        REQUIRED)
 endfunction(add_boost_interface) # add_boost_interface
 
 
@@ -63,6 +83,8 @@ function(add_python_interface)
                 INTERFACE_INCLUDE_DIRECTORIES "${Python_INCLUDE_DIRS}"
                 INTERFACE_LINK_LIBRARIES "${Python_LIBRARIES}"
         )
+        set(Python_VERSION_MAJOR ${KATANA_PYTHON_VERSION_MAJOR} PARENT_SCOPE)
+        set(Python_VERSION_MINOR ${KATANA_PYTHON_VERSION_MINOR} PARENT_SCOPE)
     elseif(DEFINED Python_ROOT_DIR)
         find_package(Python COMPONENTS Interpreter Development REQUIRED)
         if(Python_INCLUDE_DIRS AND Python_LIBRARIES AND Python_EXECUTABLE)
@@ -101,26 +123,20 @@ function(add_tbb_interface)
         endif()
         add_library(TBB::tbb INTERFACE IMPORTED)
         if(KATANA_API_LOCATION)
+            if(UNIX)
+                set(tbb_lib_suffix so)
+            elseif(WIN32)
+                set(tbb_lib_suffix lib)
+            endif() # OS Type
             set_target_properties(TBB::tbb
                 PROPERTIES
                     INTERFACE_INCLUDE_DIRECTORIES
-                        "${KATANA_API_LOCATION}/external/FnTBB/include"
+                        "${KATANA_API_LOCATION}/external/tbb/include"
                     INTERFACE_COMPILE_DEFINITIONS
                         "__TBB_NO_IMPLICIT_LINKAGE=1"
+                    INTERFACE_LINK_LIBRARIES
+                        "${KATANA_API_LOCATION}/bin/tbb.${tbb_lib_suffix}"
             )
-            if(UNIX)
-                set_target_properties(TBB::tbb
-                    PROPERTIES
-                        INTERFACE_LINK_LIBRARIES
-                            "${KATANA_API_LOCATION}/bin/libtbb2017_Foundry.so.2"
-                )
-            elseif(WIN32)
-                set_target_properties(TBB::tbb
-                    PROPERTIES
-                        INTERFACE_LINK_LIBRARIES
-                            "${KATANA_API_LOCATION}/bin/tbb2017_Foundry.lib"
-                )
-            endif() # OS Type
         else()
             message(FATAL_ERROR "KATANA_API_LOCATION must be set if using the"
                 " USE_KATANA_TBB option")
@@ -148,19 +164,18 @@ function(add_usd_interface)
     if(USE_KATANA_USD)
         set(USD_LIBRARY_DIR ${KATANA_API_LOCATION}/bin)
         set(USD_INCLUDE_DIR ${KATANA_API_LOCATION}/external/FnUSD/include)
+        set(PXR_LIB_PREFIX foundry)
         if(UNIX)
-            set(PXR_LIB_PREFIX libFn)
+            set(PXR_LIB_PREFIX libfoundry)
         endif()
         find_package(USD REQUIRED)
     elseif(USE_FOUNDRY_FIND_USD)
         find_package(USD REQUIRED)
     else()
-        if(NOT TARGET GLEW::GLEW)
-            find_package(GLEW CONFIG REQUIRED)
+        if(USD_USING_CMAKE_THIRDPARTY_TARGET_DEPENDENCIES)
+            find_package(OpenEXR CONFIG REQUIRED)
+            find_package(OpenSubdiv REQUIRED)
         endif()
-        find_package(OpenEXR CONFIG REQUIRED)
-        find_package(OpenImageIO CONFIG REQUIRED)
-        find_package(OpenSubdiv REQUIRED)
         if(NOT DEFINED USD_ROOT)
             message(FATAL_ERROR "Build option USD_ROOT is not defined")
         endif()

@@ -105,12 +105,12 @@ function(pxr_library NAME)
         _get_install_dir("lib/usd" pluginInstallPrefix)
 
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
-            _katana_build_install(${NAME} Usd/lib)
+            _katana_build_install(${NAME} lib)
             if(args_PUBLIC_HEADERS)
                 foreach(file ${args_PUBLIC_HEADERS})
                     file(COPY ${file}
                         DESTINATION
-                            ${PLUGINS_RES_BUNDLE_PATH}/Usd/include/${NAME}
+                            ${PXR_INSTALL_SUBDIR}/include/${NAME}
                     )
                 endforeach()
             endif()
@@ -125,7 +125,7 @@ function(pxr_library NAME)
     elseif (args_TYPE STREQUAL "PLUGIN")
         add_library(${NAME} SHARED "${args_CPPFILES};${${NAME}_CPPFILES}")
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
-            _katana_build_install(${NAME} Usd/plugin/Libs)
+            _katana_build_install(${NAME} plugin/Libs)
         endif()
         set_target_properties(${NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
         list(APPEND ${NAME}_DEFINITIONS ${uppercaseName}_EXPORTS=1)
@@ -236,7 +236,7 @@ function(pxr_library NAME)
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
             _katana_build_install(
                 ${pythonWrapperModuleName}
-                Usd/lib/python/${pyModuleName}
+                lib/python/${pyModuleName}
             )
         endif()
         target_compile_options(

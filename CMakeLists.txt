@@ -21,8 +21,6 @@ endif()
 message(STATUS "KATANA_API_SOURCE_DIR is ${KATANA_API_SOURCE_DIR}")
 message(STATUS "GEOLIB_API_SOURCE_DIR is ${GEOLIB_API_SOURCE_DIR}")
 
-set(PXR_INSTALL_SUBDIR "")
-
 option(ENABLE_USD_EXPORT "Enables building and installing the \
     UsdExport subdirectory and supporting logic." ON)
 
@@ -33,10 +31,21 @@ option(ENABLE_KATANAUSD_PYTHON_PLUGINS "Enabled building features which \
     require the Python modules from USD, these include UsdExport and the \
     usdKatana python module" ON)
 
+option(USD_USING_CMAKE_THIRDPARTY_TARGET_DEPENDENCIES "When Enabled this \
+    uses find_package on OpenEXR OpenImageIO and OpenSubdiv which are \
+    required when linking to some of the USD libraries we use." OFF)
+
+if(USE_KATANA_THIRDPARTY_LIBS)
+    set(USD_USING_CMAKE_THIRDPARTY_TARGET_DEPENDENCIES OFF)
+endif()
+
 if(NOT ENABLE_KATANAUSD_PYTHON_PLUGINS)
     set(ENABLE_USD_EXPORT OFF)
 endif()
 
+if(MSVC)
+    add_definitions(-DHAVE_SNPRINTF=ON)
+endif()
 add_subdirectory(lib)
 add_subdirectory(plugin)
 add_subdirectory(python)
