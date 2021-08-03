@@ -80,6 +80,7 @@ PxrUsdKatanaReadLight(
         PxrUsdKatanaAttrMap& attrs)
 {
     const UsdPrim lightPrim = light.GetPrim();
+    const SdfPath primPath = lightPrim.GetPath();
     const UsdTimeCode currentTimeCode = data.GetCurrentTime();
     const bool prmanOutputTarget = data.hasOutputTarget("prman");
     attrs.SetUSDTimeCode(currentTimeCode);
@@ -331,11 +332,6 @@ PxrUsdKatanaReadLight(
     attrs.set("geometry", geomBuilder.build());
     attrs.set("type", FnKat::StringAttribute("light"));
     attrs.set("usd", primStatements.build());
-
-    // This attribute makes the light discoverable by the GafferThree node.
-    FnKat::GroupBuilder gafferBuilder;
-    gafferBuilder.set("packageClass", FnAttribute::StringAttribute("LightPackage"));
-    attrs.set("info.gaffer", gafferBuilder.build());
 
     PxrUsdKatanaReadXformable(light, data, attrs);
 }
