@@ -11,7 +11,7 @@ function(pxr_katana_nodetypes NODE_TYPES)
 
     foreach (nodeType ${NODE_TYPES})
         list(APPEND pyFiles ${nodeType}.py)
-        set(importLines "import ${nodeType}\n")
+        set(importLines "from . import ${nodeType}\n")
     endforeach()
 
     foreach(pyfile ${pyFiles})
