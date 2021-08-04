@@ -608,7 +608,8 @@ _KTypeAndSizeFromUsdVec3(TfToken const &roleName,
         *inputTypeAttr = FnKat::StringAttribute("normal3");
     } else if (roleName == SdfValueRoleNames->Color) {
         *inputTypeAttr = FnKat::StringAttribute("color3");
-    } else if (roleName.IsEmpty()) {
+    } else if (roleName == SdfValueRoleNames->TextureCoordinate ||
+               roleName.IsEmpty()) {
         // Deserves explanation: there is no type in prman
         // (or apparently, katana) that represents
         // "a 3-vector with no additional behavior/meaning.
