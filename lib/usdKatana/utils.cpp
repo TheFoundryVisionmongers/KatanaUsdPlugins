@@ -209,6 +209,13 @@ static const std::string _ResolveAssetPath(const SdfAssetPath& assetPath)
                 }
             }
         }
+
+        // TP 485194: As of 21.05, HdStorm will attempt to bind missing textures, causing a crash
+        // when it tries to dereference the texture to get its GLuint handle.  If we couldn't
+        // resolve the path, return an empty string; unfortunately this means we don't show the
+        // original path in Katana attributes.
+        TF_WARN("No resolved path for UDIM texture @%s@", rawPath.c_str());
+        return std::string();
     }
 
     // There's no resolved path and it's not a UDIM path.
