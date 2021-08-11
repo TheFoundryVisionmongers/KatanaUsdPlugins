@@ -306,18 +306,26 @@ endfunction() # _install_resource_files
 # Function to automatically replace pxr python module usage with the specified
 # PXR_PY_PACKAGE_NAME module name. E.g `from pxr` becomes `from fnpxr`.
 function(_replace_root_python_module INPUT_FILE OUTPUT_FILE)
+
+    # We need to check the file exists before we run configure file.
+    # The output file exists check
+    set(output_file_exists OFF)
+    if(EXISTS ${OUTPUT_FILE})
+        set(output_file_exists ON)
+    endif()
+    # We must always run a configure file.
+    configure_file(${INPUT_FILE} ${OUTPUT_FILE} COPYONLY)
     if(${PXR_PY_PACKAGE_NAME} STREQUAL "pxr")
         # We must always configure file, since some methods rely on the output
         # file being valid and present. However, we do not need to perform
         # any replacements.
-        configure_file(${INPUT_FILE} ${OUTPUT_FILE} COPYONLY)
         return()
     endif()
 
     # We want to restrict how much we write the output files, since the
     # compiler will regenerate objects if the output file is re-written to
     # again.
-    if(EXISTS ${OUTPUT_FILE})
+    if(${output_file_exists})
         get_filename_component(out_ext ${INPUT_FILE} EXT)
         if(out_ext)
             if((${out_ext} STREQUAL ".py"))
@@ -362,6 +370,7 @@ function(_replace_root_python_module INPUT_FILE OUTPUT_FILE)
     endif()
 
     # Either the output file didn't exist, or there's been other changes
+    message(INFO "Converting python namespace and installing file to: ${OUTPUT_FILE}")
     file(WRITE ${OUTPUT_FILE} "${filedata}")
 endfunction()
 
