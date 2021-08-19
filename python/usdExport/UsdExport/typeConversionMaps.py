@@ -57,7 +57,14 @@ RenderInfoShaderTagToSdfMap = {
     "int": Sdf.ValueTypeNames.Int,
     "array_int": Sdf.ValueTypeNames.IntArray,
     "matrix": Sdf.ValueTypeNames.Matrix4d,
-    "normal": Sdf.ValueTypeNames.Normal3f
+    "normal": Sdf.ValueTypeNames.Normal3f,
+
+    # These are SdrPropertyTypes that have no corresponding SdfValueType; USD
+    # docs recommends just mapping them to Token:
+    #   https://graphics.pixar.com/usd/docs/api/sdr_page_front.html.
+    "struct": Sdf.ValueTypeNames.Token,
+    "terminal": Sdf.ValueTypeNames.Token,
+    "vstruct": Sdf.ValueTypeNames.Token,
 }
 
 
@@ -83,6 +90,8 @@ def ConvertRenderInfoShaderTagsToSdfType(tags):
         sdfType = RenderInfoShaderTagToSdfMap.get(tagToUse)
         if sdfType is not None:
             return sdfType
+
+    log.error("Unhandled shader type tags: %s", tagsList)
     return None
 
 
@@ -99,7 +108,7 @@ def ConvertToVtVec3fArray(array):
     isValid = (arraySize % 3) == 0
     if not isValid:
         log.error(
-            "Coudln't convert the array to Vt.Vec3fArray because the number of"
+            "Couldn't convert the array to Vt.Vec3fArray because the number of"
             "elements is not divisible by 3")
         return Vt.Vec3fArray()
 

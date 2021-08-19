@@ -161,10 +161,10 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
         if connectionsAttr:
             AddShaderConnections(
                 stage, connectionsAttr, materialPath, shader)
-
-        shaderLayoutAttr = layoutAttr.getChildByName(shaderName)
-        if shaderLayoutAttr:
-            AddShaderLayout(shaderLayoutAttr, shader)
+        if layoutAttr:
+            shaderLayoutAttr = layoutAttr.getChildByName(shaderName)
+            if shaderLayoutAttr:
+                AddShaderLayout(shaderLayoutAttr, shader)
 
     interfaces = materialAttribute.getChildByName("interface")
     if interfaces:
@@ -244,6 +244,7 @@ def CreateEmptyShaders(stage, materialNodes, materialPath):
         materialNode = materialNodes.getChildByIndex(materialNodeIndex)
         shaderName = materialNodes.getChildName(materialNodeIndex)
         shaderPath = materialPath.AppendChild(shaderName)
+
         shader = UsdShade.Shader.Define(stage, shaderPath)
         shaderIdAttr = materialNode.getChildByName("type")
         shaderId = str(shaderIdAttr.getValue())
@@ -528,8 +529,15 @@ def AddShaderConnections(stage, connectionsAttr, materialPath, shader):
         # the input type is more specific than the type it connects to
         # i.e. the connection may deliver POD but the semantics of its use
         # are in the input type
-        portConnectionSdfType = shaderNode.GetInput(
-            connectionName).GetTypeAsSdfType()[0]
+        shaderNodeInput = shaderNode.GetInput(connectionName)
+        if not shaderNodeInput:
+            log.warning(
+                "Couldn't find input connection port: {}.{} "
+                "so skipping connection from {} ({})".format(
+                    shader.GetPath(), connectionName,
+                    connectionAttr.getValue(), inputShader.GetShaderId()))
+            continue
+        portConnectionSdfType = shaderNodeInput.GetTypeAsSdfType()[0]
 
         inputPort = shader.CreateInput(connectionName, portConnectionSdfType)
 
@@ -641,8 +649,13 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
             else:
                 shaderNode = GetShaderNodeFromRegistry(shaderId)
                 shaderNodeInput = shaderNode.GetInput(sourceParamName)
-                materialPort.Set(shaderNodeInput.GetDefaultValue())
-
+                if shaderNodeInput:
+                    if shaderNodeInput.GetType() == 'float' and \
+                    shaderNodeInput.IsArray() and \
+                    shaderNodeInput.GetArraySize() == 2:
+                        materialPort.Set(tuple(shaderNodeInput.GetDefaultValue()))
+                    else:
+                        materialPort.Set(shaderNodeInput.GetDefaultValue())
         if groupName:
             # For now we need to manually replace "." with ":". In the future
             # we should use SetNestedDisplayGroups() when avialiable.
