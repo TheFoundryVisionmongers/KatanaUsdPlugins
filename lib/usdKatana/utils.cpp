@@ -1043,7 +1043,7 @@ _Traverse(const UsdPrim &prim,
         flags = flags && UsdPrimIsModel;
     }
     for (const UsdPrim &child:
-         prim.GetFilteredChildren(UsdTraverseInstanceProxies(flags))) {
+             prim.GetFilteredChildren(UsdTraverseInstanceProxies(flags))) {
         _Traverse(child, mode, seen, lights);
     }
 }

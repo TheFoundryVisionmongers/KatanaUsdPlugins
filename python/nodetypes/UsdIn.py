@@ -35,6 +35,8 @@ from Katana import (
     FnGeolibServices,
 )
 
+# pylint: disable=function-redefined
+
 def getScenegraphLocation(self, frameTime):
     return self.getParameter('location').getValue(frameTime)
 
@@ -363,11 +365,9 @@ def buildOpChain(self, interface):
         if self.getParameter('includeProxyForArchive').getValue(frameTime):
             sscb.addSubOpAtLocation(location,
                     'UsdIn.AddViewerProxy', attrs)
-        
-        
+
         interface.appendOp('StaticSceneCreate', sscb.build())
         return
-    
     
     graphState = interface.getGraphState()
     pxrUsdInArgs = self.buildPxrUsdInOpArgsAtGraphState(graphState)
@@ -387,6 +387,8 @@ def buildOpChain(self, interface):
 
     sscb.addSubOpAtLocation(self.getScenegraphLocation(
         interface.getFrameTime()), 'UsdIn', pxrUsdInArgs)
+    sscb.addSubOpAtLocation(
+        '/root/world', 'UsdIn.UpdateGlobalLists', pxrUsdInArgs)
 
     sscb.setAttrAtLocation('/root', 'info.usdLoader', FnAttribute.StringAttribute('UsdIn'))
 

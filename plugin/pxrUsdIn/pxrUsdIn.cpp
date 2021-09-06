@@ -75,6 +75,237 @@ namespace FnKat = Foundry::Katana;
     interface.setAttr("errorMessage", Foundry::Katana::StringAttribute(\
         TfStringPrintf(__VA_ARGS__)));
 
+static PxrUsdKatanaUsdInArgsRefPtr
+InitUsdInArgs(const FnKat::GroupAttribute & opArgs,
+              FnKat::GroupAttribute & additionalOpArgs,
+              const std::string & rootLocationPath)
+{
+    ArgsBuilder ab;
+
+    FnKat::StringAttribute usdFileAttr = opArgs.getChildByName("fileName");
+    if (!usdFileAttr.isValid())
+    {
+        return ab.buildWithError("UsdIn: USD fileName not specified.");
+    }
+
+    std::string fileName = usdFileAttr.getValue();
+        
+    ab.rootLocation = FnKat::StringAttribute(
+        opArgs.getChildByName("location")).getValue(
+            rootLocationPath, false);
+        
+    std::string sessionLocation = ab.rootLocation;
+    FnKat::StringAttribute sessionLocationAttr = 
+        opArgs.getChildByName("sessionLocation");
+    if (sessionLocationAttr.isValid()) {
+        sessionLocation = sessionLocationAttr.getValue();
+    }
+        
+    FnAttribute::GroupAttribute sessionAttr = 
+        opArgs.getChildByName("session");
+        
+    // XXX BEGIN convert the legacy variant string to the session
+    // TODO(pxr): decide how long to do this as this form has been deprecated
+    //            for some time but may still be present in secondary uses
+    FnAttribute::GroupBuilder legacyVariantsGb;
+        
+    std::string variants = FnKat::StringAttribute(
+        opArgs.getChildByName("variants")).getValue("", false);
+    std::set<std::string> selStrings = TfStringTokenizeToSet(variants);
+    for (const std::string selString : selStrings)
+    {
+        std::string errMsg;
+        if (SdfPath::IsValidPathString(selString, &errMsg))
+        {
+            SdfPath varSelPath(selString);
+            if (varSelPath.IsPrimVariantSelectionPath())
+            {
+                std::string entryPath = FnAttribute::DelimiterEncode(
+                    sessionLocation + varSelPath.GetPrimPath().GetString());
+                std::pair<std::string, std::string> sel =
+                    varSelPath.GetVariantSelection();
+                    
+                legacyVariantsGb.set(entryPath + "." + sel.first,
+                                     FnAttribute::StringAttribute(sel.second));
+                continue;
+            }
+        }
+            
+        return ab.buildWithError(
+            TfStringPrintf("UsdIn: Bad variant selection \"%s\"",
+                           selString.c_str()).c_str());
+    }
+        
+    FnAttribute::GroupAttribute legacyVariants = legacyVariantsGb.build();
+        
+    if (legacyVariants.getNumberOfChildren() > 0)
+    {
+        sessionAttr = FnAttribute::GroupBuilder()
+            .set("variants", legacyVariants)
+            .deepUpdate(sessionAttr)
+            .build();
+    }
+    // XXX END
+
+    ab.sessionLocation = sessionLocation;
+    ab.sessionAttr = sessionAttr;
+
+    ab.ignoreLayerRegex = FnKat::StringAttribute(
+        opArgs.getChildByName("ignoreLayerRegex")).getValue("", false);
+
+    ab.verbose = FnKat::IntAttribute(
+        opArgs.getChildByName("verbose")).getValue(0, false);
+
+    typedef FnAttribute::StringAttribute::array_type StringArrayType;
+    FnAttribute::StringAttribute outputTargetArgStr = opArgs.getChildByName("outputTarget");
+    if (outputTargetArgStr.isValid())
+    {
+        StringArrayType outputTargetVector = outputTargetArgStr.getNearestSample(0);
+        for (auto& target : outputTargetVector)
+        {
+            ab.outputTargets.insert(target);
+        }
+    }
+
+    FnKat::GroupAttribute systemArgs(opArgs.getChildByName("system"));
+
+    ab.currentTime = 
+        FnKat::FloatAttribute(systemArgs.getChildByName(
+                                  "timeSlice.currentTime")).getValue(0, false);
+
+    int numSamples = 
+        FnKat::IntAttribute(systemArgs.getChildByName(
+                                "timeSlice.numSamples")).getValue(1, false);
+
+    ab.shutterOpen =
+        FnKat::FloatAttribute(systemArgs.getChildByName(
+                                  "timeSlice.shutterOpen")).getValue(0, false);
+
+    ab.shutterClose =
+        FnKat::FloatAttribute(systemArgs.getChildByName(
+                                  "timeSlice.shutterClose")).getValue(0, false);
+
+    std::string motionSampleStr = FnKat::StringAttribute(
+        opArgs.getChildByName("motionSampleTimes")).getValue("", false);
+
+    // If motion samples was specified, convert the string of values
+    // into a vector of doubles to store with the root args.
+    if (numSamples < 2 || motionSampleStr.empty())
+    {
+        ab.motionSampleTimes.push_back(0);
+    }
+    else
+    {
+        std::vector<std::string> tokens;
+        pystring::split(motionSampleStr, tokens, " ");
+
+        for (std::vector<std::string>::iterator it = tokens.begin(); 
+             it != tokens.end(); ++it)
+        {
+            ab.motionSampleTimes.push_back(std::stod(*it));
+        }
+    }
+
+    // Determine whether to prepopulate the USD stage.
+    ab.prePopulate =
+        FnKat::IntAttribute(opArgs.getChildByName("prePopulate"))
+        .getValue(1 /* default prePopulate=yes */ , false);
+
+    ab.isolatePath = FnKat::StringAttribute(
+        opArgs.getChildByName("isolatePath")).getValue("", false);
+
+    ab.stage =  UsdKatanaCache::GetInstance().GetStage(
+        fileName, 
+        sessionAttr, sessionLocation,
+        ab.isolatePath,
+        ab.ignoreLayerRegex, 
+        ab.prePopulate);
+
+    if (!ab.stage) {
+        return ab.buildWithError("UsdIn: USD Stage cannot be loaded.");
+    }
+
+    FnAttribute::StringAttribute instanceModeAttr = opArgs.getChildByName("instanceMode");
+    if (instanceModeAttr.getValue("expanded", false) == "as sources and instances")
+    {
+        FnKat::GroupAttribute mappingAttr = PxrUsdKatanaUtils::BuildInstanceMasterMapping(
+            ab.stage, SdfPath::AbsoluteRootPath());
+        additionalOpArgs = FnKat::GroupAttribute("masterMapping", mappingAttr, true);
+    }
+
+    // if the specified isolatePath is not a valid prim, clear it out
+    if (!ab.isolatePath.empty() && !ab.stage->GetPrimAtPath(
+            SdfPath(ab.isolatePath)))
+    {
+        std::ostringstream errorBuffer;
+        errorBuffer << "UsdIn: Invalid isolatePath: " << 
+            ab.isolatePath << ".";
+        return ab.buildWithError(errorBuffer.str());
+    }
+
+    // get extra attributes or namespaces if they exist
+    FnKat::StringAttribute extraAttributesOrNamespacesAttr = 
+        opArgs.getChildByName("extraAttributesOrNamespaces");
+
+    if (extraAttributesOrNamespacesAttr.isValid())
+    {
+        std::vector<std::string> tokens;
+
+        FnKat::StringAttribute::array_type values =
+            extraAttributesOrNamespacesAttr.getNearestSample(0.0f);
+            
+        for (FnKat::StringAttribute::array_type::const_iterator I =
+                 values.begin(); I != values.end(); ++I)
+        {
+            std::string value(*I);
+            if (value.empty())
+            {
+                continue;
+            }
+                
+            pystring::split(value, tokens, ":", 1);
+            ab.extraAttributesOrNamespaces[tokens[0]].push_back(value);
+        }
+    }
+        
+    FnKat::StringAttribute materialBindingPurposesAttr = 
+        opArgs.getChildByName("materialBindingPurposes");
+    if (materialBindingPurposesAttr.getNumberOfValues())
+    {
+        auto sample = materialBindingPurposesAttr.getNearestSample(0.0f);
+
+        for (const auto & v : sample)
+        {
+            ab.materialBindingPurposes.emplace_back(v);
+        }
+    }
+
+    // always include userProperties if not explicitly included.
+    if (ab.extraAttributesOrNamespaces.find("userProperties")
+        == ab.extraAttributesOrNamespaces.end())
+    {
+        ab.extraAttributesOrNamespaces["userProperties"].push_back(
+            "userProperties");
+    }
+    else
+    {
+        // if it is there, enforce that it includes only the top-level attr
+        std::vector<std::string> & userPropertiesNames =
+            ab.extraAttributesOrNamespaces["userProperties"];
+            
+        userPropertiesNames.clear();
+        userPropertiesNames.push_back("userProperties");
+    }
+
+    ab.evaluateUsdSkelBindings = static_cast<bool>(
+        FnKat::IntAttribute(
+            opArgs.getChildByName("evaluateUsdSkelBindings"))
+        .getValue(1, false));
+
+    return ab.build();
+}
+
+
 // see overview.dox for more documentation.
 class PxrUsdInOp : public FnKat::GeolibOp
 {
@@ -187,46 +418,6 @@ public:
 
             interface.setAttr("info.usd.stageIsZup",
                               FnKat::IntAttribute(stageIsZup));
-
-            // Construct the global camera list at the USD scene root.
-            //
-            FnKat::StringBuilder cameraListBuilder;
-
-            SdfPathVector cameraPaths = PxrUsdKatanaUtils::FindCameraPaths(stage);
-
-            TF_FOR_ALL(cameraPathIt, cameraPaths)
-            {
-                const std::string path = (*cameraPathIt).GetString();
-
-                // only add cameras to the camera list that are beneath 
-                // the isolate prim path
-                if (path.find(usdInArgs->GetIsolatePath()) != 
-                    std::string::npos)
-                {
-                    cameraListBuilder.push_back(
-                        TfNormPath(usdInArgs->GetRootLocationPath()+"/"+
-                            path.substr(usdInArgs->GetIsolatePath().size())));
-                }
-            }
-
-            FnKat::StringAttribute cameraListAttr = cameraListBuilder.build();
-            if (cameraListAttr.getNumberOfValues() > 0)
-            {
-                interface.setAttr("cameraList", cameraListAttr);
-            }
-
-            // lightList and some globals.itemLists.
-            SdfPathVector lightPaths = PxrUsdKatanaUtils::FindLightPaths(stage);
-            stage->LoadAndUnload(SdfPathSet(lightPaths.begin(), lightPaths.end()),
-                                 SdfPathSet());
-            PxrUsdKatanaUtilsLightListEditor lightListEditor(interface,
-                                                             usdInArgs);
-            for (const SdfPath &p: lightPaths) {
-                lightListEditor.SetPath(p);
-                PxrUsdKatanaUsdInPluginRegistry::
-                    ExecuteLightListFncs(lightListEditor);
-            }
-            lightListEditor.Build();
             
             interface.setAttr("info.usdOpArgs", opArgs);
             interface.setAttr("info.usd.outputSession", usdInArgs->GetSessionAttr());
@@ -242,11 +433,7 @@ public:
             
             interface.setAttr("info.usdOpArgs", opArgs);
             interface.setAttr("info.usd.outputSession", usdInArgs->GetSessionAttr());
-
-
         }
-        
-        
 
         bool verbose = usdInArgs->IsVerbose();
 
@@ -671,8 +858,8 @@ public:
                     *privateData, opArgs, interface);
         }
 
-        if (!skipAllChildren) {
-
+        if (!skipAllChildren)
+        {
             std::set<std::string> childrenToSkip;
             FnKat::GroupAttribute childOps = interface.getOutputAttr(
                 "__UsdIn.skipChild");
@@ -750,257 +937,9 @@ public:
         if (!verbose) {
             interface.deleteAttr("__UsdIn");
         }
-        
-        
-        
-        
-    }
-
-    
-
-    static PxrUsdKatanaUsdInArgsRefPtr
-    InitUsdInArgs(const FnKat::GroupAttribute & opArgs,
-            FnKat::GroupAttribute & additionalOpArgs,
-            const std::string & rootLocationPath)
-    {
-        ArgsBuilder ab;
-
-        FnKat::StringAttribute usdFileAttr = opArgs.getChildByName("fileName");
-        if (!usdFileAttr.isValid()) {
-            return ab.buildWithError("UsdIn: USD fileName not specified.");
-        }
-
-        std::string fileName = usdFileAttr.getValue();
-        
-        ab.rootLocation = FnKat::StringAttribute(
-                opArgs.getChildByName("location")).getValue(
-                        rootLocationPath, false);
-        
-        
-        std::string sessionLocation = ab.rootLocation;
-        FnKat::StringAttribute sessionLocationAttr = 
-                opArgs.getChildByName("sessionLocation");
-        if (sessionLocationAttr.isValid()) {
-            sessionLocation = sessionLocationAttr.getValue();
-        }
-        
-        FnAttribute::GroupAttribute sessionAttr = 
-            opArgs.getChildByName("session");
-
-        
-        
-        // XXX BEGIN convert the legacy variant string to the session
-        // TODO: decide how long to do this as this form has been deprecated
-        //       for some time but may still be present in secondary uses
-        FnAttribute::GroupBuilder legacyVariantsGb;
-        
-        std::string variants = FnKat::StringAttribute(
-                opArgs.getChildByName("variants")).getValue("", false);
-        std::set<std::string> selStrings = TfStringTokenizeToSet(variants);
-        TF_FOR_ALL(selString, selStrings) {
-            std::string errMsg;
-            if (SdfPath::IsValidPathString(*selString, &errMsg)) {
-                SdfPath varSelPath(*selString);
-                if (varSelPath.IsPrimVariantSelectionPath()) {
-                    
-                    std::string entryPath = FnAttribute::DelimiterEncode(
-                            sessionLocation + 
-                            varSelPath.GetPrimPath().GetString());
-                    std::pair<std::string, std::string> sel =
-                            varSelPath.GetVariantSelection();
-                    
-                    legacyVariantsGb.set(entryPath + "." + sel.first,
-                            FnAttribute::StringAttribute(sel.second));
-                    continue;
-                }
-            }
-            
-            return ab.buildWithError(
-                    TfStringPrintf("UsdIn: Bad variant selection \"%s\"",
-                            selString->c_str()).c_str());
-        }
-        
-        FnAttribute::GroupAttribute legacyVariants = legacyVariantsGb.build();
-        
-        if (legacyVariants.getNumberOfChildren() > 0)
-        {
-            sessionAttr = FnAttribute::GroupBuilder()
-                .set("variants", legacyVariants)
-                .deepUpdate(sessionAttr)
-                .build();
-        }
-        // XXX END
-
-        ab.sessionLocation = sessionLocation;
-        ab.sessionAttr = sessionAttr;
-
-        ab.ignoreLayerRegex = FnKat::StringAttribute(
-                opArgs.getChildByName("ignoreLayerRegex")).getValue("", false);
-
-        ab.verbose = FnKat::IntAttribute(
-                opArgs.getChildByName("verbose")).getValue(0, false);
-
-        typedef FnAttribute::StringAttribute::array_type StringArrayType;
-        FnAttribute::StringAttribute outputTargetArgStr = FnAttribute::StringAttribute(opArgs.getChildByName(
-            "outputTargets"));
-        if (outputTargetArgStr.isValid())
-        {
-            StringArrayType outputTargetVector = outputTargetArgStr.getNearestSample(0);
-            for(StringArrayType::const_iterator it = outputTargetVector.begin() ; 
-                it != outputTargetVector.end() ; 
-                ++it)
-            {
-                ab.outputTargets.insert(*it);
-            }
-        }
-
-
-        FnKat::GroupAttribute systemArgs(opArgs.getChildByName("system"));
-
-        ab.currentTime = 
-            FnKat::FloatAttribute(systemArgs.getChildByName(
-                "timeSlice.currentTime")).getValue(0, false);
-
-        int numSamples = 
-            FnKat::IntAttribute(systemArgs.getChildByName(
-                "timeSlice.numSamples")).getValue(1, false);
-
-        ab.shutterOpen =
-            FnKat::FloatAttribute(systemArgs.getChildByName(
-                "timeSlice.shutterOpen")).getValue(0, false);
-
-        ab.shutterClose =
-            FnKat::FloatAttribute(systemArgs.getChildByName(
-                "timeSlice.shutterClose")).getValue(0, false);
-
-        std::string motionSampleStr = FnKat::StringAttribute(
-                opArgs.getChildByName("motionSampleTimes")).getValue("", false);
-
-        // If motion samples was specified, convert the string of values
-        // into a vector of doubles to store with the root args.
-        //
-        if (numSamples < 2 || motionSampleStr.empty())
-        {
-            ab.motionSampleTimes.push_back(0);
-        }
-        else
-        {
-            std::vector<std::string> tokens;
-            pystring::split(motionSampleStr, tokens, " ");
-
-            for (std::vector<std::string>::iterator it = tokens.begin(); 
-                it != tokens.end(); ++it)
-            {
-                ab.motionSampleTimes.push_back(std::stod(*it));
-            }
-        }
-
-        // Determine whether to prepopulate the USD stage.
-        ab.prePopulate =
-            FnKat::IntAttribute(opArgs.getChildByName("prePopulate"))
-                        .getValue(1 /* default prePopulate=yes */ , false);
-
-        ab.isolatePath = FnKat::StringAttribute(
-            opArgs.getChildByName("isolatePath")).getValue("", false);
-
-        ab.stage =  UsdKatanaCache::GetInstance().GetStage(
-                fileName, 
-                sessionAttr, sessionLocation,
-                ab.isolatePath,
-                ab.ignoreLayerRegex, 
-                ab.prePopulate);
-
-        if (!ab.stage) {
-            return ab.buildWithError("UsdIn: USD Stage cannot be loaded.");
-        }
-
-        if (FnAttribute::StringAttribute(
-                opArgs.getChildByName("instanceMode")
-                    ).getValue("expanded", false) == 
-                "as sources and instances")
-        {
-            additionalOpArgs = FnKat::GroupAttribute("masterMapping",
-                PxrUsdKatanaUtils::BuildInstanceMasterMapping(ab.stage,
-                                      SdfPath::AbsoluteRootPath()), true);
-        }
-
-        // if the specified isolatePath is not a valid prim, clear it out
-        if (!ab.isolatePath.empty() && !ab.stage->GetPrimAtPath(
-            SdfPath(ab.isolatePath)))
-        {
-            std::ostringstream errorBuffer;
-            errorBuffer << "UsdIn: Invalid isolatePath: " << 
-                ab.isolatePath << ".";
-            return ab.buildWithError(errorBuffer.str());
-        }
-
-        // get extra attributes or namespaces if they exist
-        //
-        FnKat::StringAttribute extraAttributesOrNamespacesAttr = 
-            opArgs.getChildByName("extraAttributesOrNamespaces");
-
-        if (extraAttributesOrNamespacesAttr.isValid())
-        {
-            std::vector<std::string> tokens;
-
-            FnKat::StringAttribute::array_type values =
-                extraAttributesOrNamespacesAttr.getNearestSample(0.0f);
-            
-            for (FnKat::StringAttribute::array_type::const_iterator I =
-                    values.begin(); I != values.end(); ++I)
-            {
-                std::string value(*I);
-                if (value.empty())
-                {
-                    continue;
-                }
-                
-                pystring::split(value, tokens, ":", 1);
-                ab.extraAttributesOrNamespaces[tokens[0]].push_back(value);
-            }
-        }
-        
-        FnKat::StringAttribute materialBindingPurposesAttr = 
-                opArgs.getChildByName("materialBindingPurposes");
-        if (materialBindingPurposesAttr.getNumberOfValues())
-        {
-            auto sample = materialBindingPurposesAttr.getNearestSample(0.0f);
-
-            for (const auto & v : sample)
-            {
-                ab.materialBindingPurposes.emplace_back(v);
-            }
-        }
-
-
-
-        // always include userProperties if not explicitly included.
-        if (ab.extraAttributesOrNamespaces.find("userProperties")
-                == ab.extraAttributesOrNamespaces.end())
-        {
-            ab.extraAttributesOrNamespaces["userProperties"].push_back(
-                    "userProperties");
-        }
-        else
-        {
-            // if it is there, enforce that it includes only the top-level attr
-            std::vector<std::string> & userPropertiesNames =
-                    ab.extraAttributesOrNamespaces["userProperties"];
-            
-            userPropertiesNames.clear();
-            userPropertiesNames.push_back("userProperties");
-        }
-
-        ab.evaluateUsdSkelBindings = static_cast<bool>(
-            FnKat::IntAttribute(
-                opArgs.getChildByName("evaluateUsdSkelBindings"))
-                .getValue(1, false));
-
-        return ab.build();
     }
 
 private:
-
     /*
      * Get the write lock and load the USD prim.
      */
@@ -1121,8 +1060,8 @@ public:
             
         FnKat::GroupAttribute additionalOpArgs;
         PxrUsdKatanaUsdInArgsRefPtr usdInArgs =
-                PxrUsdInOp::InitUsdInArgs(interface.getOpArg(),
-                        additionalOpArgs, interface.getRootLocationPath());
+            InitUsdInArgs(interface.getOpArg(),
+                          additionalOpArgs, interface.getRootLocationPath());
         
         if (!usdInArgs) {
             ERROR("Could not initialize PxrUsdIn usdInArgs.");
@@ -1201,8 +1140,8 @@ public:
             
         FnKat::GroupAttribute additionalOpArgs;
         PxrUsdKatanaUsdInArgsRefPtr usdInArgs =
-                PxrUsdInOp::InitUsdInArgs(interface.getOpArg(),
-                        additionalOpArgs, interface.getRootLocationPath());
+            InitUsdInArgs(interface.getOpArg(),
+                          additionalOpArgs, interface.getRootLocationPath());
         
         if (!usdInArgs) {
             ERROR("Could not initialize PxrUsdIn usdInArgs.");
@@ -1474,9 +1413,80 @@ public:
     }
 };
 
+//------------------------------------------------------------------------------
 
+/*
+ * This op updates the global lists "globals.cameraList" and "lightList" at the
+ * /root/world Katana scenegraph location.
+ */
+class PxrUsdInUpdateGlobalListsOp : public FnKat::GeolibOp
+{
+public:
+    static void setup(FnKat::GeolibSetupInterface& interface)
+    {
+        interface.setThreading(FnKat::GeolibSetupInterface::ThreadModeConcurrent);
+    }
 
+    static void cook(FnKat::GeolibCookInterface& interface)
+    {
+        interface.stopChildTraversal();
 
+        PxrUsdKatanaUsdInPrivateData* privateData =
+            static_cast<PxrUsdKatanaUsdInPrivateData*>(interface.getPrivateData());
+        PxrUsdKatanaUsdInArgsRefPtr usdInArgs;
+        if (privateData) {
+            usdInArgs = privateData->GetUsdInArgs();
+        } else {
+            FnKat::GroupAttribute additionalOpArgs;
+            usdInArgs = InitUsdInArgs(interface.getOpArg(), additionalOpArgs,
+                                      interface.getRootLocationPath());
+        }
+        if(!usdInArgs)
+        {
+            return;
+        }
+
+        UsdStagePtr stage = usdInArgs->GetStage();
+        if(!stage)
+        {
+            return;
+        }
+
+        // Extract camera paths.
+        SdfPathVector cameraPaths = PxrUsdKatanaUtils::FindCameraPaths(stage);
+        FnKat::StringBuilder cameraListBuilder;
+        for (const SdfPath& cameraPath : cameraPaths)
+        {
+            const std::string& path = cameraPath.GetString();
+            if (path.find(usdInArgs->GetIsolatePath()) != std::string::npos)
+            {
+                cameraListBuilder.push_back(
+                    TfNormPath(usdInArgs->GetRootLocationPath() + "/" +
+                               path.substr(usdInArgs->GetIsolatePath().size())));
+            }
+        }
+
+        FnKat::StringAttribute cameraListAttr = cameraListBuilder.build();
+        if (cameraListAttr.getNumberOfValues() > 0)
+        {
+            interface.extendAttr("globals.cameraList", cameraListAttr);
+        }
+
+        // Extract light paths.
+        SdfPathVector lightPaths = PxrUsdKatanaUtils::FindLightPaths(stage);
+        stage->LoadAndUnload(SdfPathSet(lightPaths.begin(), lightPaths.end()), SdfPathSet());
+        PxrUsdKatanaUtilsLightListEditor lightListEditor(interface, usdInArgs);
+        for (const SdfPath& lightPath : lightPaths)
+        {
+            lightListEditor.SetPath(lightPath);
+            PxrUsdKatanaUsdInPluginRegistry::ExecuteLightListFncs(lightListEditor);
+        }
+
+        lightListEditor.Build();
+    }
+};
+
+//------------------------------------------------------------------------------
 
 class FlushStageFnc : public Foundry::Katana::AttributeFunction
 {
@@ -1487,9 +1497,7 @@ public:
                 readerLock(UsdKatanaGetStageLock());
         
         FnKat::GroupAttribute additionalOpArgs;
-        auto usdInArgs = PxrUsdInOp::InitUsdInArgs(args, additionalOpArgs,
-                "/root");
-        
+        auto usdInArgs = InitUsdInArgs(args, additionalOpArgs, "/root");
         if (usdInArgs)
         {
             boost::upgrade_to_unique_lock<boost::upgrade_mutex>
@@ -1503,8 +1511,6 @@ public:
 
 };
 
-
-
 //-----------------------------------------------------------------------------
 
 DEFINE_GEOLIBOP_PLUGIN(PxrUsdInOp)
@@ -1512,20 +1518,18 @@ DEFINE_GEOLIBOP_PLUGIN(PxrUsdInBootstrapOp)
 DEFINE_GEOLIBOP_PLUGIN(PxrUsdInMaterialGroupBootstrapOp)
 DEFINE_GEOLIBOP_PLUGIN(PxrUsdInBuildIntermediateOp)
 DEFINE_GEOLIBOP_PLUGIN(PxrUsdInAddViewerProxyOp)
+DEFINE_GEOLIBOP_PLUGIN(PxrUsdInUpdateGlobalListsOp);
 DEFINE_ATTRIBUTEFUNCTION_PLUGIN(FlushStageFnc);
 
 void registerPlugins()
 {
     REGISTER_PLUGIN(PxrUsdInOp, "UsdIn", 0, 1);
     REGISTER_PLUGIN(PxrUsdInBootstrapOp, "UsdIn.Bootstrap", 0, 1);
-    REGISTER_PLUGIN(PxrUsdInMaterialGroupBootstrapOp, 
-        "UsdIn.BootstrapMaterialGroup", 0, 1);
-    REGISTER_PLUGIN(PxrUsdInBuildIntermediateOp,
-        "UsdIn.BuildIntermediate", 0, 1);    
-    REGISTER_PLUGIN(PxrUsdInAddViewerProxyOp,
-        "UsdIn.AddViewerProxy", 0, 1);    
-    REGISTER_PLUGIN(FlushStageFnc,
-        "UsdIn.FlushStage", 0, 1);
+    REGISTER_PLUGIN(PxrUsdInMaterialGroupBootstrapOp, "UsdIn.BootstrapMaterialGroup", 0, 1);
+    REGISTER_PLUGIN(PxrUsdInBuildIntermediateOp, "UsdIn.BuildIntermediate", 0, 1);
+    REGISTER_PLUGIN(PxrUsdInAddViewerProxyOp, "UsdIn.AddViewerProxy", 0, 1);
+    REGISTER_PLUGIN(PxrUsdInUpdateGlobalListsOp, "UsdIn.UpdateGlobalLists", 0, 1);
+    REGISTER_PLUGIN(FlushStageFnc, "UsdIn.FlushStage", 0, 1);
     
     PxrUsdKatanaBootstrap();
     PxrVtKatanaBootstrap();
