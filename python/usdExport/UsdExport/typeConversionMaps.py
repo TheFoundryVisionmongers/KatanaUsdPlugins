@@ -25,9 +25,12 @@ Module containing some helpful conversion maps to assist in type conversions.
 
 import logging
 
+import PyFnAttribute
+from Katana import FnAttribute
+
 log = logging.getLogger("UsdExport")
 try:
-    from pxr import Sdf, Vt
+    from pxr import  Gf, Sdf, Vt
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
@@ -43,6 +46,13 @@ ValueTypeCastMethods = {
     Sdf.ValueTypeNames.Token: str,
     Sdf.ValueTypeNames.UInt: int,
     Sdf.ValueTypeNames.UInt64: int,
+}
+
+FnAttributeToSdfType = {
+    FnAttribute.StringAttribute: Sdf.ValueTypeNames.String,
+    FnAttribute.IntAttribute: Sdf.ValueTypeNames.Int,
+    FnAttribute.FloatAttribute: Sdf.ValueTypeNames.Float,
+    FnAttribute.DoubleAttribute: Sdf.ValueTypeNames.Double,
 }
 
 RenderInfoShaderTagToSdfMap = {
@@ -122,3 +132,55 @@ def ConvertToVtVec3fArray(array):
         j = i * 3
         newarray.append((array[j], array[j + 1], array[j + 2]))
     return Vt.Vec3fArray(newarray)
+
+def ConvertParameterValueToGfType(value, sdfType):
+    """
+    Converts the Katana attribute into its equivalent Gf type based on the
+    C{sdfType} provided.
+
+    @type value: C{PyFnAttribute}
+    @type sdfType: C{Sdf.ValueTypeNames}
+    @rtype: C{Gf}
+    @param value: The value to be cast to a Gf equivalent.
+    @param sdfType: The type to cast to.
+    @return: The Gf type casted value.
+    """
+    if sdfType.type.pythonClass:
+        gfCast = sdfType.type.pythonClass
+    else:
+        gfCast = ValueTypeCastMethods.get(sdfType)
+    if gfCast:
+        if isinstance(value, PyFnAttribute.ConstVector):
+            # Convert Katana's PyFnAttribute.ConstVector to a python list
+            if isinstance(gfCast(), Vt.Vec3fArray):
+                value = ConvertToVtVec3fArray(value)
+            else:
+                value = [v for v in value]
+        if isinstance(value, list):
+            if len(value) == 1:
+                value = gfCast(value[0])
+            elif hasattr(gfCast, "dimension"):
+                if gfCast.dimension == 2:
+                    value = gfCast(value[0], value[1])
+                elif gfCast.dimension == 3:
+                    value = gfCast(value[0], value[1], value[2])
+                elif gfCast.dimension == 4:
+                    value = gfCast(value[0], value[1], value[2], value[3])
+                elif gfCast.dimension == (2, 2):
+                    value = gfCast(
+                        value[0], value[1],
+                        value[2], value[3])
+                elif gfCast.dimension == (3, 3):
+                    value = gfCast(
+                        value[0], value[1], value[2],
+                        value[3], value[4], value[5],
+                        value[6], value[7], value[8])
+                elif gfCast.dimension == (4, 4):
+                    value = gfCast(
+                        value[0], value[1], value[2], value[3],
+                        value[4], value[5], value[6], value[7],
+                        value[8], value[9], value[10], value[11],
+                        value[12], value[13], value[14], value[15])
+            elif gfCast in [Gf.Quath, Gf.Quatf, Gf.Quatd]:
+                value = gfCast(value[0], value[1], value[2], value[3])
+    return value

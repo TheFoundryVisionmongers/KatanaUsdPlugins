@@ -38,6 +38,8 @@ try:
     # These includes also require fnpxr
     from UsdExport.material import (WriteMaterial, WriteMaterialAssign,
                                     WriteChildMaterial)
+    from UsdExport.light import (WriteLight)
+    from UsdExport.transform import (WriteTransform)
     from UsdExport.prmanStatements import (
         WritePrmanStatements, WritePrmanGeomGprims, WritePrmanModel)
 
@@ -60,7 +62,7 @@ class UsdExport(BaseOutputFormat):
     FileExtension = ""
     PassFileExtension = "usda"
     Hidden = True
-    LocationTypeWritingOrder = ["material", "all"]
+    LocationTypeWritingOrder = ["material", "light", "all"]
 
     # Protected Class Methods -------------------------------------------------
 
@@ -92,7 +94,7 @@ class UsdExport(BaseOutputFormat):
         return True
 
     @staticmethod
-    def locationPathtoSdfPath(locationPath, rootPrimName):
+    def locationPathToSdfPath(locationPath, rootPrimName):
         """
         A Helper method to simply validate and create SdfPaths from
         location paths, concatenating the rootPrim name onto the Katana
@@ -170,12 +172,16 @@ class UsdExport(BaseOutputFormat):
         if not cls.__checkTypeWritingOrder(locationType, locationTypePass):
             return
 
-        sdfLocationPath = cls.locationPathtoSdfPath(location, rootPrimName)
+        sdfLocationPath = cls.locationPathToSdfPath(location, rootPrimName)
         # By default create an override prim, any other node creation should
         # happen before the point of creating this prim.
         createOverridePrim = True
 
-        # material
+        xformAttribute = attrDict.get("xform", None)
+        if xformAttribute:
+            prim = stage.DefinePrim(sdfLocationPath, "Xform")
+            WriteTransform(prim, xformAttribute)
+
         materialAttribute = attrDict.get("material")
         # Write materialLocations first, as sdfLocationPath may be altered when
         # writing to a child location.
@@ -190,6 +196,14 @@ class UsdExport(BaseOutputFormat):
                 materialDict)
             createOverridePrim = False
 
+        elif locationType == "light":
+            stage.DefinePrim(sdfLocationPath, "Light")
+            WriteLight(stage, sdfLocationPath,
+                       materialAttribute)
+            # We don't need to do anything past this point as it's not
+            # applicable to light locations.
+            return
+
         # Create an overridePrim if not disabled, and then get the current prim
         # to add any other extra data.
         if createOverridePrim:
@@ -203,7 +217,6 @@ class UsdExport(BaseOutputFormat):
             WritePrmanStatements(prmanStatementsAttributes, prim)
             WritePrmanGeomGprims(prmanStatementsAttributes, prim)
             WritePrmanModel(prmanStatementsAttributes, prim)
-
 
         # layout
         layout = attrDict.get("layout")
@@ -435,23 +448,25 @@ class UsdExport(BaseOutputFormat):
             # Maintain a dictionary of materialpaths and their resultant
             # sdf paths.
             materialDict = {}
-            passDatamaterialDictKeys = passData.materialDict.keys()
-            passDatamaterialDictKeys.sort()
-            for location in passDatamaterialDictKeys:
+            passDataMaterialDictKeys = passData.materialDict.keys()
+            passDataMaterialDictKeys.sort()
+            for location in passDataMaterialDictKeys:
                 (locationType, materialAttribute) = \
                     passData.materialDict[location]
                 if locationType != "material":
                     continue
-                # Discard materials if the path is not a valid SdfPath.
+                # Discard if the path is not a valid SdfPath.
                 if not Sdf.Path.IsValidPathString(location):
-                    log.warning('"%s" is not a valid SdfPath. Material will '
+                    log.warning('"%s" is not a valid SdfPath. Location will '
                                 'be skipped.', location)
                     continue
-                sdfLocationPath = self.__class__.locationPathtoSdfPath(
+                sdfLocationPath = self.__class__.locationPathToSdfPath(
                     location, rootPrimName)
-                self.__class__.writeMaterialAttribute(
-                    stage, materialAttribute, location, sdfLocationPath,
-                    materialDict)
+                if locationType == "material":
+                    self.__class__.writeMaterialAttribute(
+                        stage, materialAttribute, location, sdfLocationPath,
+                        materialDict)
+
             self.__class__.writeOverrides(
                 stage, passData.outputDictList, passData.sharedOverridesDict,
                 rootPrimName, materialDict)

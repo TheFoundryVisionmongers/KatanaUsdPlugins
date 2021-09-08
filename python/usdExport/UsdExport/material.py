@@ -23,7 +23,6 @@
 import logging
 
 from Katana import RenderingAPI, FnAttribute
-import PyFnAttribute
 
 # From the KatanaUsdPlugins
 import UsdKatana
@@ -36,7 +35,8 @@ try:
     # These includes also require fnpxr
     from .typeConversionMaps import (ValueTypeCastMethods,
                                      ConvertRenderInfoShaderTagsToSdfType,
-                                     ConvertToVtVec3fArray)
+                                     ConvertToVtVec3fArray,
+                                     ConvertParameterValueToGfType)
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
@@ -423,60 +423,6 @@ def AddParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
         shaderInput.Set(paramValue)
         return shaderInput
     return None
-
-
-def ConvertParameterValueToGfType(value, sdfType):
-    """
-    Converts the Katana attribute into its equivalent Gf type based on the
-    C{sdfType} provided.
-
-    @type value: C{PyFnAttribute}
-    @type sdfType: C{Sdf.ValueTypeNames}
-    @rtype: C{Gf}
-    @param value: The value to be cast to a Gf equivalent.
-    @param sdfType: The type to cast to.
-    @return: The Gf type casted value.
-    """
-    if sdfType.type.pythonClass:
-        gfCast = sdfType.type.pythonClass
-    else:
-        gfCast = ValueTypeCastMethods.get(sdfType)
-    if gfCast:
-        if isinstance(value, PyFnAttribute.ConstVector):
-            # Convert Katana's PyFnAttribute.ConstVector to a python list
-            if isinstance(gfCast(), Vt.Vec3fArray):
-                value = ConvertToVtVec3fArray(value)
-            else:
-                value = [v for v in value]
-        if isinstance(value, list):
-            if len(value) == 1:
-                value = gfCast(value[0])
-            elif hasattr(gfCast, "dimension"):
-                if gfCast.dimension == 2:
-                    value = gfCast(value[0], value[1])
-                elif gfCast.dimension == 3:
-                    value = gfCast(value[0], value[1], value[2])
-                elif gfCast.dimension == 4:
-                    value = gfCast(value[0], value[1], value[2], value[3])
-                elif gfCast.dimension == (2, 2):
-                    value = gfCast(
-                        value[0], value[1],
-                        value[2], value[3])
-                elif gfCast.dimension == (3, 3):
-                    value = gfCast(
-                        value[0], value[1], value[2],
-                        value[3], value[4], value[5],
-                        value[6], value[7], value[8])
-                elif gfCast.dimension == (4, 4):
-                    value = gfCast(
-                        value[0], value[1], value[2], value[3],
-                        value[4], value[5], value[6], value[7],
-                        value[8], value[9], value[10], value[11],
-                        value[12], value[13], value[14], value[15])
-            elif gfCast in [Gf.Quath, Gf.Quatf, Gf.Quatd]:
-                value = gfCast(value[0], value[1], value[2], value[3])
-    return value
-
 
 def _EncodePortName(name):
     """
