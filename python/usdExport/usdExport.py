@@ -36,12 +36,13 @@ pxrImported = False
 try:
     from pxr import Usd, UsdShade, Sdf
     # These includes also require fnpxr
+    from UsdExport.light import (WriteLight)
+    from UsdExport.lightLinking import (GetLinkingData, WriteLightLinking)
     from UsdExport.material import (WriteMaterial, WriteMaterialAssign,
                                     WriteChildMaterial)
-    from UsdExport.light import (WriteLight)
-    from UsdExport.transform import (WriteTransform)
     from UsdExport.prmanStatements import (
         WritePrmanStatements, WritePrmanGeomGprims, WritePrmanModel)
+    from UsdExport.transform import (WriteTransform)
 
     pxrImported = True
 except ImportError as e:
@@ -118,7 +119,7 @@ class UsdExport(BaseOutputFormat):
     @classmethod
     def WriteOverride(cls, stage, overrideDict, sharedOverridesDict,
                       locationTypePass, location, rootName, rootPrimName,
-                      materialDict):
+                      materialDict, arbitraryData):
         """
         This method is responsible for writing all of the attributes from the
         C{passData.shaderdOverrides} dictionary to the USD Stage.
@@ -137,6 +138,7 @@ class UsdExport(BaseOutputFormat):
         @type rootName: C{str}
         @type rootPrimName: C{str}
         @type materialDict: C{dict} of C{str} : C{Sdf.Path}
+        @type arbitraryData: C{dict} of C{str} : C{any}
         @param stage: The C{Usd.Stage} to write data to.
         @param overrideDict: See C{LookFilePassData} for more details.
         @param sharedOverridesDict: See C{LookFilePassData} for more details.
@@ -154,6 +156,8 @@ class UsdExport(BaseOutputFormat):
         @param materialDict: A dictionary containing a mapping between the
             material location paths from Katana, and the SdfPath in the USD
             Stage.
+        @param arbitraryData: A dictionary of keys to arbitrary data which
+            can be used in the writing of specific attributes.
         """
         # pylint: disable=too-many-branches,
         # pylint: disable=too-many-locals
@@ -198,8 +202,17 @@ class UsdExport(BaseOutputFormat):
 
         elif locationType == "light":
             stage.DefinePrim(sdfLocationPath, "Light")
-            WriteLight(stage, sdfLocationPath,
-                       materialAttribute)
+            lightPrim = WriteLight(stage, sdfLocationPath,
+                                   materialAttribute)
+            # Write out the light linking data if it is available.
+            variantLinkingData = arbitraryData.get("linkingData", None)
+            lightLinkingData = {}
+            for lightPath, linkCollections in variantLinkingData.items():
+                if lightPath.endswith(location):
+                    lightLinkingData = linkCollections
+                    break
+            if lightLinkingData:
+                WriteLightLinking(lightPrim, lightLinkingData)
             # We don't need to do anything past this point as it's not
             # applicable to light locations.
             return
@@ -287,7 +300,7 @@ class UsdExport(BaseOutputFormat):
 
     @classmethod
     def writeOverrides(cls, stage, outputDictList, sharedOverridesDict,
-                       rootPrimName, materialDict):
+                       rootPrimName, materialDict, arbitraryData = {}):
         """
         Loops through a sorted list of the output information and then loops
         through the class list of C{LocationTypeWritingOrder} and calls
@@ -305,6 +318,7 @@ class UsdExport(BaseOutputFormat):
         @type outputDictList: C{list}
         @type sharedOverridesDict: C{dict}
         @type rootPrimName: C{str}
+        @type arbitraryData: C{dict} of C{dict} : C{any}
         @param stage: The UsdStage to write data to.
         @param outputDictList: See the C{LookFilePassData} object for more
             details.
@@ -312,6 +326,8 @@ class UsdExport(BaseOutputFormat):
             details.
         @param rootPrimName: The name of the root C{Usd.Prim} of the
             C{Usd.Stage}.
+        @param arbitraryData: A dictionary of keys to arbitrary data which
+            can be used in the writing of specific attributes.
         """
         for (overrideDict, rootName, rootType) in outputDictList:
             _ = rootType
@@ -322,8 +338,10 @@ class UsdExport(BaseOutputFormat):
                                       sharedOverridesDict,
                                       locationTypePass,
                                       location,
-                                      rootName, rootPrimName,
-                                      materialDict)
+                                      rootName,
+                                      rootPrimName,
+                                      materialDict,
+                                      arbitraryData)
 
     @classmethod
     def WriteMaterialAssignAttr(cls, materialDict, stage, rootName, attribute,
@@ -467,9 +485,15 @@ class UsdExport(BaseOutputFormat):
                         stage, materialAttribute, location, sdfLocationPath,
                         materialDict)
 
-            self.__class__.writeOverrides(
-                stage, passData.outputDictList, passData.sharedOverridesDict,
-                rootPrimName, materialDict)
+
+            arbitraryData = {"linkingData": GetLinkingData(bakeNodeName,
+                                                           variantName)}
+            self.__class__.writeOverrides(stage,
+                                          passData.outputDictList,
+                                          passData.sharedOverridesDict,
+                                          rootPrimName,
+                                          materialDict,
+                                          arbitraryData)
 
         # Validate whether the required settings are provided
         try:
@@ -486,6 +510,7 @@ class UsdExport(BaseOutputFormat):
             assemblyWritten = \
                 self._settings["assemblyWritten"]
             variantSetName = self._settings["variantSetName"]
+            bakeNodeName = self._settings["bakeNodeName"]
         except ValueError:
             raise LookFileBakeException("Invalid Settings for UsdExport. "
                                         "The UsdExport Output Format plug-in "
@@ -498,6 +523,7 @@ class UsdExport(BaseOutputFormat):
             rootPrimName = "/" + rootPrimName
         if rootPrimName.endswith("/"):
             rootPrimName = rootPrimName[:-1]
+        variantName = None
         if createVariantSet:
             # Write all material data to the same variant file
             # (create on first pass, then append in subsequent passes)
