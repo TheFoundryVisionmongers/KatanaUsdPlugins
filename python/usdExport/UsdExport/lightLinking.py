@@ -119,22 +119,23 @@ def GetLinkingData(bakeNodeName, variantName):
 
     linkingData = {}
     linkingDict = _cookLightLinkingAttrs(connectedPort.getNode())
-    for path, linkAttrs in linkingDict.items():
-        enableOnCEL = sanitizeCEL(
-            linkAttrs.getChildByName("enable.onCEL").getData())
-        enableOffCEL = sanitizeCEL(
-            linkAttrs.getChildByName("enable.offCEL").getData())
-        geoShadowEnableOnCEL = sanitizeCEL(
-            linkAttrs.getChildByName("geoShadowEnable.onCEL").getData())
-        geoShadowEnableOffCEL = sanitizeCEL(
-            linkAttrs.getChildByName("geoShadowEnable.offCEL").getData())
+    if linkingDict:
+        for path, linkAttrs in linkingDict.items():
+            enableOnCEL = sanitizeCEL(
+                linkAttrs.getChildByName("enable.onCEL").getData())
+            enableOffCEL = sanitizeCEL(
+                linkAttrs.getChildByName("enable.offCEL").getData())
+            geoShadowEnableOnCEL = sanitizeCEL(
+                linkAttrs.getChildByName("geoShadowEnable.onCEL").getData())
+            geoShadowEnableOffCEL = sanitizeCEL(
+                linkAttrs.getChildByName("geoShadowEnable.offCEL").getData())
 
-        linkingData[path] = {"lightLinkIncludes": enableOnCEL,
-                                "lightLinkExcludes": enableOffCEL,
-                                "shadowLinkIncludes":
-                                    geoShadowEnableOnCEL,
-                                "shadowLinkExcludes":
-                                    geoShadowEnableOffCEL}
+            linkingData[path] = {"lightLinkIncludes": enableOnCEL,
+                                    "lightLinkExcludes": enableOffCEL,
+                                    "shadowLinkIncludes":
+                                        geoShadowEnableOnCEL,
+                                    "shadowLinkExcludes":
+                                        geoShadowEnableOffCEL}
 
     return linkingData
 
