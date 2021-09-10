@@ -8,7 +8,7 @@
     },
     "cpp-cpplint": {
       "type": "cpplint",
-      "bin": ["../../Resources/DevTools/bin/cpplint", "cpplint"],
+      "bin": ["cpplint"],
       "include": ["(\\.(c|h|cpp)$)"],
       "flags": ["--linelength=100"],
       "severity": {
@@ -34,7 +34,7 @@
     },
     "python-pylint": {
       "type": "pylint",
-      "bin": ["../../Resources/DevTools/bin/pylint", "pylint"],
+      "bin": ["pylint"],
       "include": ["(\\.py$)"],
       "exclude": ["((FnAddDependency|SCons).*\\.py$)"],
       "pylint.config": "../../Resources/DevTools/pylintrc"
