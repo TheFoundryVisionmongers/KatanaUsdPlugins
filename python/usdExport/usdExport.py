@@ -40,6 +40,7 @@ try:
     from UsdExport.lightLinking import (GetLinkingData, WriteLightLinking)
     from UsdExport.material import (WriteMaterial, WriteMaterialAssign,
                                     WriteChildMaterial)
+    from UsdExport.pluginRegistry import (GetUsdExportPluginsByType)
     from UsdExport.prmanStatements import (
         WritePrmanStatements, WritePrmanGeomGprims, WritePrmanModel)
     from UsdExport.transform import (WriteTransform)
@@ -202,7 +203,7 @@ class UsdExport(BaseOutputFormat):
 
         elif locationType == "light":
             stage.DefinePrim(sdfLocationPath, "Light")
-            lightPrim = WriteLight(stage, sdfLocationPath,
+            prim = WriteLight(stage, sdfLocationPath,
                                    materialAttribute)
             # Write out the light linking data if it is available.
             variantLinkingData = arbitraryData.get("linkingData", None)
@@ -212,10 +213,7 @@ class UsdExport(BaseOutputFormat):
                     lightLinkingData = linkCollections
                     break
             if lightLinkingData:
-                WriteLightLinking(lightPrim, lightLinkingData)
-            # We don't need to do anything past this point as it's not
-            # applicable to light locations.
-            return
+                WriteLightLinking(prim, lightLinkingData)
 
         # Create an overridePrim if not disabled, and then get the current prim
         # to add any other extra data.
@@ -242,6 +240,9 @@ class UsdExport(BaseOutputFormat):
         if materialAssignAttribute is not None:
             cls.WriteMaterialAssignAttr(materialDict, stage, rootName,
                                         materialAssignAttribute, prim)
+
+        for plugin in GetUsdExportPluginsByType(locationType):
+            plugin.WritePrim(stage, sdfLocationPath, attrDict)
 
     @staticmethod
     def writeMaterialAttribute(stage, materialAttribute, location,

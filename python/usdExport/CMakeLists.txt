@@ -30,6 +30,8 @@ pxr_katana_python_plugin(
         UsdExport/light.py
         UsdExport/lightLinking.py
         UsdExport/material.py
+        UsdExport/pluginAPI.py
+        UsdExport/pluginRegistry.py
         UsdExport/prmanStatements.py
         UsdExport/transform.py
     PLUGIN_TYPE Plugins
