@@ -195,3 +195,24 @@ def _FallbackBaseLightTokenParse(shaderName):
                 return lightType
 
     return None
+
+def WriteLightList(stage, prim=None):
+    """
+    Computes the light list on the given stage with compute mode of
+    `UsdLux.ListAPI.ComputeModeIgnoreCache`. The light list will be written
+    to the provided prim, or the stage's default prim if not provided.
+
+    @type stage: C{Usd.Stage}
+    @type prim: C{Usd.Prim}
+    @param stage: The C{Usd.Stage} to write data to.
+    @param prim: Optional prim to write the Usd List to, if not provided,
+        the stage's default prim will be used.
+    """
+    if prim is None:
+        prim = stage.GetDefaultPrim()
+    luxListAPI = UsdLux.ListAPI(prim)
+    luxListAPI.Apply(prim)
+    listList = luxListAPI.ComputeLightList(
+        UsdLux.ListAPI.ComputeModeIgnoreCache)
+    luxListAPI.StoreLightList(listList)
+

@@ -36,7 +36,7 @@ pxrImported = False
 try:
     from pxr import Kind, Sdf, Usd, UsdShade
     # These includes also require fnpxr
-    from UsdExport.light import (WriteLight)
+    from UsdExport.light import (WriteLight, WriteLightList)
     from UsdExport.lightLinking import (GetLinkingData, WriteLightLinking)
     from UsdExport.material import (WriteMaterial, WriteMaterialAssign,
                                     WriteChildMaterial)
@@ -343,6 +343,7 @@ class UsdExport(BaseOutputFormat):
                                       rootPrimName,
                                       materialDict,
                                       arbitraryData)
+        WriteLightList(stage)
 
     @classmethod
     def WriteMaterialAssignAttr(cls, materialDict, stage, rootName, attribute,
