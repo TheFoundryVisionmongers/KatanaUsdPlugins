@@ -95,28 +95,58 @@ PxrUsdKatanaReadLight(
         .Set("exposure", light.GetExposureAttr())
         .Set("diffuse", light.GetDiffuseAttr())
         .Set("specular", light.GetSpecularAttr())
-        .Set("areaNormalize", light.GetNormalizeAttr())
-        .Set("lightColor", light.GetColorAttr())
+        .Set("normalize", light.GetNormalizeAttr())
+        .Set("color", light.GetColorAttr())
         .Set("enableTemperature", light.GetEnableColorTemperatureAttr())
         .Set("temperature", light.GetColorTemperatureAttr())
         .Set("color", light.GetColorAttr());
 
+        // Prman still has different names for these attributes, so we need
+        // to write them out like this, until we move to a more SdrRegistry
+        // focused import.
+        if(prmanOutputTarget)
+        {
+        lightBuilder
+            .Set("areaNormalize", light.GetNormalizeAttr())
+            .Set("lightColor", light.GetColorAttr())
+            ;
+        }
+
     if (lightPrim)
     {
         UsdLuxShapingAPI shapingAPI(lightPrim);
+        // Prman still has different names for these attributes, so we need
+        // to write them out like this, until we move to a more SdrRegistry
+        // focused import.
+        if(prmanOutputTarget)
+        {
+            lightBuilder
+                .Set("emissionFocus", shapingAPI.GetShapingFocusAttr())
+                .Set("emissionFocusTint", shapingAPI.GetShapingFocusTintAttr())
+                .Set("coneAngle", shapingAPI.GetShapingConeAngleAttr())
+                .Set("coneSoftness", shapingAPI.GetShapingConeSoftnessAttr())
+                .Set("iesProfile", shapingAPI.GetShapingIesFileAttr())
+                .Set("iesProfileScale", shapingAPI.GetShapingIesAngleScaleAttr())
+                .Set("iesProfileNormalize", shapingAPI.GetShapingIesNormalizeAttr())
+                ;
+
+            UsdLuxShadowAPI shadowAPI(lightPrim);
+            lightBuilder.Set("enableShadows", shadowAPI.GetShadowEnableAttr());
+        }
+
         lightBuilder
-            .Set("emissionFocus", shapingAPI.GetShapingFocusAttr())
-            .Set("emissionFocusTint", shapingAPI.GetShapingFocusTintAttr())
-            .Set("coneAngle", shapingAPI.GetShapingConeAngleAttr())
-            .Set("coneSoftness", shapingAPI.GetShapingConeSoftnessAttr())
-            .Set("iesProfile", shapingAPI.GetShapingIesFileAttr())
-            .Set("iesProfileScale", shapingAPI.GetShapingIesAngleScaleAttr())
-            .Set("iesProfileNormalize",
-                 shapingAPI.GetShapingIesNormalizeAttr());
+            .Set("shapingFocus", shapingAPI.GetShapingFocusAttr())
+            .Set("shapingFocusTint", shapingAPI.GetShapingFocusTintAttr())
+            .Set("shapingConeAngle", shapingAPI.GetShapingConeAngleAttr())
+            .Set("shapingConeSoftness", shapingAPI.GetShapingConeSoftnessAttr())
+            .Set("shapingIesFile", shapingAPI.GetShapingIesFileAttr())
+            .Set("shapingIesAngleScale", shapingAPI.GetShapingIesAngleScaleAttr())
+            .Set("shapingIesNormalize", shapingAPI.GetShapingIesNormalizeAttr())
+            ;
 
         UsdLuxShadowAPI shadowAPI(lightPrim);
         lightBuilder
-            .Set("enableShadows", shadowAPI.GetShadowEnableAttr())
+            .Set("shadowEnable", shadowAPI.GetShadowEnableAttr())
             .Set("shadowColor", shadowAPI.GetShadowColorAttr())
             .Set("shadowDistance", shadowAPI.GetShadowDistanceAttr())
             .Set("shadowFalloff", shadowAPI.GetShadowFalloffAttr())
