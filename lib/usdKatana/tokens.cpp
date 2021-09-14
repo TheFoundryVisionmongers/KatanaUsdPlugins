@@ -32,6 +32,8 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 UsdKatanaTokensType::UsdKatanaTokensType() :
+    geometryCenterOfInterest("geometry:centerOfInterest", TfToken::Immortal),
+    katanaId("katana:id", TfToken::Immortal),
     katanaLooksChildNameExclusionAttrName("__UsdIn.skipChild.Looks", TfToken::Immortal),
     katanaLooksScopeName("Looks", TfToken::Immortal),
     katanaLooksScopePathSubstring("/Looks/", TfToken::Immortal),
@@ -40,6 +42,8 @@ UsdKatanaTokensType::UsdKatanaTokensType() :
     katanaType("katana:type", TfToken::Immortal),
     katanaVisible("katana:visible", TfToken::Immortal),
     allTokens({
+        geometryCenterOfInterest,
+        katanaId,
         katanaLooksChildNameExclusionAttrName,
         katanaLooksScopeName,
         katanaLooksScopePathSubstring,

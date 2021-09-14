@@ -27,10 +27,10 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef USDKATANA_GENERATED_LOOKAPI_H
-#define USDKATANA_GENERATED_LOOKAPI_H
+#ifndef USDKATANA_GENERATED_LIGHTAPI_H
+#define USDKATANA_GENERATED_LIGHTAPI_H
 
-/// \file usdKatana/lookAPI.h
+/// \file usdKatana/lightAPI.h
 
 #include "pxr/pxr.h"
 #include "usdKatana/api.h"
@@ -53,14 +53,14 @@ PXR_NAMESPACE_OPEN_SCOPE
 class SdfAssetPath;
 
 // -------------------------------------------------------------------------- //
-// LOOKAPI                                                                    //
+// LIGHTAPI                                                                   //
 // -------------------------------------------------------------------------- //
 
-/// \class UsdKatanaLookAPI
+/// \class UsdKatanaLightAPI
 ///
-/// Katana-specific extensions of UsdShadeMaterial.
+/// Katana-specific entensions of UsdLuxLight
 ///
-class UsdKatanaLookAPI : public UsdAPISchemaBase
+class UsdKatanaLightAPI : public UsdAPISchemaBase
 {
 public:
     /// Compile time constant representing what kind of schema this class is.
@@ -73,26 +73,26 @@ public:
     /// compatibility with older generated schemas.
     static const UsdSchemaKind schemaType = UsdSchemaKind::SingleApplyAPI;
 
-    /// Construct a UsdKatanaLookAPI on UsdPrim \p prim .
-    /// Equivalent to UsdKatanaLookAPI::Get(prim.GetStage(), prim.GetPath())
+    /// Construct a UsdKatanaLightAPI on UsdPrim \p prim .
+    /// Equivalent to UsdKatanaLightAPI::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
-    explicit UsdKatanaLookAPI(const UsdPrim& prim=UsdPrim())
+    explicit UsdKatanaLightAPI(const UsdPrim& prim=UsdPrim())
         : UsdAPISchemaBase(prim)
     {
     }
 
-    /// Construct a UsdKatanaLookAPI on the prim held by \p schemaObj .
-    /// Should be preferred over UsdKatanaLookAPI(schemaObj.GetPrim()),
+    /// Construct a UsdKatanaLightAPI on the prim held by \p schemaObj .
+    /// Should be preferred over UsdKatanaLightAPI(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
-    explicit UsdKatanaLookAPI(const UsdSchemaBase& schemaObj)
+    explicit UsdKatanaLightAPI(const UsdSchemaBase& schemaObj)
         : UsdAPISchemaBase(schemaObj)
     {
     }
 
     /// Destructor.
     USDKATANA_API
-    virtual ~UsdKatanaLookAPI();
+    virtual ~UsdKatanaLightAPI();
 
     /// Return a vector of names of all pre-declared attributes for this schema
     /// class and all its ancestor classes.  Does not include attributes that
@@ -101,26 +101,26 @@ public:
     static const TfTokenVector &
     GetSchemaAttributeNames(bool includeInherited=true);
 
-    /// Return a UsdKatanaLookAPI holding the prim adhering to this
+    /// Return a UsdKatanaLightAPI holding the prim adhering to this
     /// schema at \p path on \p stage.  If no prim exists at \p path on
     /// \p stage, or if the prim at that path does not adhere to this schema,
     /// return an invalid schema object.  This is shorthand for the following:
     ///
     /// \code
-    /// UsdKatanaLookAPI(stage->GetPrimAtPath(path));
+    /// UsdKatanaLightAPI(stage->GetPrimAtPath(path));
     /// \endcode
     ///
     USDKATANA_API
-    static UsdKatanaLookAPI
+    static UsdKatanaLightAPI
     Get(const UsdStagePtr &stage, const SdfPath &path);
 
 
     /// Applies this <b>single-apply</b> API schema to the given \p prim.
-    /// This information is stored by adding "LookAPI" to the
+    /// This information is stored by adding "LightAPI" to the
     /// token-valued, listOp metadata \em apiSchemas on the prim.
     ///
-    /// \return A valid UsdKatanaLookAPI object is returned upon success.
-    /// An invalid (or empty) UsdKatanaLookAPI object is returned upon
+    /// \return A valid UsdKatanaLightAPI object is returned upon success.
+    /// An invalid (or empty) UsdKatanaLightAPI object is returned upon
     /// failure. See \ref UsdPrim::ApplyAPI() for conditions
     /// resulting in failure.
     ///
@@ -130,7 +130,7 @@ public:
     /// \sa UsdPrim::RemoveAPI()
     ///
     USDKATANA_API
-    static UsdKatanaLookAPI
+    static UsdKatanaLightAPI
     Apply(const UsdPrim &prim);
 
 protected:
@@ -160,54 +160,56 @@ private:
 
 public:
     // --------------------------------------------------------------------- //
-    // PRIMNAME
+    // ID
     // --------------------------------------------------------------------- //
-    /// When a Material derives from another, "base" Material (see
-    /// \ref UsdShadeMaterial::SetBaseMaterial() "SetBaseMaterial()"), it seems
-    /// natural to think about a "child" that inherits from its base Material
-    /// "parent".
-    /// However, in USD, the derived Material cannot be a child of the base Material
-    /// because the \em derives relationship would cause an infinite
-    /// recursion in the composition graph (because the derived Material must
-    /// inherit not just the base Material prim itself, but all of the shader and
-    /// other prims scoped underneath it, which would include the derived Material
-    /// itself).
-    ///
-    /// For UI's that want to present the hierarchy that derivation implies,
-    /// we provide \em primName, which specifies the derived Material's
-    /// "relative name" with respect to the base Material.
-    ///
-    /// For example, a structure that looks like:
-    /// - Metal
-    /// - .. Brass
-    /// - .. Aluminum
-    ///
-    /// will be encoded as
-    /// - Metal
-    /// - Metal_Brass
-    /// - Metal_Aluminum
-    ///
-    /// We set derivedName on Metal_Brass and Metal_Aluminum to Brass and
-    /// Aluminum, to be able to have proper child names if the hierarchy
-    /// is reconstructed.
+    /// Defines the light shader name used by Katana when
+    /// creating the light location. This allows renderer-specific
+    /// implementations of lights to be correctly created.
     ///
     ///
     /// | ||
     /// | -- | -- |
-    /// | Declaration | `uniform string katana:primName` |
-    /// | C++ Type | std::string |
-    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->String |
+    /// | Declaration | `uniform string[] katana:id` |
+    /// | C++ Type | VtArray<std::string> |
+    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->StringArray |
     /// | \ref SdfVariability "Variability" | SdfVariabilityUniform |
     USDKATANA_API
-    UsdAttribute GetPrimNameAttr() const;
+    UsdAttribute GetIdAttr() const;
 
-    /// See GetPrimNameAttr(), and also
+    /// See GetIdAttr(), and also
     /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
     /// If specified, author \p defaultValue as the attribute's default,
     /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
     /// the default for \p writeSparsely is \c false.
     USDKATANA_API
-    UsdAttribute CreatePrimNameAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
+    UsdAttribute CreateIdAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
+
+public:
+    // --------------------------------------------------------------------- //
+    // CENTEROFINTEREST
+    // --------------------------------------------------------------------- //
+    /// Center of interest holds a distance extending from the light's
+    /// origin in the direction it is facing. This defines a point at which the
+    /// light can be pivoted around or translated towards or away from using
+    /// Katana's lighting tools.
+    ///
+    ///
+    /// | ||
+    /// | -- | -- |
+    /// | Declaration | `uniform double geometry:centerOfInterest = 20` |
+    /// | C++ Type | double |
+    /// | \ref Usd_Datatypes "Usd Type" | SdfValueTypeNames->Double |
+    /// | \ref SdfVariability "Variability" | SdfVariabilityUniform |
+    USDKATANA_API
+    UsdAttribute GetCenterOfInterestAttr() const;
+
+    /// See GetCenterOfInterestAttr(), and also
+    /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
+    /// If specified, author \p defaultValue as the attribute's default,
+    /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
+    /// the default for \p writeSparsely is \c false.
+    USDKATANA_API
+    UsdAttribute CreateCenterOfInterestAttr(VtValue const &defaultValue = VtValue(), bool writeSparsely=false) const;
 
 public:
     // ===================================================================== //

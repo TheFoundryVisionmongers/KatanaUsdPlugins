@@ -20,8 +20,8 @@ class "LookAPI" (
 {
     uniform string katana:primName (
         doc = """When a Material derives from another, \"base\" Material (see
-        \"SetBaseMaterial()\"), it seems 
-        natural to think about a \"child\" that inherits from its base Material 
+        \"SetBaseMaterial()\"), it seems
+        natural to think about a \"child\" that inherits from its base Material
         \"parent\".
         However, in USD, the derived Material cannot be a child of the base Material
         because the derives relationship would cause an infinite
@@ -31,7 +31,7 @@ class "LookAPI" (
         itself).
 
         For UI's that want to present the hierarchy that derivation implies,
-        we provide primName, which specifies the derived Material's 
+        we provide primName, which specifies the derived Material's
         \"relative name\" with respect to the base Material.
 
         For example, a structure that looks like:
@@ -51,3 +51,21 @@ class "LookAPI" (
     )
 }
 
+class "LightAPI" (
+    doc = "Katana-specific entensions of UsdLuxLight"
+)
+{
+    uniform double geometry:centerOfInterest = 20 (
+        doc = """Center of interest holds a distance extending from the light's
+        origin in the direction it is facing. This defines a point at which the
+        light can be pivoted around or translated towards or away from using
+        Katana's lighting tools.
+        """
+    )
+    uniform string[] katana:id (
+        doc = """Defines the light shader name used by Katana when
+        creating the light location. This allows renderer-specific
+        implementations of lights to be correctly created.
+        """
+    )
+}

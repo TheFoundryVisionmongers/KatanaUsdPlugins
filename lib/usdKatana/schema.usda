@@ -33,21 +33,21 @@ def "GLOBAL" (
 
 class BlindDataObject "BlindDataObject" (
     inherits = </Typed>
-    doc = """Container namespace schema for katana blind data from the klf file""" 
+    doc = """Container namespace schema for katana blind data from the klf file"""
 ) {
     string katana:type (
-        customData = { 
+        customData = {
             string apiName = "type"
         }
     )
     bool katana:visible (
-        customData = { 
+        customData = {
             string apiName = "visible"
         }
     )
     bool katana:suppressGroupToAssemblyPromotion (
         doc = """If true don't promote a group to an assembly."""
-        customData = { 
+        customData = {
             string apiName = "suppressGroupToAssemblyPromotion"
         }
     )
@@ -59,8 +59,8 @@ class "LookAPI"(
 ) {
     uniform string katana:primName (
         doc = """When a Material derives from another, "base" Material (see
-        \\ref UsdShadeMaterial::SetBaseMaterial() "SetBaseMaterial()"), it seems 
-        natural to think about a "child" that inherits from its base Material 
+        \\ref UsdShadeMaterial::SetBaseMaterial() "SetBaseMaterial()"), it seems
+        natural to think about a "child" that inherits from its base Material
         "parent".
         However, in USD, the derived Material cannot be a child of the base Material
         because the \\em derives relationship would cause an infinite
@@ -70,7 +70,7 @@ class "LookAPI"(
         itself).
 
         For UI's that want to present the hierarchy that derivation implies,
-        we provide \\em primName, which specifies the derived Material's 
+        we provide \\em primName, which specifies the derived Material's
         "relative name" with respect to the base Material.
 
         For example, a structure that looks like:
@@ -89,6 +89,32 @@ class "LookAPI"(
         """
         customData = {
             string apiName = "primName"
+        }
+    )
+}
+
+class "LightAPI"(
+    inherits = </APISchemaBase>
+    doc = """Katana-specific entensions of UsdLuxLight"""
+) {
+
+    uniform string[] katana:id (
+        doc = """Defines the light shader name used by Katana when
+        creating the light location. This allows renderer-specific
+        implementations of lights to be correctly created.
+        """
+        customData = {
+            string apiName = "id"
+        }
+    )
+    uniform double geometry:centerOfInterest = 20.0 (
+        doc = """Center of interest holds a distance extending from the light's
+        origin in the direction it is facing. This defines a point at which the
+        light can be pivoted around or translated towards or away from using
+        Katana's lighting tools.
+        """
+        customData = {
+            string apiName = "centerOfInterest"
         }
     )
 }

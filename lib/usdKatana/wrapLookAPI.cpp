@@ -54,7 +54,7 @@ namespace {
 // fwd decl.
 WRAP_CUSTOM;
 
-        
+
 static UsdAttribute
 _CreatePrimNameAttr(UsdKatanaLookAPI &self,
                                       object defaultVal, bool writeSparsely) {
@@ -103,7 +103,7 @@ void wrapUsdKatanaLookAPI()
 
         .def(!self)
 
-        
+
         .def("GetPrimNameAttr",
              &This::GetPrimNameAttr)
         .def("CreatePrimNameAttr",
@@ -118,7 +118,7 @@ void wrapUsdKatanaLookAPI()
 }
 
 // ===================================================================== //
-// Feel free to add custom code below this line, it will be preserved by 
+// Feel free to add custom code below this line, it will be preserved by
 // the code generator.  The entry point for your custom code should look
 // minimally like the following:
 //
@@ -129,7 +129,7 @@ void wrapUsdKatanaLookAPI()
 // }
 //
 // Of course any other ancillary or support code may be provided.
-// 
+//
 // Just remember to wrap code in the appropriate delimiters:
 // 'namespace {', '}'.
 //

@@ -22,6 +22,8 @@
 
 import logging
 
+import UsdKatana
+
 log = logging.getLogger("UsdExport")
 
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
@@ -113,6 +115,7 @@ def WriteLight(stage, lightSdfPath, materialAttrs):
     lightPrim = stage.DefinePrim(lightSdfPath, primType)
     shapingAPI = UsdLux.ShapingAPI(lightPrim)
     shadowAPI = UsdLux.ShadowAPI(lightPrim)
+    _ApplyKatanaLightAPI(lightPrim, lightShaderName)
 
     knownLightProperties = {} # Maps property name to sdf type.
     # Update the known properties with properties from the lux
@@ -143,6 +146,11 @@ def WriteLight(stage, lightSdfPath, materialAttrs):
                                                 lightParamAttr)
 
     return lightPrim
+
+def _ApplyKatanaLightAPI(prim, shaderName):
+    lightApi = UsdKatana.LightAPI(prim)
+    lightApi.Apply(prim)
+    lightApi.CreateIdAttr([shaderName])
 
 def _WriteParameter(prim, paramName, typeName, fnAttr):
     inputAttr = prim.CreateAttribute(paramName, typeName)

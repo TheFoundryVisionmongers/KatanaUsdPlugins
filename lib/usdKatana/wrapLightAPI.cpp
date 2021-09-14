@@ -27,7 +27,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "usdKatana/blindDataObject.h"
+#include "usdKatana/lightAPI.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
@@ -56,43 +56,36 @@ WRAP_CUSTOM;
 
 
 static UsdAttribute
-_CreateTypeAttr(UsdKatanaBlindDataObject &self,
+_CreateIdAttr(UsdKatanaLightAPI &self,
                                       object defaultVal, bool writeSparsely) {
-    return self.CreateTypeAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->String), writeSparsely);
+    return self.CreateIdAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->StringArray), writeSparsely);
 }
 
 static UsdAttribute
-_CreateVisibleAttr(UsdKatanaBlindDataObject &self,
+_CreateCenterOfInterestAttr(UsdKatanaLightAPI &self,
                                       object defaultVal, bool writeSparsely) {
-    return self.CreateVisibleAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Bool), writeSparsely);
-}
-
-static UsdAttribute
-_CreateSuppressGroupToAssemblyPromotionAttr(UsdKatanaBlindDataObject &self,
-                                      object defaultVal, bool writeSparsely) {
-    return self.CreateSuppressGroupToAssemblyPromotionAttr(
-        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Bool), writeSparsely);
+    return self.CreateCenterOfInterestAttr(
+        UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Double), writeSparsely);
 }
 
 static std::string
-_Repr(const UsdKatanaBlindDataObject &self)
+_Repr(const UsdKatanaLightAPI &self)
 {
     std::string primRepr = TfPyRepr(self.GetPrim());
     return TfStringPrintf(
-        "UsdKatana.BlindDataObject(%s)",
+        "UsdKatana.LightAPI(%s)",
         primRepr.c_str());
 }
 
 } // anonymous namespace
 
-void wrapUsdKatanaBlindDataObject()
+void wrapUsdKatanaLightAPI()
 {
-    typedef UsdKatanaBlindDataObject This;
+    typedef UsdKatanaLightAPI This;
 
-    class_<This, bases<UsdTyped> >
-        cls("BlindDataObject");
+    class_<This, bases<UsdAPISchemaBase> >
+        cls("LightAPI");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -102,8 +95,8 @@ void wrapUsdKatanaBlindDataObject()
         .def("Get", &This::Get, (arg("stage"), arg("path")))
         .staticmethod("Get")
 
-        .def("Define", &This::Define, (arg("stage"), arg("path")))
-        .staticmethod("Define")
+        .def("Apply", &This::Apply, (arg("prim")))
+        .staticmethod("Apply")
 
         .def("GetSchemaAttributeNames",
              &This::GetSchemaAttributeNames,
@@ -118,24 +111,17 @@ void wrapUsdKatanaBlindDataObject()
         .def(!self)
 
 
-        .def("GetTypeAttr",
-             &This::GetTypeAttr)
-        .def("CreateTypeAttr",
-             &_CreateTypeAttr,
+        .def("GetIdAttr",
+             &This::GetIdAttr)
+        .def("CreateIdAttr",
+             &_CreateIdAttr,
              (arg("defaultValue")=object(),
               arg("writeSparsely")=false))
 
-        .def("GetVisibleAttr",
-             &This::GetVisibleAttr)
-        .def("CreateVisibleAttr",
-             &_CreateVisibleAttr,
-             (arg("defaultValue")=object(),
-              arg("writeSparsely")=false))
-
-        .def("GetSuppressGroupToAssemblyPromotionAttr",
-             &This::GetSuppressGroupToAssemblyPromotionAttr)
-        .def("CreateSuppressGroupToAssemblyPromotionAttr",
-             &_CreateSuppressGroupToAssemblyPromotionAttr,
+        .def("GetCenterOfInterestAttr",
+             &This::GetCenterOfInterestAttr)
+        .def("CreateCenterOfInterestAttr",
+             &_CreateCenterOfInterestAttr,
              (arg("defaultValue")=object(),
               arg("writeSparsely")=false))
 
@@ -167,32 +153,6 @@ void wrapUsdKatanaBlindDataObject()
 namespace {
 
 WRAP_CUSTOM {
-    _class
-        .def("GetKbdAttributeNameSpace",
-             &UsdKatanaBlindDataObject::GetKbdAttributeNameSpace, arg("prop"))
-        .staticmethod("GetKbdAttributeNameSpace")
-        .def("GetGroupBuilderKeyForProperty",
-             &UsdKatanaBlindDataObject::GetGroupBuilderKeyForProperty,
-             arg("prop"))
-        .staticmethod("GetGroupBuilderKeyForProperty")
-        .def("CreateKbdAttribute",
-             (UsdAttribute (UsdKatanaBlindDataObject::*)(
-                 const std::string &, const SdfValueTypeName &))
-             &UsdKatanaBlindDataObject::CreateKbdAttribute,
-             (arg("katanaFullName"), arg("usdType")))
-        .def("GetKbdAttribute",
-             (UsdAttribute (UsdKatanaBlindDataObject::*)(
-                 const std::string &))
-             &UsdKatanaBlindDataObject::GetKbdAttribute,
-             (arg("katanaFullName")))
-        .def("GetKbdAttributes",
-             &UsdKatanaBlindDataObject::GetKbdAttributes,
-             (arg("nameSpace")=""),
-             return_value_policy<TfPySequenceToList>())
-        .def("IsKbdAttribute", &UsdKatanaBlindDataObject::IsKbdAttribute,
-             arg("prop"))
-        .staticmethod("IsKbdAttribute")
-        ;
 }
 
 }

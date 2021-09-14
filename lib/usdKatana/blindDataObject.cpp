@@ -41,7 +41,7 @@ TF_REGISTRY_FUNCTION(TfType)
 {
     TfType::Define<UsdKatanaBlindDataObject,
         TfType::Bases< UsdTyped > >();
-    
+
     // Register the usd prim typename as an alias under UsdSchemaBase. This
     // enables one to call
     // TfType::Find<UsdSchemaBase>().FindDerivedByName("BlindDataObject")
@@ -99,7 +99,7 @@ UsdKatanaBlindDataObject::_GetStaticTfType()
 }
 
 /* static */
-bool 
+bool
 UsdKatanaBlindDataObject::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();
@@ -232,7 +232,7 @@ TfToken UsdKatanaBlindDataObject::GetKbdAttributeNameSpace(const UsdProperty &pr
     return TfToken(names[_KATANA_NAMESPACE_INDEX]);
 }
 
-std::string 
+std::string
 UsdKatanaBlindDataObject::GetGroupBuilderKeyForProperty(
         const UsdProperty& prop)
 {
@@ -257,7 +257,7 @@ UsdKatanaBlindDataObject::GetGroupBuilderKeyForProperty(
 
     // we're getting the name after the katanaNamespace.
     return TfStringJoin(
-            nameParts.begin()+_KATANA_NAMESPACE_INDEX+1, 
+            nameParts.begin()+_KATANA_NAMESPACE_INDEX+1,
             nameParts.end(), ".");
 }
 
@@ -286,11 +286,11 @@ _MakeKbdAttrName(const string &katanaAttrName)
 
 UsdAttribute
 UsdKatanaBlindDataObject::CreateKbdAttribute(
-    const std::string& katanaAttrName, 
+    const std::string& katanaAttrName,
     const SdfValueTypeName &usdType)
 {
     std::string fullName = _MakeKbdAttrName(katanaAttrName);
-    UsdAttribute attr = GetPrim().CreateAttribute(TfToken(fullName), usdType, 
+    UsdAttribute attr = GetPrim().CreateAttribute(TfToken(fullName), usdType,
                                                   /* custom = */ false);
     if (!TF_VERIFY(attr)) {
         return UsdAttribute();
@@ -302,9 +302,9 @@ std::vector<UsdProperty>
 UsdKatanaBlindDataObject::GetKbdAttributes(
     const string &nameSpace) const
 {
-    std::vector<UsdProperty> props = 
+    std::vector<UsdProperty> props =
         GetPrim().GetPropertiesInNamespace(_tokens->kbdNamespace);
-    
+
     std::vector<UsdProperty> validProps;
     bool requestedNameSpace = (nameSpace != "");
     TfToken nameSpaceToken(nameSpace);

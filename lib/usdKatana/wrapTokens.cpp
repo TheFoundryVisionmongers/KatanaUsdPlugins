@@ -70,6 +70,8 @@ void wrapUsdKatanaTokens()
 {
     boost::python::class_<UsdKatanaTokensType, boost::noncopyable>
         cls("Tokens", boost::python::no_init);
+    _AddToken(cls, "geometryCenterOfInterest", UsdKatanaTokens->geometryCenterOfInterest);
+    _AddToken(cls, "katanaId", UsdKatanaTokens->katanaId);
     _AddToken(cls, "katanaLooksChildNameExclusionAttrName", UsdKatanaTokens->katanaLooksChildNameExclusionAttrName);
     _AddToken(cls, "katanaLooksScopeName", UsdKatanaTokens->katanaLooksScopeName);
     _AddToken(cls, "katanaLooksScopePathSubstring", UsdKatanaTokens->katanaLooksScopePathSubstring);

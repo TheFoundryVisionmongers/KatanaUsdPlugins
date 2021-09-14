@@ -69,7 +69,7 @@ public:
     static const UsdSchemaKind schemaKind = UsdSchemaKind::ConcreteTyped;
 
     /// \deprecated
-    /// Same as schemaKind, provided to maintain temporary backward 
+    /// Same as schemaKind, provided to maintain temporary backward
     /// compatibility with older generated schemas.
     static const UsdSchemaKind schemaType = UsdSchemaKind::ConcreteTyped;
 
@@ -148,7 +148,7 @@ protected:
     UsdSchemaKind _GetSchemaKind() const override;
 
     /// \deprecated
-    /// Same as _GetSchemaKind, provided to maintain temporary backward 
+    /// Same as _GetSchemaKind, provided to maintain temporary backward
     /// compatibility with older generated schemas.
     USDKATANA_API
     UsdSchemaKind _GetSchemaType() const override;
@@ -167,9 +167,9 @@ private:
 
 public:
     // --------------------------------------------------------------------- //
-    // TYPE 
+    // TYPE
     // --------------------------------------------------------------------- //
-    /// 
+    ///
     ///
     /// | ||
     /// | -- | -- |
@@ -179,7 +179,7 @@ public:
     USDKATANA_API
     UsdAttribute GetTypeAttr() const;
 
-    /// See GetTypeAttr(), and also 
+    /// See GetTypeAttr(), and also
     /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
     /// If specified, author \p defaultValue as the attribute's default,
     /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
@@ -189,9 +189,9 @@ public:
 
 public:
     // --------------------------------------------------------------------- //
-    // VISIBLE 
+    // VISIBLE
     // --------------------------------------------------------------------- //
-    /// 
+    ///
     ///
     /// | ||
     /// | -- | -- |
@@ -201,7 +201,7 @@ public:
     USDKATANA_API
     UsdAttribute GetVisibleAttr() const;
 
-    /// See GetVisibleAttr(), and also 
+    /// See GetVisibleAttr(), and also
     /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
     /// If specified, author \p defaultValue as the attribute's default,
     /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
@@ -211,7 +211,7 @@ public:
 
 public:
     // --------------------------------------------------------------------- //
-    // SUPPRESSGROUPTOASSEMBLYPROMOTION 
+    // SUPPRESSGROUPTOASSEMBLYPROMOTION
     // --------------------------------------------------------------------- //
     /// If true don't promote a group to an assembly.
     ///
@@ -223,7 +223,7 @@ public:
     USDKATANA_API
     UsdAttribute GetSuppressGroupToAssemblyPromotionAttr() const;
 
-    /// See GetSuppressGroupToAssemblyPromotionAttr(), and also 
+    /// See GetSuppressGroupToAssemblyPromotionAttr(), and also
     /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
     /// If specified, author \p defaultValue as the attribute's default,
     /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
@@ -233,23 +233,23 @@ public:
 
 public:
     // ===================================================================== //
-    // Feel free to add custom code below this line, it will be preserved by 
-    // the code generator. 
+    // Feel free to add custom code below this line, it will be preserved by
+    // the code generator.
     //
-    // Just remember to: 
-    //  - Close the class declaration with }; 
+    // Just remember to:
+    //  - Close the class declaration with };
     //  - Close the namespace with PXR_NAMESPACE_CLOSE_SCOPE
     //  - Close the include guard with #endif
     // ===================================================================== //
     // --(BEGIN CUSTOM CODE)--
 
     // --------------------------------------------------------------------- //
-    // CreateKbdAttribute 
+    // CreateKbdAttribute
     // --------------------------------------------------------------------- //
     /// \brief Create an attribute on the prim to which this schema is attached.
     ///
     /// This will be a blind representation of a Katana attribute from Klf file.
-    /// \p katanaFullName should be the full attribute name from katana, i.e. 
+    /// \p katanaFullName should be the full attribute name from katana, i.e.
     /// "materials.interface.foo".   \p usdType is the typename for the
     /// attribute and will be passed directly to \p UsdPrim::CreateAttribute().
     USDKATANA_API UsdAttribute
@@ -258,13 +258,13 @@ public:
         const SdfValueTypeName &usdType);
 
     // --------------------------------------------------------------------- //
-    // GetKbdAttributes 
+    // GetKbdAttributes
     // --------------------------------------------------------------------- //
-    /// Return all rib attributes on this prim, or under a specific 
+    /// Return all rib attributes on this prim, or under a specific
     /// namespace (e.g. "user")
     ///
-    /// As noed above, rib attributes can be either UsdAttribute or 
-    /// UsdRelationship, and like all UsdProperties, need not have a defined 
+    /// As noed above, rib attributes can be either UsdAttribute or
+    /// UsdRelationship, and like all UsdProperties, need not have a defined
     /// value.
     USDKATANA_API std::vector<UsdProperty>
     GetKbdAttributes(const std::string &nameSpace = "") const;
@@ -291,7 +291,7 @@ public:
     /// Return a string that is the attribute name that can be used with a
     /// group builder.  For example, when constructing the GroupAttribute for
     /// the top-level group "geometry", this should be used as follows:
-    /// 
+    ///
     /// FnKat::GroupBuilder gb;
     /// props = UsdKatanaBlindDataObject(prim).GetKbdAttribute("geometry");
     /// gb.set(UsdKatanaBlindDataObject::GetGroupBuilderKeyForProperty(props[0]), ...)

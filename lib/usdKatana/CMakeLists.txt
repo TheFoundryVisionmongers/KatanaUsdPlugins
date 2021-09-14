@@ -30,6 +30,7 @@ pxr_shared_library(${PXR_PACKAGE}
         debugCodes
         locks
         tokens
+        lightAPI
         lookAPI
         utils
 
@@ -62,6 +63,7 @@ pxr_shared_library(${PXR_PACKAGE}
     PYMODULE_CPPFILES
         wrapBlindDataObject.cpp
         wrapCache.cpp
+        wrapLightAPI.cpp
         wrapLookAPI.cpp
         module.cpp
 
