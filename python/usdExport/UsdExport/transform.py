@@ -32,20 +32,23 @@ except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
 
-def WriteTransform(prim, xformAttr):
+def WriteTransform(stage, xformSdfPath, xformAttrs):
     """
-    Converts the given light material C{GroupAttribute} into a
-    C{UsdLux.Light}.
+    Writes transform attributes to the specified location. If the location does
+    not exist, it will be created. Any existing prim type will be overwritten
+    with with 'Xform'.
 
-    @type prim: C{Usd.Stage}
-    @type xformAttr: C{FnAttribute.GroupAttribute}
-    @rtype: C{UsdLux.Light} or C{None}
-    @param prim: The USD stage to write the light to.
-    @param xformAttr: The path to write the C{UsdLux.Light} to.
-    @return: Returns the prim with the transform attribute applied.
+    @type stage: C{Usd.Stage}
+    @type xformSdfPath: C{Sdf.Path}
+    @type xformAttrs: C{FnAttribute.GroupAttribute}
+    @rtype: C{Usd.Prim}
+    @param stage: The USD stage to write the transform to.
+    @param xformSdfPath: The path in the stage to write the attributes to.
+    @param xformAttrs: The Katana attributes to write to the Usd Stage.
+    @return: Returns the prim with the transform attributes applied.
     """
-    # Write out transforms.
-    interactiveXform = xformAttr.getChildByName("interactive")
+    prim = stage.DefinePrim(xformSdfPath, "Xform")
+    interactiveXform = xformAttrs.getChildByName("interactive")
     if interactiveXform:
         xformable = UsdGeom.Xformable(prim)
         # Write translation.

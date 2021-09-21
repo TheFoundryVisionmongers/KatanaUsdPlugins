@@ -33,6 +33,7 @@ log = logging.getLogger("UsdExport")
 try:
     from pxr import UsdShade, Sdf, Gf, Sdr, Vt, UsdUI, Tf
     # These includes also require fnpxr
+    from .common import (GetShaderNodeFromRegistry)
     from .typeConversionMaps import (ValueTypeCastMethods,
                                      ConvertRenderInfoShaderTagsToSdfType,
                                      ConvertToVtVec3fArray,
@@ -147,6 +148,7 @@ def WriteMaterial(stage, materialSdfPath, materialAttribute):
 
     # Now we have defined all the shaders we can connect them with no
     # issues.
+    # pylint: disable=undefined-variable
     for materialNodeIndex in xrange(materialNodes.getNumberOfChildren()):
         materialNode = materialNodes.getChildByIndex(materialNodeIndex)
         shaderName = materialNodes.getChildName(materialNodeIndex)
@@ -243,6 +245,7 @@ def CreateEmptyShaders(stage, materialNodes, materialPath):
     # We may want the option in the future to write out the shaders from
     # material.layout instead, as this includes nodes which may not be
     # connected.
+    # pylint: disable=undefined-variable
     for materialNodeIndex in xrange(materialNodes.getNumberOfChildren()):
         materialNode = materialNodes.getChildByIndex(materialNodeIndex)
         shaderName = Tf.MakeValidIdentifier(
@@ -266,6 +269,7 @@ def AddTerminals(stage, terminals, material):
     @param material: The Material to write the terminals to.
     """
     supportedOutputTypes = ["surface", "displacement", "volume"]
+    # pylint: disable=undefined-variable
     for terminalIndex in xrange(terminals.getNumberOfChildren()):
         terminalAttr = terminals.getChildByIndex(terminalIndex)
         terminalName = terminals.getChildName(terminalIndex)
@@ -333,6 +337,7 @@ def AddMaterialParameters(parametersAttr, shaderId, shader):
     @param shaderId: The ``str`` ID of the shader (its type).
     @param shader: The UsdShader shader object from the Usd Stage.
     """
+    # pylint: disable=undefined-variable
     for paramIndex in xrange(parametersAttr.getNumberOfChildren()):
         paramName = parametersAttr.getChildName(paramIndex)
         paramAttr = parametersAttr.getChildByIndex(paramIndex)
@@ -619,6 +624,7 @@ def OverwriteMaterialInterfaces(parametersAttr, material, parentMaterial):
     """
     # Not techincally the parent in USD, but it is the parent from Katana.
     parentInputs = parentMaterial.GetInputs()
+    # pylint: disable=undefined-variable
     for parameterIndex in xrange(parametersAttr.getNumberOfChildren()):
         parameterName = parametersAttr.getChildName(parameterIndex)
         parameterAttr = parametersAttr.getChildByIndex(parameterIndex)
@@ -655,6 +661,7 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
     @param interfacesAttr: The attribute from materials.interface
     @param material: The material prim to add the parameter interface to.
     """
+    # pylint: disable=undefined-variable
     for interfaceIndex in xrange(interfacesAttr.getNumberOfChildren()):
         interfaceName = interfacesAttr.getChildName(interfaceIndex)
         interfaceAttr = interfacesAttr.getChildByIndex(interfaceIndex)
@@ -794,25 +801,3 @@ def WriteMaterialAssign(material, overridePrim):
     @param overridePrim: The Prim to bind to.
     """
     UsdShade.MaterialBindingAPI(overridePrim.GetPrim()).Bind(material)
-
-
-def GetShaderNodeFromRegistry(shaderType):
-    """
-    Method required to get the SdrShadingNode from the SdrRegistry in different
-    ways, depending on the usdPlugin.
-
-    @type shaderType: C{str}
-    @rtype: C{Sdr.ShaderNode}
-    @param shaderType: The type of the shader to search for in the shading
-        registry.
-    @return: The shader from the shader registry which matches the provided
-        type.
-    """
-    sdrRegistry = Sdr.Registry()
-    shader = sdrRegistry.GetNodeByName(shaderType)
-    if not shader:
-        # try arnold, that uses identifiers instead of node names
-        shader = sdrRegistry.GetShaderNodeByIdentifier(
-            "arnold:{}".format(shaderType))
-
-    return shader

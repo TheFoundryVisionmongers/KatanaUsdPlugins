@@ -1,4 +1,4 @@
-# Copyright (c) 2020 The Foundry Visionmongers Ltd.
+# Copyright (c) 2021 The Foundry Visionmongers Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "Apache License")
 # with the following modification; you may not use this file except in
@@ -20,23 +20,34 @@
 # KIND, either express or implied. See the Apache License for the specific
 # language governing permissions and limitations under the Apache License.
 
-pxr_katana_python_plugin(
-    MODULE_NAME USD.USDExport.bundle
-    PYTHON_PLUGIN_REGISTRY_FILES
-        usdExport.py
-    PYTHON_MODULE_FILES
-        UsdExport/typeConversionMaps.py
-        UsdExport/__init__.py
-        UsdExport/common.py
-        UsdExport/light.py
-        UsdExport/lightLinking.py
-        UsdExport/material.py
-        UsdExport/pluginAPI.py
-        UsdExport/pluginRegistry.py
-        UsdExport/prmanStatements.py
-        UsdExport/transform.py
-    PLUGIN_TYPE Plugins
-)
+import logging
 
-add_subdirectory(SuperTools)
-add_subdirectory(UsdExportPlugins)
+log = logging.getLogger("UsdExport.Common")
+
+try:
+    from pxr import Sdr
+except ImportError as e:
+    log.warning('Error while importing pxr module (%s). Is '
+                '"[USD install]/lib/python" in PYTHONPATH?', e.message)
+
+def GetShaderNodeFromRegistry(shaderType):
+    """
+    Method required to get the SdrShadingNode from the SdrRegistry in different
+    ways, depending on the usdPlugin.
+
+    @type shaderType: C{str}
+    @rtype: C{Sdr.ShaderNode}
+    @param shaderType: The type of the shader to search for in the shading
+        registry.
+    @return: The shader from the shader registry which matches the provided
+        type.
+    """
+    sdrRegistry = Sdr.Registry()
+    shader = sdrRegistry.GetNodeByName(shaderType)
+    if not shader:
+        # try arnold, that uses identifiers instead of node names
+        shader = sdrRegistry.GetShaderNodeByIdentifier(
+            "arnold:{}".format(shaderType))
+
+    return shader
+    

@@ -1,4 +1,4 @@
-# Copyright (c) 2020 The Foundry Visionmongers Ltd.
+# Copyright (c) 2021 The Foundry Visionmongers Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "Apache License")
 # with the following modification; you may not use this file except in
@@ -21,22 +21,10 @@
 # language governing permissions and limitations under the Apache License.
 
 pxr_katana_python_plugin(
-    MODULE_NAME USD.USDExport.bundle
+    MODULE_NAME USD.USDExportPlugins.bundle
     PYTHON_PLUGIN_REGISTRY_FILES
-        usdExport.py
+        KatanaLightAPIUsdExportPlugin.py
+        SdrLightUsdExportPlugin.py
     PYTHON_MODULE_FILES
-        UsdExport/typeConversionMaps.py
-        UsdExport/__init__.py
-        UsdExport/common.py
-        UsdExport/light.py
-        UsdExport/lightLinking.py
-        UsdExport/material.py
-        UsdExport/pluginAPI.py
-        UsdExport/pluginRegistry.py
-        UsdExport/prmanStatements.py
-        UsdExport/transform.py
-    PLUGIN_TYPE Plugins
+    PLUGIN_TYPE UsdExportPlugins
 )
-
-add_subdirectory(SuperTools)
-add_subdirectory(UsdExportPlugins)

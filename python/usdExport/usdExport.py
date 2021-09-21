@@ -184,8 +184,10 @@ class UsdExport(BaseOutputFormat):
 
         xformAttribute = attrDict.get("xform", None)
         if xformAttribute:
-            prim = stage.DefinePrim(sdfLocationPath, "Xform")
-            WriteTransform(prim, xformAttribute)
+            prim = WriteTransform(stage,
+                                  sdfLocationPath,
+                                  xformAttribute)
+            createOverridePrim = False
 
         materialAttribute = attrDict.get("material")
         # Write materialLocations first, as sdfLocationPath may be altered when
@@ -202,7 +204,6 @@ class UsdExport(BaseOutputFormat):
             createOverridePrim = False
 
         elif locationType == "light":
-            stage.DefinePrim(sdfLocationPath, "Light")
             prim = WriteLight(stage, sdfLocationPath,
                                    materialAttribute)
             # Write out the light linking data if it is available.
@@ -214,6 +215,7 @@ class UsdExport(BaseOutputFormat):
                     break
             if lightLinkingData:
                 WriteLightLinking(prim, lightLinkingData)
+            createOverridePrim = False
 
         # Create an overridePrim if not disabled, and then get the current prim
         # to add any other extra data.

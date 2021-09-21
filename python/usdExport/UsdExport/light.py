@@ -22,8 +22,6 @@
 
 import logging
 
-import UsdKatana
-
 log = logging.getLogger("UsdExport")
 
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
@@ -39,7 +37,9 @@ except ImportError as e:
 def WriteLight(stage, lightSdfPath, materialAttrs):
     """
     Converts the given light material C{GroupAttribute} into a
-    C{Usd.Prim}.
+    C{Usd.Prim}. If the C{Sdf.Path} does not exist, it will be created. Any
+    existing prim type will be overwritten with with either the corresponding
+    UsdLux light type or 'Light' if a non-UsdLux light type is being written.
 
     @type stage: C{Usd.Stage}
     @type lightSdfPath: C{Sdf.Path}
@@ -49,7 +49,7 @@ def WriteLight(stage, lightSdfPath, materialAttrs):
     @param lightSdfPath: The path to write the C{UsdLux.Light} to.
     @param materialAttrs: The ``light`` attribute from Katana's
         scenegraph for the light location.
-    @return: The C{UsdLux.Light} created by this function or C{None} if
+    @return: The C{Usd.Prim} created by this function or C{None} if
         no light was created.
     """
     # pylint: disable=too-many-locals
@@ -62,9 +62,6 @@ def WriteLight(stage, lightSdfPath, materialAttrs):
             propertySpec = prim.GetSchemaPropertySpec(propertyName)
             if isinstance(propertySpec, Sdf.AttributeSpec):
                 properties[propertyName] = propertySpec.typeName
-            elif isinstance(propertySpec, Sdf.RelationshipSpec):
-                # Light/shadow linking & filters should be here.
-                pass
 
         return properties
 
@@ -84,117 +81,52 @@ def WriteLight(stage, lightSdfPath, materialAttrs):
 
         return sanitizedParamName == fnAttrName
 
-    lightShaderName = ""
-    lightShaderAttrs = None
-    for lightAttrName, lightAttr in materialAttrs.childList():
-        if lightAttrName.endswith("LightShader"):
-            shaderNameAttrData = lightAttr.getData()
-            if not shaderNameAttrData:
-                continue
-            lightShaderName = shaderNameAttrData[0]
+    lights = ParseLightsFromMaterialAttrs(materialAttrs)
+    lightPrim = stage.DefinePrim(lightSdfPath, "Light")
 
-        elif lightAttrName.endswith("LightParams"):
-            lightShaderAttrs = lightAttr
+    for lightShaderName, lightShaderAttrs in lights.items():
+        (renderer, lightShaderName) = lightShaderName
 
-    if not lightShaderName or not lightShaderAttrs:
-        log.warning("Failed to write light: missing required attributes.")
-        return None
+        if renderer != "usd":
+            continue
 
-    if not lightShaderName.startswith("UsdLux"):
-        # This is only temporary while third party light export does not work.
-        log.warning("Shader '%s' is not a UsdLux shader type, skipping bake "
-                    "for this light.", lightShaderName)
-        return None
+        primType = _ResolveLightPrimType(lightShaderName)
+        lightPrim = stage.DefinePrim(lightSdfPath, primType)
 
-    primType = _ResolveLightPrim(lightShaderName)
-    if not primType:
-        log.warning("Unable to resolve prim type for shader '%s'.",
-                    lightShaderName)
-        return None
+        shapingAPI = UsdLux.ShapingAPI(lightPrim)
+        shapingAPI.Apply(lightPrim)
+        shadowAPI = UsdLux.ShadowAPI(lightPrim)
+        shadowAPI.Apply(lightPrim)
 
-    lightPrim = stage.DefinePrim(lightSdfPath, primType)
-    shapingAPI = UsdLux.ShapingAPI(lightPrim)
-    shadowAPI = UsdLux.ShadowAPI(lightPrim)
-    _ApplyKatanaLightAPI(lightPrim, lightShaderName)
+        knownLightProperties = {} # Maps property name to sdf type.
+        # Update the known properties with properties from the lux
+        # light, shaping and shadow schemas.
+        lightPrimDef = \
+            Usd.SchemaRegistry().FindConcretePrimDefinition(primType)
+        knownLightProperties.update(collateProperties(lightPrimDef))
+        knownLightProperties.update(
+            collateProperties(shapingAPI.GetSchemaClassPrimDefinition()))
+        knownLightProperties.update(
+            collateProperties(shadowAPI.GetSchemaClassPrimDefinition()))
 
-    knownLightProperties = {} # Maps property name to sdf type.
-    # Update the known properties with properties from the lux
-    # light, shaping and shadow schemas.
-    lightPrimDef = \
-        Usd.SchemaRegistry().FindConcretePrimDefinition(primType)
-    knownLightProperties.update(collateProperties(lightPrimDef))
-    knownLightProperties.update(
-        collateProperties(shapingAPI.GetSchemaClassPrimDefinition()))
-    knownLightProperties.update(
-        collateProperties(shadowAPI.GetSchemaClassPrimDefinition()))
-
-    shapingAPI.Apply(lightPrim)
-    shadowAPI.Apply(lightPrim)
-
-    # Process shader parameters.
-    for lightParamName, lightParamAttr in lightShaderAttrs.childList():
-        knownParamMatches = [i for i in knownLightProperties.keys() \
-            if compareFnAttrToUsdParam(lightParamName, i)]
-        if len(knownParamMatches) > 0:
-            lightPrim = _WriteParameter(lightPrim,
-                                        knownParamMatches[0],
-                                        knownLightProperties[knownParamMatches[0]],
-                                        lightParamAttr)
-        else:
-            lightPrim = _WriteCustomParameter(lightPrim,
-                                                lightParamName,
+        # Process shader parameters.
+        for lightParamName, lightParamAttr in lightShaderAttrs.childList():
+            knownParamMatches = [i for i in knownLightProperties.keys() \
+                if compareFnAttrToUsdParam(lightParamName, i)]
+            if len(knownParamMatches) > 0:
+                matchingParam = knownParamMatches[0]
+                existingParamNames = lightPrim.GetAuthoredAttributes()
+                if not matchingParam in existingParamNames:
+                    lightPrim = _WriteParameter(lightPrim,
+                                                matchingParam,
+                                                knownLightProperties[matchingParam],
                                                 lightParamAttr)
+            else:
+                lightPrim = _WriteCustomParameter(lightPrim,
+                                                  lightParamName,
+                                                  lightParamAttr)
 
     return lightPrim
-
-def _ApplyKatanaLightAPI(prim, shaderName):
-    lightApi = UsdKatana.LightAPI(prim)
-    lightApi.Apply(prim)
-    lightApi.CreateIdAttr([shaderName])
-
-def _WriteParameter(prim, paramName, typeName, fnAttr):
-    inputAttr = prim.CreateAttribute(paramName, typeName)
-    gfValue = ConvertParameterValueToGfType(fnAttr.getData(), typeName)
-    inputAttr.Set(gfValue)
-
-    return prim
-
-def _WriteCustomParameter(prim, paramName, fnAttr, paramType = None):
-    if not isinstance(paramType, Sdf.ValueTypeName):
-        paramType = FnAttributeToSdfType.get(type(fnAttr),
-                                             Sdf.ValueTypeNames.Token)
-
-    return _WriteParameter(prim, paramName, paramType, fnAttr)
-
-def _ResolveLightPrim(shaderName):
-    schemaType = None
-
-    lightType = Tf.Type.FindByName(shaderName)
-    if not lightType:
-        log.debug("No type for '%s'.", shaderName)
-    else:
-        schemaType = Usd.SchemaRegistry().GetConcreteSchemaTypeName(lightType)
-        if not schemaType:
-            log.debug("No schema for '%s'.", shaderName)
-        else:
-            return schemaType
-
-    return _FallbackBaseLightTokenParse(shaderName)
-
-def _FallbackBaseLightTokenParse(shaderName):
-    lightTypeToKnownLightNames = {
-            "CylinderLight": ["cylinder"],
-            "DiskLight": ["disk", "spot", "photometric"],
-            "DistantLight": ["dist", "portal"],
-            "DomeLight": ["dome", "env"],
-            "RectLight": ["rect", "quad"],
-            "SphereLight": ["sphere", "point"]}
-    for lightType, names in lightTypeToKnownLightNames.items():
-        for name in names:
-            if name in shaderName.lower():
-                return lightType
-
-    return None
 
 def WriteLightList(stage, prim=None):
     """
@@ -216,3 +148,51 @@ def WriteLightList(stage, prim=None):
         UsdLux.ListAPI.ComputeModeIgnoreCache)
     luxListAPI.StoreLightList(listList)
 
+def ParseLightsFromMaterialAttrs(materialAttrs):
+    """
+    Creates a dictionary mapping shaders to light attributes for the given
+    material attributes. The dictionary key is a tuple of C{str} for the
+    renderer name and C{str} for the shader name, for example
+    `("prman", "PxrDiskLight)` or `("usd", "UsdLuxRectLight)`
+
+    @type materialAttrs: C{FnAttribute.GroupAttribute}
+    @rtype: C{dict} of (C{tuple} of C{str}) : C{FnAttribute.GroupAttribute}
+    @param materialAttrs: The material group attribute to read from.
+    @return: A dictionary mapping the renderer prefixed shader name to the
+        attributes for that light.
+    """
+    lights = {}
+    for lightAttrName, lightAttr in materialAttrs.childList():
+        if lightAttrName.endswith("LightShader"):
+            renderer = lightAttrName.split("LightShader")[0]
+            lightParams = \
+                materialAttrs.getChildByName(renderer + "LightParams")
+            shaderName = lightAttr.getData()
+            if not shaderName or not lightParams:
+                continue
+            shaderName = shaderName[0]
+            lights[(renderer, shaderName)] = lightParams
+
+    return lights
+
+def _WriteParameter(prim, paramName, typeName, fnAttr):
+    inputAttr = prim.CreateAttribute(paramName, typeName)
+    gfValue = ConvertParameterValueToGfType(fnAttr.getData(), typeName)
+    inputAttr.Set(gfValue)
+
+    return prim
+
+def _WriteCustomParameter(prim, paramName, fnAttr, paramType = None):
+    if not isinstance(paramType, Sdf.ValueTypeName):
+        paramType = FnAttributeToSdfType.get(type(fnAttr),
+                                             Sdf.ValueTypeNames.Token)
+
+    return _WriteParameter(prim, paramName, paramType, fnAttr)
+
+def _ResolveLightPrimType(shaderName):
+    lightType = Tf.Type.FindByName(shaderName)
+    if not lightType:
+        return "Light"
+
+    schemaType =  Usd.SchemaRegistry().GetConcreteSchemaTypeName(lightType)
+    return schemaType if schemaType else "Light"
