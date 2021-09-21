@@ -22,6 +22,8 @@
 
 import logging
 
+from Katana import FnAttribute
+
 log = logging.getLogger("UsdExport")
 
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
@@ -81,9 +83,11 @@ def WriteLight(stage, lightSdfPath, materialAttrs):
 
         return sanitizedParamName == fnAttrName
 
-    lights = ParseLightsFromMaterialAttrs(materialAttrs)
     lightPrim = stage.DefinePrim(lightSdfPath, "Light")
+    if not materialAttrs:
+        return
 
+    lights = ParseLightsFromMaterialAttrs(materialAttrs)
     for lightShaderName, lightShaderAttrs in lights.items():
         (renderer, lightShaderName) = lightShaderName
 
@@ -162,16 +166,18 @@ def ParseLightsFromMaterialAttrs(materialAttrs):
         attributes for that light.
     """
     lights = {}
-    for lightAttrName, lightAttr in materialAttrs.childList():
-        if lightAttrName.endswith("LightShader"):
-            renderer = lightAttrName.split("LightShader")[0]
-            lightParams = \
-                materialAttrs.getChildByName(renderer + "LightParams")
-            shaderName = lightAttr.getData()
-            if not shaderName or not lightParams:
-                continue
-            shaderName = shaderName[0]
-            lights[(renderer, shaderName)] = lightParams
+    if materialAttrs:
+        for lightAttrName, lightAttr in materialAttrs.childList():
+            if lightAttrName.endswith("LightShader"):
+                renderer = lightAttrName.split("LightShader")[0]
+                lightParams = \
+                    materialAttrs.getChildByName(renderer + "LightParams")
+                if not lightParams:
+                    lightParams = FnAttribute.GroupAttribute()
+                shaderName = lightAttr.getData()
+                if not shaderName:
+                    continue
+                lights[(renderer, shaderName[0])] = lightParams
 
     return lights
 
