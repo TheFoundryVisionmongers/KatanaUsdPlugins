@@ -1111,9 +1111,10 @@ PxrUsdKatanaUtils::ConvertUsdPathToKatLocation(
                 }
                 return sessionPathString + pathString;
             } else {
-                std::cerr << "UsdIn: Failed to compute katana path for"
-                " usd path: " << path << " with given isolatePath: " <<
-                isolatePathString << std::endl;
+                FnLogWarn(
+                    "UsdIn: Failed to compute katana path for"
+                    " usd path: "
+                    << path << " with given isolatePath: " << isolatePathString);
                 return std::string();
             }
         }
@@ -1947,7 +1948,7 @@ PxrUsdKatanaUtilsLightListAccess::SetLinks(
         UsdCollectionAPI::MembershipQuery::PathExpansionRuleMap linkMap =
             query.GetAsPathExpansionRuleMap();
         for (const auto &entry: linkMap) {
-            if (!entry.first.IsAbsoluteRootOrPrimPath()) {
+            if (entry.first == SdfPath::AbsoluteRootPath()) {
                 // Skip property paths
                 continue;
             }
@@ -1962,8 +1963,8 @@ PxrUsdKatanaUtilsLightListAccess::SetLinks(
             const std::string linkHash = locAttr.getHash().str();
             const bool on = (entry.second != UsdTokens->exclude);
             (on ? onBuilder : offBuilder).set(linkHash, locAttr);
+            isLinked = true;
         }
-        isLinked = query.IsPathIncluded(collectionAPI.GetPath());
     }
 
     // Set off and then on attributes, in order, to ensure

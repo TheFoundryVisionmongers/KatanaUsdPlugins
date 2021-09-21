@@ -120,10 +120,10 @@ lightListFnc(PxrUsdKatanaUtilsLightListAccess& lightList)
     if (prim && prim.IsA<UsdLuxLight>()) {
         UsdLuxLight light(prim);
         lightList.Set("path", lightList.GetLocation());
-        bool enabled = lightList.SetLinks(light.GetLightLinkCollectionAPI(),
+        bool lightEnabled = lightList.SetLinks(light.GetLightLinkCollectionAPI(),
                                           "light");
-        lightList.Set("enable", enabled);
-        lightList.SetLinks(light.GetShadowLinkCollectionAPI(), "shadow");
+        bool shadowEnabled = lightList.SetLinks(light.GetShadowLinkCollectionAPI(), "shadow");
+        lightList.Set("enable", (lightEnabled || shadowEnabled));
     }
     if (prim && prim.IsA<UsdRiPxrAovLight>()) {
         lightList.Set("hasAOV", true);
