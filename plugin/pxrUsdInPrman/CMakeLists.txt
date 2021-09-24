@@ -9,14 +9,18 @@ pxr_plugin(${PXR_PACKAGE}
     KATANA_PLUGIN
     LIBRARIES
         katanaPluginApi
+        usd
         usdGeom
         usdKatana
+        usdLux
+        usdRi
         ${vtKatana_LIBRARY}
-    
+
     PRIVATE_HEADERS
         declarePackageOps.h
-    
+
     CPPFILES
         register.cpp
-        prmanGeometryDecorator.cpp        
+        prmanGeometryDecorator.cpp
+        prmanLightDecorator.cpp
 )

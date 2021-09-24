@@ -60,7 +60,7 @@ public:
     /// Set the katana attribute \p path by evaluating the given
     /// USD attribute \p attr at the time configured in SetUSDTime().
     /// Returns this object by reference so these calls can be chained.
-    PxrUsdKatanaAttrMap& Set(const std::string& path, const UsdAttribute& attr);
+    USDKATANA_API PxrUsdKatanaAttrMap& Set(const std::string& path, const UsdAttribute& attr);
 
     /// \brief set \p attr at \p path.
     USDKATANA_API void set(const std::string& path, const Foundry::Katana::Attribute& attr);

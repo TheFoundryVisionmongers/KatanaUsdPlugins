@@ -157,7 +157,7 @@ InitUsdInArgs(const FnKat::GroupAttribute & opArgs,
         opArgs.getChildByName("verbose")).getValue(0, false);
 
     typedef FnAttribute::StringAttribute::array_type StringArrayType;
-    FnAttribute::StringAttribute outputTargetArgStr = opArgs.getChildByName("outputTarget");
+    FnAttribute::StringAttribute outputTargetArgStr = opArgs.getChildByName("outputTargets");
     if (outputTargetArgStr.isValid())
     {
         StringArrayType outputTargetVector = outputTargetArgStr.getNearestSample(0);
@@ -487,7 +487,6 @@ public:
                 ab.rootLocation =
                         interface.getOutputLocationPath() + "/" + primName;
                 ab.isolatePath = prim.GetPath().GetString();
-
                 interface.createChild(
                         primName,
                         "",

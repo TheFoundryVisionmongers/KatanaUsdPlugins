@@ -126,6 +126,7 @@ void registerPlugins()
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdShadeMaterial>("PxrUsdInCore_LookOp");
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdSkelRoot>("PxrUsdInCore_XformOp");
 
+    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxLight>("PxrUsdInCore_LightOp");
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxCylinderLight>("PxrUsdInCore_LightOp");
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDomeLight>("PxrUsdInCore_LightOp");
     PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxGeometryLight>("PxrUsdInCore_LightOp");

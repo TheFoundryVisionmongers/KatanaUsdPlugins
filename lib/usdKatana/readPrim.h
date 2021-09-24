@@ -49,14 +49,14 @@ PxrUsdKatanaReadPrim(
         const PxrUsdKatanaUsdInPrivateData& data,
         PxrUsdKatanaAttrMap& attrs);
 
-void
+USDKATANA_API void
 PxrUsdKatanaReadPrimPrmanStatements(
         const UsdPrim& prim,
         double currentTime,
         Foundry::Katana::GroupBuilder& statementBuilder,
         const bool prmanOutputTarget);
 
-Foundry::Katana::Attribute
+USDKATANA_API Foundry::Katana::Attribute
 PxrUsdKatanaGeomGetPrimvarGroup(
         const UsdGeomImageable& imageable,
         const PxrUsdKatanaUsdInPrivateData& data);

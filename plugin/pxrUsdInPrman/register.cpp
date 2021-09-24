@@ -39,6 +39,7 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 
 DEFINE_GEOLIBOP_PLUGIN(PxrUsdInPrman_LocationDecorator);
+DEFINE_GEOLIBOP_PLUGIN(PxrUsdInPrmanLuxLight_LocationDecorator);
 
 void registerPlugins()
 {
@@ -49,6 +50,13 @@ void registerPlugins()
     
     PxrUsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(
             "UsdInPrman_LocationDecorator");
+    USD_OP_REGISTER_PLUGIN(PxrUsdInPrmanLuxLight_LocationDecorator, 
+                       "UsdInPrmanLuxLight_LocationDecorator", 
+                       0, 
+                       1);
+    
+    PxrUsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(
+            "UsdInPrmanLuxLight_LocationDecorator");
 
     PxrUsdKatanaBootstrap();
     PxrVtKatanaBootstrap();

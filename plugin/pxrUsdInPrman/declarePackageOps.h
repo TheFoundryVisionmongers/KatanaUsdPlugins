@@ -33,5 +33,6 @@
 #include "usdKatana/usdInPluginRegistry.h"
 
 PXRUSDKATANA_USDIN_PLUGIN_DECLARE(PxrUsdInPrman_LocationDecorator)
+PXRUSDKATANA_USDIN_PLUGIN_DECLARE(PxrUsdInPrmanLuxLight_LocationDecorator)
 
 #endif // PXR_USDINPRMAN_DECLAREPACKAGEOPS_H
