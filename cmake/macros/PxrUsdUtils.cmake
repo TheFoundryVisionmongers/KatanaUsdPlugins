@@ -369,8 +369,8 @@ function(_replace_root_python_module INPUT_FILE OUTPUT_FILE)
         endif()
     endif()
 
-    # Either the output file didn't exist, or there's been other changes
-    message(INFO "Converting python namespace and installing file to: ${OUTPUT_FILE}")
+    # Either the output file didn't exist, or there have been other changes
+    message(STATUS "PxrUsdUtils.cmake: Converting Python namespace and installing file to: ${OUTPUT_FILE}")
     file(WRITE ${OUTPUT_FILE} "${filedata}")
 endfunction()
 
