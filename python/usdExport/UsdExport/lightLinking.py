@@ -125,10 +125,15 @@ def GetLinkingData(bakeNodeName, variantName):
                 linkAttrs.getChildByName("enable.onCEL").getData())
             enableOffCEL = sanitizeCEL(
                 linkAttrs.getChildByName("enable.offCEL").getData())
-            geoShadowEnableOnCEL = sanitizeCEL(
-                linkAttrs.getChildByName("geoShadowEnable.onCEL").getData())
-            geoShadowEnableOffCEL = sanitizeCEL(
-                linkAttrs.getChildByName("geoShadowEnable.offCEL").getData())
+
+            geoShadowEnableOnCEL = []
+            geoShadowEnableOffCEL = []
+            geoShadowEnable = linkAttrs.getChildByName("geoShadowEnable")
+            if geoShadowEnable:
+                geoShadowEnableOnCEL = sanitizeCEL(
+                    geoShadowEnable.getChildByName("onCEL").getData())
+                geoShadowEnableOffCEL = sanitizeCEL(
+                    geoShadowEnable.getChildByName("offCEL").getData())
 
             linkingData[path] = {"lightLinkIncludes": enableOnCEL,
                                     "lightLinkExcludes": enableOffCEL,
