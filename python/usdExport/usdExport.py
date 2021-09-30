@@ -36,8 +36,9 @@ pxrImported = False
 try:
     from pxr import Kind, Sdf, Usd, UsdShade
     # These includes also require fnpxr
+    from UsdExport.common import (LocationPathToSdfPath, GetRelativeUsdSdfPath)
     from UsdExport.light import (WriteLight, WriteLightList)
-    from UsdExport.lightLinking import (GetLinkingData, WriteLightLinking)
+    from UsdExport.lightLinking import (WriteLightLinking)
     from UsdExport.material import (WriteMaterial, WriteMaterialAssign,
                                     WriteChildMaterial)
     from UsdExport.pluginRegistry import (GetUsdExportPluginsByType)
@@ -95,32 +96,11 @@ class UsdExport(BaseOutputFormat):
             return False
         return True
 
-    @staticmethod
-    def locationPathToSdfPath(locationPath, rootPrimName):
-        """
-        A Helper method to simply validate and create SdfPaths from
-        location paths, concatenating the rootPrim name onto the Katana
-        location path.
-
-        @type locationPath: C{str}
-        @type rootPrimName: C{str}
-        @rtype: C{Sdf.Path}
-        @param locationPath: The path for the current Katana location.
-        @param rootPrimName: The name of the root prim for the C{Usd.Stage}.
-        @return: A validated concatenated C{Sdf.Path} to write the C{Prim} to.
-        """
-        if not locationPath.startswith("/"):
-            locationPath = "/" + locationPath
-        if rootPrimName:
-            locationPath = rootPrimName + locationPath
-        # ":" is not supported in an SdfPath
-        locationPath = locationPath.replace(":", "_")
-        return Sdf.Path(locationPath)
 
     @classmethod
     def WriteOverride(cls, stage, overrideDict, sharedOverridesDict,
                       locationTypePass, location, rootName, rootPrimName,
-                      materialDict, arbitraryData):
+                      materialDict, lightDict):
         """
         This method is responsible for writing all of the attributes from the
         C{passData.shaderdOverrides} dictionary to the USD Stage.
@@ -139,7 +119,7 @@ class UsdExport(BaseOutputFormat):
         @type rootName: C{str}
         @type rootPrimName: C{str}
         @type materialDict: C{dict} of C{str} : C{Sdf.Path}
-        @type arbitraryData: C{dict} of C{str} : C{any}
+        @type lightDict: C{dict} of C{str} : C{Sdf.Path}
         @param stage: The C{Usd.Stage} to write data to.
         @param overrideDict: See C{LookFilePassData} for more details.
         @param sharedOverridesDict: See C{LookFilePassData} for more details.
@@ -157,8 +137,9 @@ class UsdExport(BaseOutputFormat):
         @param materialDict: A dictionary containing a mapping between the
             material location paths from Katana, and the SdfPath in the USD
             Stage.
-        @param arbitraryData: A dictionary of keys to arbitrary data which
-            can be used in the writing of specific attributes.
+        @param lightDict: A dictionary containing a mapping between the
+            light location paths from Katana, and the SdfPath in the USD
+            Stage.
         """
         # pylint: disable=too-many-branches,
         # pylint: disable=too-many-locals
@@ -177,17 +158,21 @@ class UsdExport(BaseOutputFormat):
         if not cls.__checkTypeWritingOrder(locationType, locationTypePass):
             return
 
-        sdfLocationPath = cls.locationPathToSdfPath(location, rootPrimName)
+        sdfLocationPath = LocationPathToSdfPath(location, rootPrimName)
         # By default create an override prim, any other node creation should
         # happen before the point of creating this prim.
-        createOverridePrim = True
+        prim = None
 
         xformAttribute = attrDict.get("xform", None)
         if xformAttribute:
             prim = WriteTransform(stage,
                                   sdfLocationPath,
                                   xformAttribute)
-            createOverridePrim = False
+
+        lightListAttribute = attrDict.get("lightList", None)
+        if lightListAttribute:
+            WriteLightLinking(stage, sdfLocationPath, lightListAttribute,
+                lightDict, rootName)
 
         materialAttribute = attrDict.get("material")
         # Write materialLocations first, as sdfLocationPath may be altered when
@@ -201,32 +186,19 @@ class UsdExport(BaseOutputFormat):
             sdfLocationPath = cls.writeMaterialAttribute(
                 stage, materialAttribute, location, sdfLocationPath,
                 materialDict)
-            createOverridePrim = False
+            prim = stage.GetPrimAtPath(sdfLocationPath)
 
         elif locationType == "light":
             prim = WriteLight(stage, sdfLocationPath,
                                    materialAttribute)
-            # Write out the light linking data if it is available.
-            variantLinkingData = arbitraryData.get("linkingData", None)
-            lightLinkingData = {}
-            for lightPath, linkCollections in variantLinkingData.items():
-                if lightPath.endswith(location):
-                    lightLinkingData = linkCollections
-                    break
-            if lightLinkingData:
-                WriteLightLinking(prim, lightLinkingData)
-            createOverridePrim = False
-
-        # Create an overridePrim if not disabled, and then get the current prim
-        # to add any other extra data.
-        if createOverridePrim:
-            stage.OverridePrim(sdfLocationPath)
-        prim = stage.GetPrimAtPath(sdfLocationPath)
+            lightDict[location] = sdfLocationPath
 
         prmanStatementsAttributes = {
             key: value for key, value in attrDict.iteritems()
             if 'prmanStatements' in key}
         if prmanStatementsAttributes:
+            if not prim:
+                prim = stage.OverridePrim(sdfLocationPath)
             WritePrmanStatements(prmanStatementsAttributes, prim)
             WritePrmanGeomGprims(prmanStatementsAttributes, prim)
             WritePrmanModel(prmanStatementsAttributes, prim)
@@ -240,6 +212,8 @@ class UsdExport(BaseOutputFormat):
         # materialAssign
         materialAssignAttribute = attrDict.get("materialAssign")
         if materialAssignAttribute is not None:
+            if not prim:
+                prim = stage.OverridePrim(sdfLocationPath)
             cls.WriteMaterialAssignAttr(materialDict, stage, rootName,
                                         materialAssignAttribute, prim)
 
@@ -303,7 +277,7 @@ class UsdExport(BaseOutputFormat):
 
     @classmethod
     def writeOverrides(cls, stage, outputDictList, sharedOverridesDict,
-                       rootPrimName, materialDict, arbitraryData = {}):
+                       rootPrimName, materialDict):
         """
         Loops through a sorted list of the output information and then loops
         through the class list of C{LocationTypeWritingOrder} and calls
@@ -321,7 +295,6 @@ class UsdExport(BaseOutputFormat):
         @type outputDictList: C{list}
         @type sharedOverridesDict: C{dict}
         @type rootPrimName: C{str}
-        @type arbitraryData: C{dict} of C{dict} : C{any}
         @param stage: The UsdStage to write data to.
         @param outputDictList: See the C{LookFilePassData} object for more
             details.
@@ -329,9 +302,11 @@ class UsdExport(BaseOutputFormat):
             details.
         @param rootPrimName: The name of the root C{Usd.Prim} of the
             C{Usd.Stage}.
-        @param arbitraryData: A dictionary of keys to arbitrary data which
-            can be used in the writing of specific attributes.
         """
+        # Create a light dict for us to write mappings of relative paths
+        # to sdfLocationPaths, such that we can use this when finding the
+        # lights used in resolved light linking
+        lightDict = {}
         for (overrideDict, rootName, rootType) in outputDictList:
             _ = rootType
             outputDictKeys = sorted(overrideDict.keys())
@@ -344,7 +319,7 @@ class UsdExport(BaseOutputFormat):
                                       rootName,
                                       rootPrimName,
                                       materialDict,
-                                      arbitraryData)
+                                      lightDict)
         WriteLightList(stage)
 
     @classmethod
@@ -371,65 +346,12 @@ class UsdExport(BaseOutputFormat):
         @param overridePrim: The Prim to write the material binding to.
         """
         assignValue = str(attribute.getValue())
-        materialPath = cls.GetRelativeUsdSdfPath(
+        materialPath = GetRelativeUsdSdfPath(
             materialDict, rootName, assignValue)
         if materialPath:
             material = UsdShade.Material.Get(stage, materialPath)
             if material:
                 WriteMaterialAssign(material, overridePrim)
-
-    @classmethod
-    def GetRelativeUsdSdfPath(cls, materialDict, rootName, location):
-        """
-        To be used with values from attributes like "materialAssign".
-        Katana provides the absolute scene graph location path, but since
-        the LookFileBakeAPI provides materials under the C{rootName}, as
-        relative paths, the abolute paths must be translated to match
-        the relative paths provided. If writing out materials from the
-        root/materials, or other root paths, this is not needed since these
-        are absolute already.
-        Child material paths also need to be remapped since they are changed
-        to sibling materials. The mappings from the original location in Katana
-        and the C{Sdf.Path} in the USD file are stored in the C{materialDict}.
-
-        @type materialDict: C{dict} of C{ C{str} : C{Sdf.Path} }
-        @type rootName: C{str}
-        @type locationPath: C{str}
-        @rtype: C{str} C{None}
-        @param materialDict: The dictionary of katana relative paths to the
-            location of L{rootName}, and their C{Sdf.Path}s.
-        @param rootName: Refer to L{LookFilePassData} for more information
-        @param locationPath: Katana location path.
-        @return: The path to the material in the USD Stage, read from the
-            C{materialDict} after resolving the relative path.
-        """
-        if location in materialDict:
-            return materialDict[location]
-        rfindIndex = len(location)
-        # Path separators to ensure the rootName is not matched within a
-        # directory or file name. This will require stripping later on.
-        rootNamePath = "/" + rootName + "/"
-        rfindIndex = location.rfind(rootNamePath, 0, rfindIndex)
-        if rfindIndex < 0:
-            return None
-        # Start reading with a closing "/"
-        materialPath = location[rfindIndex + len(rootNamePath) - 1:]
-        if materialPath in materialDict:
-            return materialDict[materialPath]
-        # If the location is not found in the first try, there may be
-        # duplicate levels in  the hierarchy, so this must be repeated until
-        # a valid relative material path is found.
-        materialPath = location[rfindIndex:]
-        # Start reading with a closing "/"
-        rfindIndex = rfindIndex + 1
-        while materialPath and materialPath not in materialDict:
-            rfindIndex = location.rfind(rootNamePath, 0, rfindIndex)
-            if rfindIndex < 0:
-                # Can no longer find the rootNamePath.
-                return None
-            materialPath = location[rfindIndex:]
-            rfindIndex = rfindIndex + 1
-        return materialDict[materialPath]
 
 
     # Instance Methods --------------------------------------------------------
@@ -482,22 +404,17 @@ class UsdExport(BaseOutputFormat):
                     log.warning('"%s" is not a valid SdfPath. Location will '
                                 'be skipped.', location)
                     continue
-                sdfLocationPath = self.__class__.locationPathToSdfPath(
-                    location, rootPrimName)
+                sdfLocationPath = LocationPathToSdfPath(location, rootPrimName)
                 if locationType == "material":
                     self.__class__.writeMaterialAttribute(
                         stage, materialAttribute, location, sdfLocationPath,
                         materialDict)
 
-
-            arbitraryData = {"linkingData": GetLinkingData(bakeNodeName,
-                                                           variantName)}
             self.__class__.writeOverrides(stage,
                                           passData.outputDictList,
                                           passData.sharedOverridesDict,
                                           rootPrimName,
-                                          materialDict,
-                                          arbitraryData)
+                                          materialDict)
 
         # Validate whether the required settings are provided
         try:
@@ -514,7 +431,6 @@ class UsdExport(BaseOutputFormat):
             assemblyWritten = \
                 self._settings["assemblyWritten"]
             variantSetName = self._settings["variantSetName"]
-            bakeNodeName = self._settings["bakeNodeName"]
         except ValueError:
             raise LookFileBakeException("Invalid Settings for UsdExport. "
                                         "The UsdExport Output Format plug-in "

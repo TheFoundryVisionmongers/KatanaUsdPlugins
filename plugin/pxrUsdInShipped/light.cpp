@@ -122,8 +122,9 @@ lightListFnc(PxrUsdKatanaUtilsLightListAccess& lightList)
         lightList.Set("path", lightList.GetLocation());
         bool lightEnabled = lightList.SetLinks(light.GetLightLinkCollectionAPI(),
                                           "light");
+        lightList.Set("enable", lightEnabled);
         bool shadowEnabled = lightList.SetLinks(light.GetShadowLinkCollectionAPI(), "shadow");
-        lightList.Set("enable", (lightEnabled || shadowEnabled));
+        lightList.Set("geoShadowEnable", shadowEnabled);
     }
     if (prim && prim.IsA<UsdRiPxrAovLight>()) {
         lightList.Set("hasAOV", true);

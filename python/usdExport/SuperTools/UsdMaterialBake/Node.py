@@ -235,7 +235,6 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
             "createCompleteUsdAssemblyFile": createCompleteUsdAssemblyFile,
             "assemblyFilename": assemblyFilename,
             "payloadFilename": payloadFilename,
-            "bakeNodeName": self.getName(),
         }
         # Ensure the interruptWidget is only created in a UI session
         if parentWidget:
