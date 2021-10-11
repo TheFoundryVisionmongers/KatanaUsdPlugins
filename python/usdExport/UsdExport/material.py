@@ -634,10 +634,9 @@ def OverwriteMaterialInterfaces(parametersAttr, material, parentMaterial):
         matchingParamFullName = None
         paramSdfType = None
         for shaderInput in parentInputs:
-            inputName = shaderInput.GetFullName()
-            inputParamName = inputName.split(":")[-1]
+            inputParamName = shaderInput.GetBaseName()
             if inputParamName == parameterName:
-                matchingParamFullName = inputName
+                matchingParamFullName = inputParamName
                 paramSdfType = shaderInput.GetTypeName()
         if matchingParamFullName and paramSdfType:
             AddParameterToShader(parameterName, parameterAttr, material,
