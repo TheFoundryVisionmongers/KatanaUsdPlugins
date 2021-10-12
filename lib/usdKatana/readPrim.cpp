@@ -405,9 +405,7 @@ _BuildScopedCoordinateSystems(
     return foundCoordSys;
 }
 
-static 
-void
-_AppendPathToIncludeExcludeStr(
+static void _AppendPathToIncludeExcludeStr(
     const SdfPath &path,
     bool isIncludePath,
     const UsdPrim &prim, 
@@ -430,14 +428,14 @@ _AppendPathToIncludeExcludeStr(
         if (relativePath == "")
             relativePath = "/";
         // Add the path and all descendants
-        incExcStr << relativePath << " " 
-                  << ((relativePath != "/") ? relativePath : "") << "//* ";
-
-    } else {
-        FnLogWarn("Collection " << srcCollectionName  << 
-                  (isIncludePath ? "includes" : "excludes") << " path "
+        incExcStr << relativePath << " " << ((relativePath != "/") ? relativePath : "") << "//* ";
+    }
+    else
+    {
+        FnLogWarn("Collection " << srcCollectionName  <<
+                  (isIncludePath ? " includes" : " excludes") << " path "
                   << path.GetString() << " which is not a descendant of the "
-                  "collection-owning prim <" << prim.GetPath().GetString() 
+                  "collection-owning prim <" << prim.GetPath().GetString()
                   << ">");
     }
 }
@@ -552,16 +550,14 @@ _BuildCollections(
 
             // Add the string that encodes the includes and excludes if it's 
             // not empty.
-            if (incExcStr.str() != "(())") {
+            if (incExcStr.str() != "(() - ())" && incExcStr.str() != "(())") {
                 collectionBuilder.push_back(incExcStr.str());
             }
 
             FnKat::StringAttribute collectionAttr = collectionBuilder.build();
             if (collectionAttr.getNearestSample(0).size() > 0) {
-                collectionsBuilder.set(
-                        _GetKatanaCollectionName(collection.GetName())
-                                + ".cel",
-                        collectionAttr);
+                collectionsBuilder.set(_GetKatanaCollectionName(collection.GetName()) + ".cel",
+                                       collectionAttr);
             }
         } else {
             // Bake the collection as a flat list of member paths.
@@ -579,7 +575,6 @@ _BuildCollections(
                     if (relativePath == "")
                         relativePath = "/";
                     collectionBuilder.push_back(relativePath);
-                        
                 } else {
                     FnLogWarn("Collection " << collection.GetName()  << " includes "
                         "path " << p.GetString() << " which is not a descendant "
@@ -591,14 +586,13 @@ _BuildCollections(
             // If empty, no point creating collection
             FnKat::StringAttribute collectionAttr = collectionBuilder.build();
             if (collectionAttr.getNearestSample(0).size() > 0) {
-                collectionsBuilder.set(_GetKatanaCollectionName(
-                        collection.GetName()) + ".baked",
-                                    collectionAttr);
+                collectionsBuilder.set(_GetKatanaCollectionName(collection.GetName()) + ".baked",
+                                       collectionAttr);
             }
         }
     }
 
-    return collections.size() > 0;
+    return collectionsBuilder.isValid();
 }
 
 
