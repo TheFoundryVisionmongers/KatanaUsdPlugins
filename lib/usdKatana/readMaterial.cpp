@@ -40,6 +40,7 @@
 #include "usdKatana/utils.h"
 #include "usdKatana/baseMaterialHelpers.h"
 
+#include "pxr/usd/sdf/layerUtils.h"
 #include "pxr/base/tf/stringUtils.h"
 
 #include "pxr/usd/usdGeom/scope.h"
@@ -92,6 +93,7 @@ _GetMaterialAttr(
 void
 _UnrollInterfaceFromPrim(
         const UsdPrim& prim,
+        double currentTime,
         const std::string& paramPrefix,
         FnKat::GroupBuilder& materialBuilder,
         FnKat::GroupBuilder& interfaceBuilder);
@@ -386,8 +388,31 @@ _ProcessShaderConnections(
     // empty -- we will inherit it from the parent katana material.
     if (flatten || !PxrUsdKatana_IsAttrValFromBaseMaterial(attr))
     {
-        paramsBuilder.set(connectionId,
-                          PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
+        bool isUdim = false;
+        if (vtValue.IsHolding<SdfAssetPath>())
+        {
+            const SdfAssetPath& assetPath(vtValue.UncheckedGet<SdfAssetPath>());
+            const std::string& rawPath = assetPath.GetAssetPath();
+            size_t udimIdx = rawPath.rfind("<UDIM>");
+
+            if (udimIdx != std::string::npos)
+            {
+                isUdim = true;
+                UsdTimeCode usdTime(currentTime);
+                SdfLayerHandle layer = _FindLayerHandle(attr, usdTime);
+                if (layer)
+                {
+                    const std::string path = SdfComputeAssetPathRelativeToLayer(layer, rawPath);
+                    vtValue = VtValue(SdfAssetPath(path));
+                    paramsBuilder.set(connectionId,
+                                      PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
+                }
+            }
+        }
+        if (!isUdim)
+        {
+            paramsBuilder.set(connectionId, PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
+        }
     }
 }
 
@@ -974,6 +999,7 @@ _GetMaterialAttr(
         }
 
         _UnrollInterfaceFromPrim(curr,
+                currentTime,
                 paramPrefix,
                 materialBuilder,
                 interfaceBuilder);
@@ -1043,9 +1069,23 @@ _GetMaterialAttr(
     return localMaterialAttr;
 }
 
+SdfLayerHandle _FindLayerHandle(const UsdAttribute& attr, const UsdTimeCode& time)
+{
+    for (const auto& spec : attr.GetPropertyStack(time))
+    {
+        if (spec->HasDefaultValue() ||
+            spec->GetLayer()->GetNumTimeSamplesForPath(spec->GetPath()) > 0)
+        {
+            return spec->GetLayer();
+        }
+    }
+    return TfNullPtr;
+}
+
 /* static */
 void
 _UnrollInterfaceFromPrim(const UsdPrim& prim,
+        double currentTime,
         const std::string& paramPrefix,
         FnKat::GroupBuilder& materialBuilder,
         FnKat::GroupBuilder& interfaceBuilder)
@@ -1072,9 +1112,9 @@ _UnrollInterfaceFromPrim(const UsdPrim& prim,
 
     TF_FOR_ALL(interfaceInputIter, interfaceInputs) {
         UsdShadeInput interfaceInput = *interfaceInputIter;
-
+        const UsdAttribute& attr = interfaceInput.GetAttr();
         // Skip invalid interface inputs.
-        if (!interfaceInput.GetAttr()) {
+        if (!attr) {
             continue;
         }
 
@@ -1082,11 +1122,37 @@ _UnrollInterfaceFromPrim(const UsdPrim& prim,
         const std::string renamedParam = paramPrefix + paramName.GetString();
 
         // handle parameters with values
-        VtValue attrVal;
-        if (interfaceInput.GetAttr().Get(&attrVal) && !attrVal.IsEmpty()) {
-            materialBuilder.set(
-                    TfStringPrintf("parameters.%s", renamedParam.c_str()),
-                    PxrUsdKatanaUtils::ConvertVtValueToKatAttr(attrVal));
+
+        VtValue vtValue;
+
+        if (attr.Get(&vtValue) && !vtValue.IsEmpty())
+        {
+            bool isUdim = false;
+            if (vtValue.IsHolding<SdfAssetPath>())
+            {
+                const SdfAssetPath& assetPath(vtValue.UncheckedGet<SdfAssetPath>());
+                const std::string& rawPath = assetPath.GetAssetPath();
+                size_t udimIdx = rawPath.rfind("<UDIM>");
+
+                if (udimIdx != std::string::npos)
+                {
+                    isUdim = true;
+                    UsdTimeCode usdTime(currentTime);
+                    SdfLayerHandle layer = _FindLayerHandle(attr, usdTime);
+                    if (layer)
+                    {
+                        const std::string path = SdfComputeAssetPathRelativeToLayer(layer, rawPath);
+                        vtValue = VtValue(SdfAssetPath(path));
+                        materialBuilder.set(TfStringPrintf("parameters.%s", renamedParam.c_str()),
+                                            PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
+                    }
+                }
+            }
+            if (!isUdim)
+            {
+                materialBuilder.set(TfStringPrintf("parameters.%s", renamedParam.c_str()),
+                                    PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
+            }
         }
 
         if (interfaceInputConsumers.count(interfaceInput) == 0) {
