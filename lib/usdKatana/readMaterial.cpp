@@ -79,6 +79,8 @@ _CreateShadingNode(
         const std::string & targetName,
         bool flatten);
 
+SdfLayerHandle _FindLayerHandle(const UsdAttribute& attr, const UsdTimeCode& time);
+
 std::string
 _GetRenderTarget(const std::string& shaderId);
 
