@@ -212,6 +212,10 @@ function(pxr_library NAME)
     # make a separate shared library for the Python wrapper
     if(args_PYMODULE_CPPFILES AND ENABLE_KATANAUSD_PYTHON_PLUGINS)
         set(pythonWrapperModuleName "_${NAME}")
+        if(CMAKE_BUILD_TYPE MATCHES Debug AND WIN32)
+            # Add the `_d` debug suffix to the Python Module
+            set(pythonWrapperModuleName ${pythonWrapperModuleName}_d)
+        endif()
         _get_python_module_name(${NAME} pyModuleName)
 
         add_library(${pythonWrapperModuleName} SHARED ${args_PYMODULE_CPPFILES})
