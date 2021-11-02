@@ -24,6 +24,8 @@
 
 #include "pxrUsdInPrman/declarePackageOps.h"
 
+#include "pxr/base/tf/envSetting.h"
+#include "pxr/base/tf/getenv.h"
 #include "pxr/usd/usdLux/cylinderLight.h"
 #include "pxr/usd/usdLux/diskLight.h"
 #include "pxr/usd/usdLux/distantLight.h"
@@ -44,11 +46,23 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+TF_DEFINE_ENV_SETTING(USD_IMPORT_USD_LUX_LIGHTS_WITH_PRMAN_SHADERS,
+                      false,
+                      "If set to true basic UsdLux prims will import with RenderMan light shader"
+                      "information as well. Off by default. RfK must also be setup in the"
+                      "environment.");
+
 PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInPrmanLuxLight_LocationDecorator,
                                  privateData,
                                  opArgs,
                                  interface)
 {
+    static const bool importUsdLuxAsPrman =
+        TfGetEnvSetting(USD_IMPORT_USD_LUX_LIGHTS_WITH_PRMAN_SHADERS);
+    if (!importUsdLuxAsPrman)
+    {
+        return;
+    }
     if (!privateData.hasOutputTarget("prman"))
     {
         return;
