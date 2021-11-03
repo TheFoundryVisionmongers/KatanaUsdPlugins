@@ -1,5 +1,23 @@
 # Change List
 
+# 19.11_fn9
+
+## Bug Fixes
+- ID 486520 - Removed paths to _Resources/_ from .arclint
+- ID 482198 - When using the **isolatePath** parameter on a UsdIn node that is loading a USD asset that uses light lists, UsdIn failed with an error message: _UsdIn: Failed to compute katana path for usd path_
+- ID 479726 - When setting the **isolatePath** parameter on a UsdIn node, and then trying to use a UsdInIsolate node, UsdIn failed with an error message: UsdIn: Failed to compute katana path for usd path
+
+  The value of the **isolatePath** parameter is now prefixed onto the USD stage mask path set up by UsdInIsolate.
+
+  When using **isolatePath** and UsdInIsolate in the same node graph, the mask created by UsdInIsolate (using Katana scene graph locations) did not take account of the UsdIn mask path which did not contain the locations cut out by setting UsdIn's **isolatePath**. This meant the USD stage was masked by locations which did not exist, causing errors.
+- ID 479729 - When using a UsdInIsolate node to isolate a location that did not exist, Katana crashed.
+- ID 480335 - Updating clang-format to 100 column line length
+- ID 471351 - When attempting to bake a Network Material containing custom OSL shaders to USD files using a UsdMaterialBake node, a Python exception was raised, due to an apparent `TfToken` type mismatch. A resulting USD file then contained shader inputs appearing with a wrong type and default value, for example `color3f inputs:MyFloat = (0, 0, 0)` instead of `float inputs:MyFloat = 0.58`.
+
+  Shader inputs not found in the `SdrRegistry` but with valid shader output tags may now assume their respective USD data type. Note that this is an estimation, and is not guaranteed to always be correct, if the input attributes are not found in the USD `SdrRegistry`.
+- ID 470559 - When attempting to bake a Network Material containing a shading node whose name contained spaces to USD files using a UsdMaterialBake node, a Python exception was raised.
+- ID 467244 - When applied to a material network containing shading nodes connected via the per-component ports (e.g. `color.r`), the **UsdMaterialBake** node would fail to write out shader connections properly.  The delimiting dots in these names are now converted to colons in the USD file (e.g. `color:r`) to produce valid USD attribute names.
+
 # 19.11_fn8
 
 ## Feature Enhancements
