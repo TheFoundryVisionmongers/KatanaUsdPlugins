@@ -1,5 +1,10 @@
 # Change List
 
+
+# 21.05_fn1_py3
+
+- Updated codebase with changes for Python3 compliance.
+
 # 21.05_fn1_py2
 
 ## Bug fixes
