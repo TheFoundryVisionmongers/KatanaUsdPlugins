@@ -52,8 +52,16 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_ConstraintsOp, privateData, opArgs
     gb.set("scenegraph.stopExpand.a.tabs", FnKat::IntAttribute(1));
 
     // TODO: SHould this use the ModelAPI?
-    std::vector<UsdProperty> constraintTargets =
-        privateData.GetUsdPrim().GetPropertiesInNamespace("constraintTargets");
+    std::vector<UsdProperty> constraintTargets;
+    const UsdPrim& prim = privateData.GetUsdPrim();
+    if (prim)
+    {
+        constraintTargets = prim.GetPropertiesInNamespace("constraintTargets");
+    }
+    else
+    {
+        return;
+    }   
 
     for (auto constraintTargetProperty : constraintTargets)
     {
