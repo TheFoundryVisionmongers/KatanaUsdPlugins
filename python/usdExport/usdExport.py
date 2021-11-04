@@ -194,7 +194,7 @@ class UsdExport(BaseOutputFormat):
             lightDict[location] = sdfLocationPath
 
         prmanStatementsAttributes = {
-            key: value for key, value in attrDict.iteritems()
+            key: value for key, value in attrDict.items()
             if 'prmanStatements' in key}
         if prmanStatementsAttributes:
             if not prim:
@@ -392,9 +392,9 @@ class UsdExport(BaseOutputFormat):
             # Maintain a dictionary of materialpaths and their resultant
             # sdf paths.
             materialDict = {}
-            passDataMaterialDictKeys = passData.materialDict.keys()
-            passDataMaterialDictKeys.sort()
-            for location in passDataMaterialDictKeys:
+            passDatamaterialDictKeys = list(passData.materialDict.keys())
+            passDatamaterialDictKeys.sort()
+            for location in passDatamaterialDictKeys:
                 (locationType, materialAttribute) = \
                     passData.materialDict[location]
                 if locationType != "material":

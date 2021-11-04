@@ -92,8 +92,8 @@ class TestPxrOpUsdInInternalPointInstancer(unittest.TestCase):
     def compareAgainstBaseline(self, testfile):
         '''Compare the given test file to its associated baseline file.'''
         baselinefile = testfile.replace('test.', 'baseline.')
-        print 'Comparing %s against baseline %s' % \
-                (os.path.abspath(testfile), os.path.abspath(baselinefile))
+        print('Comparing %s against baseline %s'
+              % (os.path.abspath(testfile), os.path.abspath(baselinefile)))
         if filecmp.cmp(testfile, baselinefile, shallow=False):
             return True
         return False

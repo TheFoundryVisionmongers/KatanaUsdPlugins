@@ -48,7 +48,7 @@ def WritePrmanStatements(prmanStatementsAttributes, prim):
     @param prim: A prim to write prmanStatements to.
     """
     prmanStatementsSchema = UsdRi.StatementsAPI(prim)
-    for groupName, value in prmanStatementsAttributes.iteritems():
+    for groupName, value in prmanStatementsAttributes.items():
         if not groupName == "prmanStatements.attributes":
             continue
         for child in value.childList():

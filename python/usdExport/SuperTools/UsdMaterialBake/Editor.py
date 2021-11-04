@@ -20,20 +20,22 @@
 # KIND, either express or implied. See the Apache License for the specific
 # language governing permissions and limitations under the Apache License.
 
+from functools import reduce
 import logging
 import time
 
-from Katana import QtWidgets, QtCore, QtGui
-from Katana import NodegraphAPI, Utils
-import LookFileBakeAPI
-import UI4
+from PyQt5 import QtWidgets
 
+from Katana import NodegraphAPI
+import UI4
 from .VariantsWidget import VariantsWidget
+
 
 log = logging.getLogger("UsdMaterialBake.Editor")
 
 NodegraphAPI.AddNodeFlavor("UsdMaterialBake", "3d")
 NodegraphAPI.AddNodeFlavor("UsdMaterialBake", "lookfile")
+
 
 class UsdMaterialBakeEditor(QtWidgets.QFrame):
     """ The editor used for the UsdMaterialBake node parameters tab.

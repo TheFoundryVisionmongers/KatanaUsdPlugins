@@ -328,7 +328,7 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
             self, [self._getReferenceInputPortName()] + passInputPortNames,
             graphState)
         referenceOp = ops[0]
-        passNamesAndOps = zip(passInputPortNames, ops[1:])
+        passNamesAndOps = list(zip(passInputPortNames, ops[1:]))
         return (referenceOp, passNamesAndOps)
 
 
