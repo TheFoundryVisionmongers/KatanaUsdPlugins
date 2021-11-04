@@ -1,5 +1,36 @@
 # Change List
 
+# 21.05_fn1_py2
+
+## Bug fixes
+- ID 485105 - UsdMaterialBake node would write out childMaterial's shaderInput with a double up of the connection type  (for example`float inputs:inputs:roughness = 0.4` rather than `float inputs:roughness = 0.4`.) 
+- ID 487750 - Some UsdLux light attributes were not imported with the matching name as Katana attributes.
+- ID 485192 - When using a UsdIn node to import a USD file containing a 3-dimensional texture coordinate primvar named **\<primname>**, the attributes under **geometry.arbitrary.\<primname>** were not loaded completely.
+- ID 483676 - When baking a material network via a **UsdMaterialBake** node, expansion states would not be written correctly.
+
+## Feature Enhancements
+- ID 489436 - UsdExport will now export light and shadow linking information.
+Resolved light linking paths will be written to USD, so long as the location linked to, and the light are under the same rootLocation specified on **UsdMaterialBake**
+- ID 484656 - Lights using the LightAPI schema with `katana:id` attributes will be imported as the provided shader type, with all the renderer name-spaced attributes being loaded into that renderers light parameters.  If multiple shaders are mentioned in the `katana:id` attribute, multiple shaders will be imported, and this is why the name-spaced attributes are important.  You may not have multiple shaders for the same renderer.  We utilise the `SdrRegistry` to discover the light shader and to read in the relevant attributes, and understand the context required; this means it is required that the light shader is registered to the `SdrRegistry` for the USD library KatanaUsdPlugins is utilising. 
+
+  UsdLux Light information will be imported as before using the UsdLuxAPI.
+
+  The logic to import UsdLux information into `prmanLightShader` and `prmanLightParameters` has been moved to a location decorator, and will be skipped if the `prman` renderer isn't present in the environment, or if the `prmanLightShader` has been populated by the `SdrRegistry` based logic mentioned above.
+- ID 484483 - The `PxrUsdIn` Op no longer reads and writes camera or light lists to the location provided by a UsdIn node's location parameter.
+
+  A new Op `PxrUsdInUpdateGlobalListsOp`, which runs after UsdIn's current Op(s), has been added to set **globals.cameraList** and lightList directly on the **/root/world** location; provided they are within a model hierarchy with the USD Stage.
+- ID 487862 - A USD Export plugin has been added to write light location attributes based on parameters from the Sdr Registry. Where a node exists for a light shader, attribute names which match an input identifier are written with the input's type information. This process occurs after light locations are written via the UsdLux API and any parameters written through that are preserved.
+- ID 487878 - UsdExport will now parse the exported USD file for any exported lights using the UsdLuxListAPI and write this to the Root Prim, for each variant.
+- ID 487875 - A LightAPI schema is applied to lights exported through the **UsdMaterialBake** node containing Katana-specific parameters.
+- ID 487630 - A new API `UsdExportPlugins` has been added to allow further customization of exported data to USD without having to edit and rebuild KatanaUsdPlugins.  More information on this can be found in the Developer Guide **Katana USD Plug-ins > UsdExport > UsdExport Plug-ins**.
+- ID 471650 - Lights imported via a UsdIn node are adopted by right clicking their entry in a GafferThree node and selecting **Adopt for Editing** where **Show Incoming** Scene is enabled.
+- ID 487661 - Exported default Prims will now have a Kind assigned to them:
+  - Assembly file default Prim will be of Kind assembly.
+  - Shading file default Prim will be of Kind component.
+- ID 484359 - The schema classes that are part of the Katana USD Plug-ins have been rebuilt using the usdGenSchema code generator script that ships with USD 21.05.
+- ID 484299 - `usdImagingGL` has been replaced by `usdImaging` as a dependency for the `usdKatana` library in `KatanaUsdPlugins`.
+- ID 472106 - Added UsdTransform2d nodes to usd shaders.
+
 # 19.11_fn9
 
 ## Bug Fixes
@@ -15,7 +46,7 @@
 - ID 471351 - When attempting to bake a Network Material containing custom OSL shaders to USD files using a UsdMaterialBake node, a Python exception was raised, due to an apparent `TfToken` type mismatch. A resulting USD file then contained shader inputs appearing with a wrong type and default value, for example `color3f inputs:MyFloat = (0, 0, 0)` instead of `float inputs:MyFloat = 0.58`.
 
   Shader inputs not found in the `SdrRegistry` but with valid shader output tags may now assume their respective USD data type. Note that this is an estimation, and is not guaranteed to always be correct, if the input attributes are not found in the USD `SdrRegistry`.
-- ID 470559 - When attempting to bake a Network Material containing a shading node whose name contained spaces to USD files using a UsdMaterialBake node, a Python exception was raised.
+- ID 470559 - When attempting to bake a Network Material containing a shading node whose name contained spaces to USD files using a **UsdMaterialBake** node, a Python exception was raised.
 - ID 467244 - When applied to a material network containing shading nodes connected via the per-component ports (e.g. `color.r`), the **UsdMaterialBake** node would fail to write out shader connections properly.  The delimiting dots in these names are now converted to colons in the USD file (e.g. `color:r`) to produce valid USD attribute names.
 
 # 19.11_fn8
