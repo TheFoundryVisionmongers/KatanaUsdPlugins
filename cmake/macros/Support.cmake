@@ -212,10 +212,6 @@ function(pxr_library NAME)
     # make a separate shared library for the Python wrapper
     if(args_PYMODULE_CPPFILES AND ENABLE_KATANAUSD_PYTHON_PLUGINS)
         set(pythonWrapperModuleName "_${NAME}")
-        if(CMAKE_BUILD_TYPE MATCHES Debug AND WIN32)
-            # Add the `_d` debug suffix to the Python Module
-            set(pythonWrapperModuleName ${pythonWrapperModuleName}_d)
-        endif()
         _get_python_module_name(${NAME} pyModuleName)
 
         add_library(${pythonWrapperModuleName} SHARED ${args_PYMODULE_CPPFILES})
@@ -275,10 +271,15 @@ function(pxr_library NAME)
         set_target_properties(${pythonWrapperModuleName} PROPERTIES PREFIX "")
         if(WIN32)
             # Python modules must be suffixed with .pyd on Windows.
+            set(PY_MODULE_SUFFIX ".pyd")
+            if(CMAKE_BUILD_TYPE MATCHES Debug AND WIN32)
+                # Add the `_d` debug suffix to the Python Module
+                set(PY_MODULE_SUFFIX _d${PY_MODULE_SUFFIX})
+            endif()
             set_target_properties(
                 ${pythonWrapperModuleName}
                 PROPERTIES
-                SUFFIX ".pyd"
+                SUFFIX ${PY_MODULE_SUFFIX}
             )
         endif()
     endif()
