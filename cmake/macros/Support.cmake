@@ -135,6 +135,16 @@ function(pxr_library NAME)
         message(FATAL_ERROR "Unsupported library type: " args_TYPE)
     endif()
 
+    if (args_TYPE STREQUAL "SHARED" OR args_TYPE STREQUAL "PLUGIN")
+        if (NOT WIN32)
+            set_target_properties(${NAME}
+                PROPERTIES
+                BUILD_WITH_INSTALL_RPATH TRUE
+                INSTALL_RPATH "$ORIGIN;$ORIGIN/../../lib"
+            )
+        endif ()
+    endif ()
+
     set(pluginToLibraryPath "")
     if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
         if(WIN32)
