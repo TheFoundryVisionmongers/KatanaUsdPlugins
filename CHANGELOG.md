@@ -1,5 +1,17 @@
 # Change List
 
+
+# 21.05_fn2_py2
+
+## Bug fixes
+- ID 490802 - Lights imported through UsdIn have the lightList attribute 'enabled' set to `true` by default.
+- ID 446730 - When trying to overwrite variants already baked from a UsdMaterialBake node, an error can be printed to the terminal, resulting in the USD file not being written. In this instance, flushing caches before overwriting the file should act as a workaround.
+- ID 488546 - Mute and Solo of lights imported from USD without `UsdLuxLightListAPI` information, and adopted for editing by a gafferThree node.
+
+## Feature Enhancements
+- ID 490830 - Environment variable `USD_IMPORT_USD_LUX_LIGHTS_WITH_PRMAN_SHADERS` added to KatanaUsdPlugins to determine whether base UsdLux lights should import with RenderMan light attributes, in addition to USD attributes, if the RenderMan renderer is detected. By default this behaviour is off.
+- ID 447830 - Texture paths linking to relative UDIM paths will now resolved relative to the USD layer which contains the attribute value.
+
 # 21.05_fn1_py2
 
 ## Bug fixes
