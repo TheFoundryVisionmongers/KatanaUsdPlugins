@@ -29,6 +29,7 @@ import os
 
 from Katana import LookFileBakeAPI
 from LookFileBakeAPI import LookFileUtil, LookFileBakeException
+
 log = logging.getLogger("UsdExport")
 
 # [USD install]/lib/python needs to be on $PYTHONPATH for this import to work
@@ -438,6 +439,31 @@ class UsdExport(BaseOutputFormat):
                                         "UsdMaterialBake node.")
         looksFilename += "." + looksFileFormat
         looksFilePath = os.path.join(fileDir, looksFilename)
+
+        assemblyWritten = self._settings["assemblyWritten"]
+        assemblyStage = None
+        assemblyRootPrim = None
+        if createCompleteUsdAssemblyFile and not assemblyWritten:
+            # setup the assembly stage
+            assemblyPath = os.path.join(fileDir, assemblyFilename) + ".usda"
+            assemblyStage = _CreateNewStage(
+                assemblyPath, rootPrimName, Kind.Tokens.assembly)
+            assemblyRootPrim = assemblyStage.GetDefaultPrim()
+
+            # add the payload asset
+            if not payloadFilename:
+                raise LookFileBakeException(
+                    "No payload asset filename was specified!")
+            if not os.path.exists(payloadFilename):
+                raise LookFileBakeException(
+                    "Payload asset at '{}' does not exist!".format(
+                        payloadFilename
+                    ))
+            payload = Sdf.Payload(payloadFilename)
+            assemblyRootPrim.GetPayloads().AddPayload(
+                payload, position=Usd.ListPositionBackOfAppendList)
+            assemblyWritten = True
+
         # Validate rootPrimName, must start with / and must not end with /
         if not rootPrimName.startswith("/"):
             rootPrimName = "/" + rootPrimName
@@ -483,37 +509,25 @@ class UsdExport(BaseOutputFormat):
 
         # Save the stage
         stage.GetRootLayer().Save()
-        assemblyWritten = self._settings["assemblyWritten"]
-        if createCompleteUsdAssemblyFile and not assemblyWritten:
-            # setup the assembly stage
-            assemblyPath = os.path.join(fileDir, assemblyFilename) + ".usda"
-            assemblyStage = _CreateNewStage(
-                assemblyPath, rootPrimName, Kind.Tokens.assembly)
-            assemblyRootPrim = assemblyStage.GetDefaultPrim()
 
-            # add the payload asset
-            if not payloadFilename:
-                raise LookFileBakeException(
-                    "No payload asset filename was specified!")
-            if not os.path.exists(payloadFilename):
-                raise LookFileBakeException(
-                    "Payload asset at '{}' does not exist!".format(
-                        payloadFilename
-                    ))
-            payload = Sdf.Payload(payloadFilename)
-            assemblyRootPrim.GetPayloads().AddPayload(
-                payload, position=Usd.ListPositionBackOfAppendList)
-
+        if createCompleteUsdAssemblyFile and assemblyWritten:
             # add the lookfile as a reference
             assemblyRootPrim.GetReferences().AddReference(
                 './'+ looksFilename, position=Usd.ListPositionBackOfAppendList)
             assemblyStage.GetRootLayer().Save()
-            assemblyWritten = True
 
         return [filePath]
 
 def _CreateNewStage(filePath, rootPrimName, kind=None):
-    stage = Usd.Stage.CreateNew(filePath)
+    stage = None
+    existingLayer = Sdf.Layer.FindOrOpen(filePath)
+    if existingLayer:
+        existingLayer.Clear()
+        stage = Usd.Stage.Open(existingLayer)
+    else:
+        stage = Usd.Stage.CreateNew(filePath)
+
+    stage.RemovePrim(rootPrimName)
     now = datetime.datetime.now()
     stage.SetMetadata(\
         "comment",\

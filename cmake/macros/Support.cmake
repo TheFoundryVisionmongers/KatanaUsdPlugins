@@ -135,6 +135,16 @@ function(pxr_library NAME)
         message(FATAL_ERROR "Unsupported library type: " args_TYPE)
     endif()
 
+    if (args_TYPE STREQUAL "SHARED" OR args_TYPE STREQUAL "PLUGIN")
+        if (NOT WIN32)
+            set_target_properties(${NAME}
+                PROPERTIES
+                BUILD_WITH_INSTALL_RPATH TRUE
+                INSTALL_RPATH "$ORIGIN;$ORIGIN/../../lib"
+            )
+        endif ()
+    endif ()
+
     set(pluginToLibraryPath "")
     if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
         if(WIN32)
@@ -271,10 +281,15 @@ function(pxr_library NAME)
         set_target_properties(${pythonWrapperModuleName} PROPERTIES PREFIX "")
         if(WIN32)
             # Python modules must be suffixed with .pyd on Windows.
+            set(PY_MODULE_SUFFIX ".pyd")
+            if(CMAKE_BUILD_TYPE MATCHES Debug AND WIN32)
+                # Add the `_d` debug suffix to the Python Module
+                set(PY_MODULE_SUFFIX _d${PY_MODULE_SUFFIX})
+            endif()
             set_target_properties(
                 ${pythonWrapperModuleName}
                 PROPERTIES
-                SUFFIX ".pyd"
+                SUFFIX ${PY_MODULE_SUFFIX}
             )
         endif()
     endif()

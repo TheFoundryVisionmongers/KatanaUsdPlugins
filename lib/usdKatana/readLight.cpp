@@ -36,6 +36,7 @@
 #include "usdKatana/utils.h"
 
 #include "pxr/base/tf/stringUtils.h"
+#include "pxr/usd/ndr/declare.h"
 #include "pxr/usd/sdr/registry.h"
 #include "pxr/usd/sdr/shaderProperty.h"
 
@@ -204,14 +205,23 @@ void __handleSdrRegistryLights(const UsdPrim& lightPrim,
         const std::string& lightShaderPrefix = idSplit[0];
         const std::string& lightShaderId = idSplit[1];
         SdrShaderNodeConstPtr sdrNode;
+
+        // The Sdr Registers the base UsdLux light types without the UsdLux prefix.
         if (TfStringStartsWith(lightShaderId, "UsdLux"))
         {
-            sdrNode = sdrRegistry.GetShaderNodeByIdentifier(
-                TfToken(std::string(lightShaderId.begin() + 6, lightShaderId.end())));
+            // UsdLux Lights are dealt with separately. Can be updated to use Only Sdr
+            // Registry behaviour in 21.11 after a bugfix to include Shaping and ShadingAPI
+            // was introduced.
+            continue;
         }
         else
         {
             sdrNode = sdrRegistry.GetShaderNodeByIdentifier(TfToken(lightShaderId));
+            if (!sdrNode)
+            {
+                sdrNode = sdrRegistry.GetShaderNodeByName(
+                    TfToken(lightShaderId), {}, NdrVersionFilterAllVersions);
+            }
         }
         if (!sdrNode)
         {

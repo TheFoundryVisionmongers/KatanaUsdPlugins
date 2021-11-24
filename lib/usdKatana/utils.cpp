@@ -34,6 +34,7 @@
 #include "pxr/base/gf/vec3d.h"
 #include "pxr/base/gf/matrix4d.h"
 #include "pxr/base/arch/demangle.h"
+#include "pxr/base/tf/getenv.h"
 #include "pxr/base/work/loops.h"
 #include "pxr/usd/kind/registry.h"
 #include "pxr/base/vt/array.h"
@@ -980,7 +981,18 @@ _FindCameraPaths_Traversal( const UsdPrim &prim, SdfPathVector *result )
     // Note 2: Obviously, we will not find cameras embedded within models.
     //         We have made this restriction consciously to reduce the
     //         latency of camera-enumeration
-    TF_FOR_ALL(child, prim.GetFilteredChildren(UsdPrimIsModel)) {
+
+    // If set, this allows for better traversal for global attributes (camera list and light lists)
+    // by utilizing USD Prim children filters to check for prims in the model hierarchy only,
+    // rather than the default Prim child traversal.
+    static const bool traverseModelHierarchyOnly =
+        TfGetenvBool("KATANA_USD_GLOBALS_TRAVERSE_MODEL_HIERARCHY", true);
+    auto flags = UsdPrimDefaultPredicate;
+    if (traverseModelHierarchyOnly)
+    {
+        flags = flags && UsdPrimIsModel;
+    }
+    TF_FOR_ALL(child, prim.GetFilteredChildren(flags)) {
         if (child->IsA<UsdGeomCamera>()) {
             result->push_back(child->GetPath());
         }
@@ -1038,9 +1050,20 @@ _Traverse(const UsdPrim &prim,
     }
     // Traverse descendants.
     auto flags = UsdPrimIsActive && !UsdPrimIsAbstract && UsdPrimIsDefined;
-    if (mode == UsdLuxListAPI::ComputeModeConsultModelHierarchyCache) {
+
+    // If set, this allows for better traversal for global attributes (camera list and light lists)
+    // by utilizing USD Prim children filters to check for prims in the model hierarchy only,
+    // rather than the default Prim child traversal.
+    static const bool traverseModelHierarchyOnly =
+        TfGetenvBool("KATANA_USD_GLOBALS_TRAVERSE_MODEL_HIERARCHY", true);
+    if (traverseModelHierarchyOnly && mode == UsdLuxListAPI::ComputeModeConsultModelHierarchyCache)
+    {
         // When consulting the cache we only traverse model hierarchy.
         flags = flags && UsdPrimIsModel;
+    }
+    else
+    {
+        flags = flags && UsdPrimIsLoaded;
     }
     for (const UsdPrim &child:
              prim.GetFilteredChildren(UsdTraverseInstanceProxies(flags))) {
