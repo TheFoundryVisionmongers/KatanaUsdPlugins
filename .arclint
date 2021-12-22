@@ -6,6 +6,10 @@
     "filename": {
       "type": "filename"
     },
+    "clang-format": {
+      "type": "katana-clang-format",
+      "include": ["(\\.(c|cc|cpp|h|hpp)$)"]
+    },
     "cpp-cpplint": {
       "type": "cpplint",
       "bin": ["cpplint"],
@@ -36,18 +40,7 @@
       "type": "pylint",
       "bin": ["pylint"],
       "include": ["(\\.py$)"],
-      "exclude": ["((FnAddDependency|SCons).*\\.py$)"],
       "pylint.config": "../../Resources/DevTools/pylintrc"
-    },
-    "python-pylint-scons": {
-      "type": "pylint",
-      "bin": ["../../Resources/DevTools/bin/pylint", "pylint"],
-      "include": ["((FnAddDependency|SCons).*\\.py$)"],
-      "pylint.config": "../../Resources/DevTools/pylintrc",
-      "flags": [
-        "--disable=bad-indentation,bad-continuation",
-        "--additional-builtins=env,ARGUMENTS,Action,Builder,Copy,Dir,Exit,File,Flatten,GetOption,Import,Return,SConscript,Value"
-      ]
     },
     "spelling": {
       "type": "spelling",
@@ -61,7 +54,10 @@
         "(CMakeLists\\.txt$|\\.cmake$)",
         "(\\.(c|h|cpp)$)",
         "(\\.py$)",
+        "(\\.rst$)",
+        "(\\.sh$)",
         "(\\.(xml|xsd|qrc|args)$)",
+        "(\\.(html|js)$)",
         "(\\.(conf|ini)$)"
       ],
       "severity": {
@@ -75,7 +71,6 @@
       "type": "text",
       "include": [
         "(CMakeLists\\.txt$|\\.cmake$)",
-        "((FnAddDependency|SCons).*\\.py$)",
         "(\\.(xml|xsd|qrc|args)$)",
         "(\\.(conf|ini)$)"
       ],
