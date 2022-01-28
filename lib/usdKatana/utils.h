@@ -203,7 +203,7 @@ struct PxrUsdKatanaUtils {
 
     USDKATANA_API static FnKat::Attribute ApplySkinningToPoints(
         const UsdGeomPointBased& points,
-        double time);
+        const PxrUsdKatanaUsdInPrivateData& data);
 };
 
 /// Utility class for building a light list.

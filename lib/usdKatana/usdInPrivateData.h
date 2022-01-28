@@ -149,6 +149,25 @@ public:
         const UsdAttribute& attr = UsdAttribute(),
         bool fallBackToShutterBoundary = false) const;
 
+    // This method will gather the valid motion samples available for the UsdSkel
+    // joint and blend shape animations. 
+    // It will also populate the two vectors passed by reference with any samples
+    // it finds.  If it is not animated these will NOT be filled.
+    // Time samples will be returned will be relative to the current frame.
+    // E.g 0 is currentTime.
+    // The samples populated in the vectors will be real time (e.g if 1003 is
+    // currentTime, and a sample is found, 1003 will be populated in the 
+    // samples).
+    // If only the current frame sample is found, we also return the two samples
+    // either side if available.
+    // Only samples which appear in both joint and blend shape will be returned
+    // if both attributes are animated. If one is animated and the other not,
+    // we return the samples from the animated attributes.
+    USDKATANA_API const std::vector<double> GetSkelMotionSampleTimes(
+        const UsdSkelAnimQuery& skelAnimQuery,
+        std::vector<double>& blendShapeMotionSampleTimes,
+        std::vector<double>& jointTransformMotionSampleTimes) const;
+
     /// \brief Returns a list of <usd, katana> times for use in clients that
     ///        wish to multi-sample USD data and build corresponding Katana 
     ///        attributes.
