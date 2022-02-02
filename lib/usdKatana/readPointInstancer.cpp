@@ -525,9 +525,19 @@ PxrUsdKatanaReadPointInstancer(
                     primPaths.push_back(buildPath);
                 }
             }
-            sourcesBldr.setAttrAtLocation(relBuildPathUpOne,
-                    "usdPrimPath", FnKat::StringAttribute(
-                            usdPrimPathsTracker[relBuildPathUpOne]));
+
+            if (relBuildPathUpOne.empty())
+            {
+                sourcesBldr.setAttrAtLocation(relBuildPath,
+                        "usdPrimPath", FnKat::StringAttribute(
+                                usdPrimPathsTracker[relBuildPathUpOne]));
+            }
+            else
+            {
+                sourcesBldr.setAttrAtLocation(relBuildPathUpOne,
+                        "usdPrimPath", FnKat::StringAttribute(
+                                usdPrimPathsTracker[relBuildPathUpOne]));
+            }
 
             // Build an AttributeSet op that will delete the prototype's
             // transform, since we've already folded it into the instance
