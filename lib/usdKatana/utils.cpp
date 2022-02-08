@@ -1044,7 +1044,7 @@ _Traverse(const UsdPrim &prim,
         }
     }
     // Accumulate discovered prims.
-    if (prim.IsA<UsdLuxLight>() || prim.IsA<UsdLuxLightFilter>()) {
+    if (prim.IsA<UsdLuxLight>() || prim.IsA<UsdLuxLightFilter>() || prim.GetTypeName() == "Light") {
         if (seen.insert(prim.GetPath()).second) {
             lights->push_back(prim.GetPath());
         }
