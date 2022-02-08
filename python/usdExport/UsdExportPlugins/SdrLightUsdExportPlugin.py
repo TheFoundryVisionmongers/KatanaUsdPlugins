@@ -71,6 +71,16 @@ class SdrLightUsdExportPlugin(BaseUsdExportPlugin):
 
             for attrName, attr in lightShaderAttrs.childList():
                 nodeInput = node.GetInput(attrName)
+
+                # Check if our attribute matches the implementation name.
+                if nodeInput is None:
+                    for tmpInputName in node.GetInputNames():
+                        tmpInput = node.GetInput(tmpInputName)
+                        if attrName == tmpInput.GetImplementationName():
+                            attrName = tmpInputName
+                            nodeInput = tmpInput
+                            break
+
                 if nodeInput is None:
                     continue
 

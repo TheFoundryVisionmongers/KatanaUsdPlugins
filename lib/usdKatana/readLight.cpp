@@ -271,7 +271,16 @@ void __handleSdrRegistryLights(const UsdPrim& lightPrim,
                     continue;
                 }
             }
-            lightBuilder.Set(inputName, lightPrim.GetAttribute(TfToken(usdAttributeName)));
+            // Use implementation name instead of input name for Katana attributes
+            // for cases like color vs lightColor
+            const SdrShaderProperty* input = sdrNode->GetShaderInput(inputNameToken);
+            if (!input)
+            {
+                continue;
+            }
+
+            lightBuilder.Set(input->GetImplementationName(),
+                             lightPrim.GetAttribute(TfToken(usdAttributeName)));
         }
 
         materialBuilder.set(lightShaderPrefix + "LightShader",
