@@ -1,0 +1,56 @@
+name: CI
+on: [push]
+
+jobs:
+  aswf-build:
+    name: ASWF container
+    runs-on: ubuntu-latest
+    container:
+      image: aswf/ci-usd:2019
+      volumes:
+      - ${{ github.workspace }}/tmp/katana:${{ github.workspace }}/tmp/katana
+      - ${{ github.workspace }}/tmp/usd:${{ github.workspace }}/tmp/usd
+      - ${{ github.workspace }}/build:${{ github.workspace }}/build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        usd: ["19.11", "20.08"]
+        katana: ["3.1v7", "3.6v2"]
+
+    steps:
+
+    - name: Install Katana
+      env:
+        INSTALL_PATH: ${{ runner.temp }}/katana
+      run: |
+        set -x
+        mkdir -p "$INSTALL_PATH"
+        curl -sSL "http://thefoundry.s3.amazonaws.com/products/katana/releases/${{matrix.katana}}/Katana${{matrix.katana}}-linux-x86-release-64.tgz" \
+        | tar -xzO "katana_files.tar.gz" \
+        | tar -xz -C "$INSTALL_PATH"
+        echo "::set-env name=KATANA_API_LOCATION::$INSTALL_PATH"
+ 
+    # Fetch USD
+    - uses: actions/checkout@v2
+      with:
+        repository: PixarAnimationStudios/USD
+        path: tmp/usd
+        ref: v${{ matrix.usd }}
+
+    # Build
+    - uses: actions/checkout@v2
+    - run: mkdir build dist && echo "$KATANA_API_LOCATION"
+    - name: cmake generate
+      working-directory: build
+      run: >
+        cmake ..
+        -DKATANA_API_LOCATION="$KATANA_API_LOCATION"
+        -DUSD_ROOT="${{ github.workspace }}/tmp/usd"
+        -DPXR_PY_PACKAGE_NAME=fnpxr
+        -DUSE_KATANA_THIRDPARTY_LIBS=ON
+        -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/dist"
+        -DUSE_KATANA_THIRDPARTY_LIBS=ON
+
+    - working-directory: build
+      run: cmake --build . --target install
