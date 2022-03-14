@@ -1,5 +1,20 @@
 # Change List
 
+# 21.05_fn3_py2
+
+## Bug fixes
+- ID 499422 -
+    - Convert USD shader parameter name to the implementation name when imported into Katana and vice-versa when exported or passed on to Hydra.
+    - Use the `sdrUsdDefinitionType` shader input hint to define what type to give parameters passed through Hydra.
+    - Convert shader input values which have been designated as Asset Identifiers to anSdfAssetPath when passed through Hydra.
+- ID 491565 - UsdIn will add imported prims with the 'Light' prim type to the `lightList` attribute on '/root/world'. UsdMaterialBake will write lights with the 'Light' prim type to the USD 'lightList' cache. Any exported USD `lightList` cache will use the `consumeAndHalt` cache mode by default.
+- ID 499328 - Instancing prototype locations which exist as direct children of the instancer are correctly given the `instance source` type.
+MISC - Libraries created with the pxr_library function compile with C++14
+
+## Feature Enhancements
+
+- ID 499854 - Motion Samples are now read for UsdSkel assets when importing with UsdIn if available and the motionSampleTimes parameter is set with multiple fallback sample points.
+
 # 21.05_fn2_py2 - 21.05_fn2_py3
 
 ## Bug fixes

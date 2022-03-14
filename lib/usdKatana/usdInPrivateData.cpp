@@ -37,6 +37,43 @@
 #include <pystring/pystring.h>
 #include <FnGeolib/util/Path.h>
 
+namespace
+{
+// Returns the time sample above and below the provided time. If the time
+// equals one of the time samples, it will return the time and the higher value.
+bool GetUpperBoundedClosestTimes(const std::vector<double>& timeSamples,
+                                 double time,
+                                 double* tLower,
+                                 double* tUpper)
+{
+    // A time sample time will exist at each discrete integer frame for the
+    // duration of the generated animation and will already be cached.
+    if (timeSamples.empty())
+    {
+        return false;
+    }
+
+    auto const it = std::upper_bound(timeSamples.begin(), timeSamples.end(), time);
+    if (it == timeSamples.end())
+    {
+        *tLower = *tUpper = timeSamples.back();
+        return true;
+    }
+    else if (it == timeSamples.begin())
+    {
+        *tLower = *tUpper = timeSamples.front();
+        return true;
+    }
+    else
+    {
+        size_t endFrameIdx = it - timeSamples.begin();
+        *tUpper = *it;
+        *tLower = timeSamples[endFrameIdx - 1];
+    }
+    return true;
+}
+}  // namespace
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 
@@ -385,6 +422,154 @@ PxrUsdKatanaUsdInPrivateData::GetUsdAndKatanaTimes(
     return result;
 }
 
+const std::vector<double> PxrUsdKatanaUsdInPrivateData::GetSkelMotionSampleTimes(
+    const UsdSkelAnimQuery& skelAnimQuery,
+    std::vector<double>& blendShapeMotionSampleTimes,
+    std::vector<double>& jointTransformMotionSampleTimes) const
+{
+    static std::vector<double> noMotion = {0.0};
+    // If the UsdIn node does not explicitly set a fallback motion sample setting,
+    // return no motion, since it is not requested.
+    if (_motionSampleTimesFallback.size() < 2)
+    {
+        return noMotion;
+    }
+    // If an override was explicitly specified for this prim, return it.
+    if (_motionSampleTimesOverride.size() > 0)
+    {
+        return _motionSampleTimesOverride;
+    }
+    // Early exit if we don't have a valid UsdSkel Animation Query.
+    if (!skelAnimQuery)
+    {
+        return _motionSampleTimesFallback;
+    }
+    // Store whether the joint of blend samples are actually animated.
+    bool hasJointTransformSamples = skelAnimQuery.JointTransformsMightBeTimeVarying();
+    bool hasBlendShapeSamples = skelAnimQuery.BlendShapeWeightsMightBeTimeVarying();
+    if (!hasJointTransformSamples && !hasBlendShapeSamples)
+    {
+        return noMotion;
+    }
+
+    // Allowable error in sample time comparison.
+    static const double epsilon = 0.0001;
+
+    double shutterStartTime, shutterCloseTime;
+    // Calculate shutter start and close times based on
+    // the direction of motion blur.
+    if (IsMotionBackward())
+    {
+        shutterStartTime = _currentTime - _shutterClose;
+        shutterCloseTime = _currentTime - _shutterOpen;
+    }
+    else
+    {
+        shutterStartTime = _currentTime + _shutterOpen;
+        shutterCloseTime = _currentTime + _shutterClose;
+    }
+
+    // get the time samples for our frame interval
+    if (!skelAnimQuery.GetBlendShapeWeightTimeSamplesInInterval(
+            GfInterval(shutterStartTime, shutterCloseTime), &blendShapeMotionSampleTimes))
+    {
+        blendShapeMotionSampleTimes.insert(blendShapeMotionSampleTimes.begin(),
+                                           _motionSampleTimesFallback.begin(),
+                                           _motionSampleTimesFallback.end());
+    }
+    if (!skelAnimQuery.GetJointTransformTimeSamplesInInterval(
+            GfInterval(shutterStartTime, shutterCloseTime), &jointTransformMotionSampleTimes))
+    {
+        jointTransformMotionSampleTimes.insert(jointTransformMotionSampleTimes.begin(),
+                                               _motionSampleTimesFallback.begin(),
+                                               _motionSampleTimesFallback.end());
+    }
+    std::vector<double> blendShapeTimes, jointTransformTimes;
+    skelAnimQuery.GetBlendShapeWeightTimeSamples(&blendShapeTimes);
+    skelAnimQuery.GetJointTransformTimeSamples(&jointTransformTimes);
+
+    // We have a single mid sample, but we know there are more samples.
+    // We should find the next and previous samples to add.
+    if (blendShapeMotionSampleTimes.size() == 1 && blendShapeTimes.size() > 1)
+    {
+        double lower, upper;
+        if (GetUpperBoundedClosestTimes(blendShapeTimes, shutterStartTime, &lower, &upper))
+        {
+            if (fabs(lower - blendShapeMotionSampleTimes.front()) > epsilon)
+            {
+                blendShapeMotionSampleTimes.push_back(lower);
+            }
+        }
+        if (GetUpperBoundedClosestTimes(blendShapeTimes, shutterCloseTime, &lower, &upper))
+        {
+            if (fabs(upper - blendShapeMotionSampleTimes.back()) > epsilon)
+            {
+                blendShapeMotionSampleTimes.push_back(upper);
+            }
+        }
+    }
+    if (jointTransformMotionSampleTimes.size() == 1 && jointTransformTimes.size() > 1)
+    {
+        double lower, upper;
+        if (GetUpperBoundedClosestTimes(jointTransformTimes, shutterStartTime, &lower, &upper))
+        {
+            if (fabs(lower - jointTransformMotionSampleTimes.front()) > epsilon)
+            {
+                jointTransformMotionSampleTimes.push_back(lower);
+            }
+        }
+        if (GetUpperBoundedClosestTimes(jointTransformTimes, shutterCloseTime, &lower, &upper))
+        {
+            if (fabs(upper - jointTransformMotionSampleTimes.back()) > epsilon)
+            {
+                jointTransformMotionSampleTimes.push_back(upper);
+            }
+        }
+    }
+
+    // There may be differing motion samples for blendshapes and joint transforms.
+    // Although unlikely this will cause problems when generating the points time samples,
+    // since one sample may have joint transforms applied, the next would have only blend
+    // shapes applied, making for some bad motion blur.
+    // We therefore only pick up values which match in both, or if one has time samples
+    // and not the other, then use the samples from the animated values.
+    std::vector<double> result;
+    const auto& blendShapeBeginIt = blendShapeMotionSampleTimes.begin();
+    const auto& blendShapeEndIt = blendShapeMotionSampleTimes.end();
+    const auto& jointBeginIt = jointTransformMotionSampleTimes.begin();
+    const auto& jointEndIt = jointTransformMotionSampleTimes.end();
+    if (!hasJointTransformSamples && hasBlendShapeSamples)
+    {
+        result.insert(result.begin(), blendShapeBeginIt, blendShapeEndIt);
+    }
+    else if (!hasBlendShapeSamples && hasJointTransformSamples)
+    {
+        result.insert(result.begin(), jointBeginIt, jointEndIt);
+    }
+    // If they both have samples, only add samples in both sample sets.
+    else if (hasBlendShapeSamples && hasJointTransformSamples)
+    {
+        for (auto t : jointTransformMotionSampleTimes)
+        {
+            if (std::count(blendShapeBeginIt, blendShapeEndIt, t))
+            {
+                result.push_back(t);
+            }
+        }
+    }
+    // Always take the currentTime sample if none are provided.
+    if (result.empty())
+    {
+        return noMotion;
+    }
+    // convert from absolute to frame-relative time samples
+    for (std::vector<double>::iterator I = result.begin(); I != result.end(); ++I)
+    {
+        (*I) -= _currentTime;
+    }
+
+    return result;
+}
 
 const std::vector<double>
 PxrUsdKatanaUsdInPrivateData::GetMotionSampleTimes(

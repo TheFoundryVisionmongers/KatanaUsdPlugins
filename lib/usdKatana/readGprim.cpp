@@ -257,7 +257,7 @@ FnKat::Attribute PxrUsdKatanaGeomGetPAttr(
     if (data.GetEvaluateUsdSkelBindings())
     {
         skinnedPointsAttr = PxrUsdKatanaUtils::ApplySkinningToPoints(
-            points, data.GetCurrentTime());
+            points, data);
     }
 
     if (skinnedPointsAttr.isValid())

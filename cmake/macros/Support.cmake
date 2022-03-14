@@ -207,7 +207,7 @@ function(pxr_library NAME)
     target_compile_options(
         ${NAME}
         PRIVATE
-        $<$<CXX_COMPILER_ID:GNU>:-Wall -std=c++11 -Wno-unused-but-set-variable -Wno-deprecated -Wno-unused-local-typedefs -Werror=narrowing>
+        $<$<CXX_COMPILER_ID:GNU>:-Wall -std=c++14 -Wno-unused-but-set-variable -Wno-deprecated -Wno-unused-local-typedefs -Werror=narrowing>
         $<$<CXX_COMPILER_ID:MSVC>:/W4 /wd4267 /wd4100 /wd4702 /wd4244 /wd4800 /wd4996 /wd4456 /wd4127 /wd4701 /wd4305 /wd4838 /wd4624 /wd4506 /wd4245 /wd4996 /DWIN32_LEAN_AND_MEAN /DNOMINMAX /DNOGDI /FIiso646.h>
         $<$<CONFIG:Debug>:-DTBB_USE_DEBUG=1> # needed on Windows to avoid errors when Python changes _DEBUG
         $<$<CONFIG:Debug>:-DBOOST_DEBUG_PYTHON> # needed on Windows to help with the autolink library name (even though adding BOOST_ALL_NO_LIB doesn't seem to disable this)
@@ -252,7 +252,7 @@ function(pxr_library NAME)
         target_compile_options(
             ${pythonWrapperModuleName}
             PRIVATE
-            $<$<CXX_COMPILER_ID:GNU>:-Wall -std=c++11 -Wno-deprecated -Wno-unused-local-typedefs>
+            $<$<CXX_COMPILER_ID:GNU>:-Wall -std=c++14 -Wno-deprecated -Wno-unused-local-typedefs>
             $<$<CXX_COMPILER_ID:MSVC>:/W4 /wd4244 /wd4305 /wd4100 /wd4459 /wd4996 /DWIN32_LEAN_AND_MEAN /DNOMINMAX>
             $<$<CONFIG:Debug>:-DBOOST_DEBUG_PYTHON> # needed on Windows to help with the autolink library name (even though adding BOOST_ALL_NO_LIB doesn't seem to disable this)
         )

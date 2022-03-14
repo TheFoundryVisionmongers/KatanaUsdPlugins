@@ -144,13 +144,26 @@ def WriteLightList(stage, prim=None):
     @param prim: Optional prim to write the Usd List to, if not provided,
         the stage's default prim will be used.
     """
+    flags = (Usd.PrimIsActive | Usd.PrimIsDefined | ~Usd.PrimIsAbstract)
+    lightList = []
+    def traverse(prim):
+        if  prim.IsA(UsdLux.Light) or \
+            prim.IsA(UsdLux.LightFilter) or \
+            prim.GetTypeName() == "Light":
+            lightList.append(prim.GetPath())
+
+        for child in prim.GetFilteredChildren(Usd.TraverseInstanceProxies(
+            flags)):
+            traverse(child)
+
     if prim is None:
         prim = stage.GetDefaultPrim()
+
     luxListAPI = UsdLux.ListAPI(prim)
+    traverse(prim)
+    luxListAPI.StoreLightList(lightList)
+    luxListAPI.CreateLightListCacheBehaviorAttr("consumeAndHalt")
     luxListAPI.Apply(prim)
-    listList = luxListAPI.ComputeLightList(
-        UsdLux.ListAPI.ComputeModeIgnoreCache)
-    luxListAPI.StoreLightList(listList)
 
 def ParseLightsFromMaterialAttrs(materialAttrs):
     """

@@ -81,6 +81,7 @@ FnLogSetup("PxrUsdKatanaUtils");
 
 #include <cmath>
 #include <sstream>
+#include <map>
 
 PXR_NAMESPACE_OPEN_SCOPE
 namespace
@@ -1043,7 +1044,7 @@ _Traverse(const UsdPrim &prim,
         }
     }
     // Accumulate discovered prims.
-    if (prim.IsA<UsdLuxLight>() || prim.IsA<UsdLuxLightFilter>()) {
+    if (prim.IsA<UsdLuxLight>() || prim.IsA<UsdLuxLightFilter>() || prim.GetTypeName() == "Light") {
         if (seen.insert(prim.GetPath()).second) {
             lights->push_back(prim.GetPath());
         }
@@ -1782,11 +1783,20 @@ PxrUsdKatanaUtils::BuildInstanceMasterMapping(
     return gb.build();
 }
 
-FnKat::Attribute PxrUsdKatanaUtils::ApplySkinningToPoints(
-    const UsdGeomPointBased& points,
-    const double time)
+FnKat::Attribute PxrUsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& points,
+                                                          const PxrUsdKatanaUsdInPrivateData& data)
 {
+    static const int tupleSize = 3;
     FnKat::FloatAttribute skinnedPointsAttr;
+    FnKat::DataBuilder<FnKat::FloatAttribute> attrBuilder(tupleSize);
+
+    // Flag to check if we discovered the topology is varying, in
+    // which case we only output the sample at the curent frame.
+    bool varyingTopology = false;
+
+    const double currentTime = data.GetCurrentTime();
+
+    const bool isMotionBackward = data.IsMotionBackward();
 
     UsdSkelCache skelCache;
     const UsdPrim prim{points.GetPrim()};
@@ -1796,10 +1806,6 @@ FnKat::Attribute PxrUsdKatanaUtils::ApplySkinningToPoints(
         return skinnedPointsAttr;
     }
     skelCache.Populate(skelRoot, UsdTraverseInstanceProxies());
-
-    // Populate skinnedPoints with the points of the rest position
-    VtVec3fArray skinnedPoints;
-    points.GetPointsAttr().Get(&skinnedPoints, time);
 
     // Get skinning query
     const UsdSkelSkinningQuery skinningQuery = skelCache.GetSkinningQuery(prim);
@@ -1816,20 +1822,75 @@ FnKat::Attribute PxrUsdKatanaUtils::ApplySkinningToPoints(
         return skinnedPointsAttr;
     }
 
-    PXR_INTERNAL_NS::ApplyBlendShapeAnimation(skinningQuery, skelQuery, time,
-                                              skinnedPoints);
-    PXR_INTERNAL_NS::ApplyJointAnimation(skinningQuery, skelQuery, time,
-                                         skinnedPoints);
+    // Get motion samples from UsdSkel animation query
+    const UsdSkelAnimQuery skelAnimQuery = skelQuery.GetAnimQuery();
+    std::vector<double> blendShapeMotionSamples, jointXformMotionSamples;
 
-    // Package the points in an attribute.
-    if (!skinnedPoints.empty())
+    const std::vector<double> matchingMotionSamples = data.GetSkelMotionSampleTimes(
+        skelAnimQuery, blendShapeMotionSamples, jointXformMotionSamples);
+
+    // No guarantee that the GetSkelMotionSamples will populate the
+    // blendShapeMotionSamples or jointXformMotionSamples.
+    // Ensure we at least look at the current frame.
+    if (blendShapeMotionSamples.empty())
     {
-        std::vector<float> attrVec(skinnedPoints.size() * 3);
-        PxrUsdKatanaUtils::ConvertArrayToVector(skinnedPoints, &attrVec);
-        skinnedPointsAttr = {attrVec.data(),
-                             static_cast<int64_t>(attrVec.size()), 3};
+        blendShapeMotionSamples.push_back(currentTime);
     }
-    return skinnedPointsAttr;
+    if (jointXformMotionSamples.empty())
+    {
+        jointXformMotionSamples.push_back(currentTime);
+    }
+
+    std::map<float, VtArray<GfVec3f>> timeToSampleMap;
+    // Prioritise JointTransform samples. Could prioritise either
+    for (double relSampleTime : matchingMotionSamples)
+    {
+        double time = currentTime + relSampleTime;
+        VtVec3fArray skinnedPoints;
+        points.GetPointsAttr().Get(&skinnedPoints, time);
+        // Retrieve the base points again!
+
+        if (std::count(blendShapeMotionSamples.begin(), blendShapeMotionSamples.end(), time))
+        {
+            PXR_INTERNAL_NS::ApplyBlendShapeAnimation(skinningQuery, skelQuery, time,
+                                                      skinnedPoints);
+        }
+        if (std::count(jointXformMotionSamples.begin(), jointXformMotionSamples.end(), time))
+        {
+            PXR_INTERNAL_NS::ApplyJointAnimation(skinningQuery, skelQuery, time, skinnedPoints);
+        }
+
+        if (!timeToSampleMap.empty())
+        {
+            if (timeToSampleMap.begin()->second.size() != skinnedPoints.size())
+            {
+                timeToSampleMap.clear();
+                varyingTopology = true;
+                break;
+            }
+        }
+        float correctedSampleTime =
+            isMotionBackward ? PxrUsdKatanaUtils::ReverseTimeSample(relSampleTime) : relSampleTime;
+        timeToSampleMap.insert({correctedSampleTime, skinnedPoints});
+    }
+    if (varyingTopology)
+    {
+        VtVec3fArray skinnedPoints;
+        points.GetPointsAttr().Get(&skinnedPoints, currentTime);
+        FnKat::DataBuilder<FnKat::FloatAttribute> defaultBuilder(tupleSize);
+
+        PXR_INTERNAL_NS::ApplyBlendShapeAnimation(skinningQuery, skelQuery, currentTime,
+                                                  skinnedPoints);
+        PXR_INTERNAL_NS::ApplyJointAnimation(skinningQuery, skelQuery, currentTime, skinnedPoints);
+        // Package the points in an attribute.
+        if (!skinnedPoints.empty())
+        {
+            std::vector<float>& attrVec = attrBuilder.get(0);
+            PxrUsdKatanaUtils::ConvertArrayToVector(skinnedPoints, &attrVec);
+        }
+        return defaultBuilder.build();
+    }
+    return VtKatanaMapOrCopy<GfVec3f>(timeToSampleMap);
 }
 
 namespace {
