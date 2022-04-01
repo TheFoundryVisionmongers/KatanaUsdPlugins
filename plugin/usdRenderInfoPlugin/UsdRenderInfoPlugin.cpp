@@ -166,7 +166,7 @@ ShaderWidgetInfo GetWidgetInfoFromShaderInputProperty(
     }
     else
     {
-        SdfTypeIndicator sdfTypePair = shaderInput->GetTypeAsSdfType();
+        NdrSdfTypeIndicator sdfTypePair = shaderInput->GetTypeAsSdfType();
         std::string shaderInputType = sdfTypePair.first.GetCPPTypeName();
 
         static const std::map<std::string, std::string> widgetTypes = {
@@ -359,9 +359,9 @@ void UsdRenderInfoPlugin::fillShaderTagsFromUsdShaderProperty(
     // second element, a TfToken, will be empty. In the second scenario, the
     // Sdf type will be set to Token to indicate an unclean mapping, and the
     // second element will be set to the original type returned by GetType().
-    // From USD code: (So we know what an SdfTypeIndicator is in the future!)
-    // typedef std::pair<SdfValueTypeName, TfToken> SdfTypeIndicator;
-    SdfTypeIndicator sdfTypePair = shaderProperty->GetTypeAsSdfType();
+    // From USD code: (So we know what an NdrSdfTypeIndicator is in the future!)
+    // typedef std::pair<SdfValueTypeName, TfToken> NdrSdfTypeIndicator;
+    NdrSdfTypeIndicator sdfTypePair = shaderProperty->GetTypeAsSdfType();
     std::string sdfType;
     if (sdfTypePair.second.IsEmpty())
     {

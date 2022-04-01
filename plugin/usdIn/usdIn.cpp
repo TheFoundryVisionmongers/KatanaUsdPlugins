@@ -662,7 +662,7 @@ public:
                 interface.getOutputAttr("__UsdIn.skipAllChildren")).getValue(
                 0, false);
 
-        if (prim.IsMaster() and FnKat::IntAttribute(
+        if (prim.IsPrototype() and FnKat::IntAttribute(
                 opArgs.getChildByName("childOfIntermediate")
                 ).getValue(0, false) == 1)
         {
@@ -692,7 +692,7 @@ public:
 
         if (prim.IsInstance())
         {
-            UsdPrim master = prim.GetMaster();
+            UsdPrim master = prim.GetPrototype();
             interface.setAttr("info.usd.masterPrimPath",
                     FnAttribute::StringAttribute(
                         master.GetPrimPath().GetString()));
@@ -910,7 +910,7 @@ public:
             //
             if (prim.IsInstance() && !privateData->GetMasterPath().IsEmpty())
             {
-                const UsdPrim& masterPrim = prim.GetMaster();
+                const UsdPrim& masterPrim = prim.GetPrototype();
                 if (!masterPrim)
                 {
                     ERROR("USD Prim is advertised as an instance "

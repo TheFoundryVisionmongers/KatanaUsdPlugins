@@ -350,7 +350,7 @@ def AddParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
     @type shader: C{UsdShade.Shader}
     @type shaderId: C{str}
     @type paramName: C{str}
-    @type sdfType: C{SdfTypeIndicator}
+    @type sdfType: C{NdrSdfTypeIndicator}
     @rtype: C{Usd.Shader.Input} or C{None}
     @param shaderParamName: The parameter name as it appears on the shader.
         This is used to determine the type of the shader attribute.
@@ -747,8 +747,8 @@ def GetShaderAttrSdfType(shaderType, shaderAttr, isOutput=False):
         # second scenario, the Sdf type will be set to Token to indicate an
         # unclean mapping, and the second element will be set to the original
         # type returned by  GetType().
-        # From USD code: (So we know what an SdfTypeIndicator is in the future)
-        # typedef std::pair<SdfValueTypeName, TfToken> SdfTypeIndicator;
+        # From USD code: (So we know what an NdrSdfTypeIndicator is in the future)
+        # typedef std::pair<SdfValueTypeName, TfToken> NdrSdfTypeIndicator;
         if isOutput:
             shaderOutput = shader.GetOutput(shaderAttr)
             if shaderOutput:

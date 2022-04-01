@@ -72,7 +72,7 @@ FnKat::Attribute _GetCacheKey(const UsdKatanaUsdInPrivateData& privateData)
     std::string location;
     UsdPrim prim = privateData.GetUsdPrim();
     if (prim.IsInstanceProxy()) {
-        location = prim.GetPrimInMaster().GetPath().GetString();
+        location = prim.GetPrimInPrototype().GetPath().GetString();
     }
     else {
         location = prim.GetPath().GetString();

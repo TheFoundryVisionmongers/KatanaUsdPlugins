@@ -39,10 +39,10 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 class UsdKatanaAttrMap;
 class UsdKatanaUsdInPrivateData;
-class UsdLuxLight;
+class UsdLuxBoundableLightBase;
 
 /// \brief read \p Light into \p attrs.
-USDKATANA_API void UsdKatanaReadLight(const UsdLuxLight& light,
+USDKATANA_API void UsdKatanaReadLight(const UsdLuxBoundableLightBase& light,
                                       const UsdKatanaUsdInPrivateData& data,
                                       UsdKatanaAttrMap& attrs);
 

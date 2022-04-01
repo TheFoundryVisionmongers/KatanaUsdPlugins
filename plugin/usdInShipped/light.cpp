@@ -36,6 +36,9 @@
 #include "usdKatana/readLight.h"
 #include "usdKatana/usdInPluginRegistry.h"
 #include "usdKatana/utils.h"
+#include "pxr/usd/usdLux/lightAPI.h"
+#include "pxr/usd/usdLux/boundableLightBase.h"
+#include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -44,7 +47,7 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_LightOp, privateData, opArgs, interface)
     UsdKatanaUsdInArgsRefPtr usdInArgs = privateData.GetUsdInArgs();
     UsdKatanaAttrMap attrs;
 
-    UsdLuxLight light(privateData.GetUsdPrim());
+    UsdLuxBoundableLightBase light(privateData.GetUsdPrim());
 
     UsdKatanaReadLight(light, privateData, attrs);
 
@@ -106,16 +109,19 @@ namespace {
 static void lightListFnc(UsdKatanaUtilsLightListAccess& lightList)
 {
     UsdPrim prim = lightList.GetPrim();
-    if (prim && prim.IsA<UsdLuxLight>() || prim.GetTypeName() == "Light") {
+    if (prim && prim.HasAPI<UsdLuxLightAPI>() || prim.GetTypeName() == "Light") {
+        UsdLuxBoundableLightBase light(prim);
+        /*
         UsdLuxLight light(prim);
         lightList.Set("path", lightList.GetLocation());
         lightList.SetLinks(light.GetLightLinkCollectionAPI(), "light");
         lightList.Set("enable", true);
         lightList.SetLinks(light.GetShadowLinkCollectionAPI(), "shadow");
+        */
     }
-    if (prim && prim.IsA<UsdRiPxrAovLight>()) {
-        lightList.Set("hasAOV", true);
-    }
+    //if (prim && prim.IsA<UsdRiPxrAovLight>()) {
+    //    lightList.Set("hasAOV", true);
+    //}
 }
 
 }

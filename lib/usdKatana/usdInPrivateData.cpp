@@ -99,7 +99,7 @@ UsdKatanaUsdInPrivateData::UsdKatanaUsdInPrivateData(const UsdPrim& prim,
     //
     if (prim.IsInstance())
     {
-        if (prim.IsInMaster() && parentData &&
+        if (prim.IsInPrototype() && parentData &&
             parentData->GetInstancePath() != SdfPath::EmptyPath())
         {
             SdfPath descendentPrimPath =
@@ -114,7 +114,7 @@ UsdKatanaUsdInPrivateData::UsdKatanaUsdInPrivateData(const UsdPrim& prim,
             _instancePath = prim.GetPath();
         }
 
-        const UsdPrim& masterPrim = prim.GetMaster();            
+        const UsdPrim& masterPrim = prim.GetPrototype();
         if (masterPrim)
         {
             _masterPath = masterPrim.GetPath();

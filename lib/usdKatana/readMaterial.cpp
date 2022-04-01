@@ -50,9 +50,6 @@
 #include "pxr/usd/usdShade/utils.h"
 
 #include "pxr/usd/usdRi/materialAPI.h"
-#include "pxr/usd/usdRi/risObject.h"
-#include "pxr/usd/usdRi/risOslPattern.h"
-#include "pxr/usd/usdRi/rslShader.h"
 #include "pxr/usd/usdUI/nodeGraphNodeAPI.h"
 
 #include <FnConfig/FnConfig.h>
@@ -791,21 +788,10 @@ _GetMaterialAttr(
             surfaceShader.GetPrim(), currentTime,
             nodesBuilder, interfaceBuilder, layoutBuilder, "prman", flatten);
 
-        // If the source shader type is an RslShader, then publish it
-        // as a prmanSurface terminal. If not, fallback to the
-        // prmanBxdf terminal.
-        UsdRiRslShader rslShader(surfaceShader.GetPrim());
-        if (rslShader) {
-            terminalsBuilder.set("prmanSurface",
-                                 FnKat::StringAttribute(handle));
-            terminalsBuilder.set("prmanSurfacePort",
-                                 FnKat::StringAttribute("out"));
-        } else {
-            terminalsBuilder.set("prmanBxdf",
-                                 FnKat::StringAttribute(handle));
-            terminalsBuilder.set("prmanBxdfPort",
-                                 FnKat::StringAttribute("out"));
-        }
+        terminalsBuilder.set("prmanBxdf",
+                                FnKat::StringAttribute(handle));
+        terminalsBuilder.set("prmanBxdfPort",
+                                FnKat::StringAttribute("out"));
     }
 
     // look for displacement

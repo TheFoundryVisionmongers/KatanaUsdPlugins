@@ -46,6 +46,7 @@
 #include "pxr/usd/usdGeom/scope.h"
 #include "pxr/usd/usdGeom/subset.h"
 #include "pxr/usd/usdGeom/xform.h"
+#include "pxr/usd/usdLux/boundableLightBase.h"
 #include "pxr/usd/usdLux/cylinderLight.h"
 #include "pxr/usd/usdLux/diskLight.h"
 #include "pxr/usd/usdLux/distantLight.h"
@@ -54,13 +55,6 @@
 #include "pxr/usd/usdLux/lightFilter.h"
 #include "pxr/usd/usdLux/rectLight.h"
 #include "pxr/usd/usdLux/sphereLight.h"
-#include "pxr/usd/usdRi/pxrAovLight.h"
-#include "pxr/usd/usdRi/pxrBarnLightFilter.h"
-#include "pxr/usd/usdRi/pxrCookieLightFilter.h"
-#include "pxr/usd/usdRi/pxrEnvDayLight.h"
-#include "pxr/usd/usdRi/pxrIntMultLightFilter.h"
-#include "pxr/usd/usdRi/pxrRampLightFilter.h"
-#include "pxr/usd/usdRi/pxrRodLightFilter.h"
 #include "pxr/usd/usdShade/material.h"
 #include "pxr/usd/usdSkel/root.h"
 
@@ -126,7 +120,7 @@ void registerPlugins()
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdShadeMaterial>("UsdInCore_LookOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdSkelRoot>("UsdInCore_XformOp");
 
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxLight>("UsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxBoundableLightBase>("UsdInCore_LightOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxCylinderLight>("UsdInCore_LightOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDomeLight>("UsdInCore_LightOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxGeometryLight>("UsdInCore_LightOp");
@@ -134,19 +128,6 @@ void registerPlugins()
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxSphereLight>("UsdInCore_LightOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDiskLight>("UsdInCore_LightOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxRectLight>("UsdInCore_LightOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrAovLight>("UsdInCore_LightOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrEnvDayLight>("UsdInCore_LightOp");
-
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrIntMultLightFilter>(
-        "UsdInCore_LightFilterOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrBarnLightFilter>(
-        "UsdInCore_LightFilterOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrCookieLightFilter>(
-        "UsdInCore_LightFilterOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrRampLightFilter>(
-        "UsdInCore_LightFilterOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrRodLightFilter>(
-        "UsdInCore_LightFilterOp");
 
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomCamera>("UsdInCore_CameraOp");
 

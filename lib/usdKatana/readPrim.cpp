@@ -94,7 +94,7 @@ static FnKat::Attribute _GetMaterialAssignAttrFromPath(const SdfPath& inputTarge
     //     is available as the provided prim will automatically
     //     retarget (or provide enough context to retarget without
     //     tracking manually).
-    if (targetPrim && targetPrim.IsInMaster()) {
+    if (targetPrim && targetPrim.IsInPrototype()) {
         if (!data.GetInstancePath().IsEmpty() &&
             !data.GetMasterPath().IsEmpty()) {
 

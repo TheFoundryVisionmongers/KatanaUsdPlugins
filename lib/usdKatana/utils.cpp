@@ -50,7 +50,7 @@
 #include "pxr/usd/usdGeom/scope.h"
 #include "pxr/usd/usdRi/statementsAPI.h"
 #include "pxr/usd/usdUI/sceneGraphPrimAPI.h"
-#include "pxr/usd/usdLux/light.h"
+#include "pxr/usd/usdLux/lightAPI.h"
 #include "pxr/usd/usdLux/lightFilter.h"
 #include "pxr/usd/usdLux/listAPI.h"
 #include "pxr/usd/usdShade/shader.h"
@@ -1041,7 +1041,7 @@ _Traverse(const UsdPrim &prim,
         }
     }
     // Accumulate discovered prims.
-    if (prim.IsA<UsdLuxLight>() || prim.IsA<UsdLuxLightFilter>() || prim.GetTypeName() == "Light") {
+    if (prim.HasAPI<UsdLuxLightAPI>() || prim.IsA<UsdLuxLightFilter>() || prim.GetTypeName() == "Light") {
         if (seen.insert(prim.GetPath()).second) {
             lights->push_back(prim.GetPath());
         }
@@ -1173,7 +1173,7 @@ std::string UsdKatanaUtils::ConvertUsdPathToKatLocation(const SdfPath& path,
     // an instance, replace the master path by the instance path before
     // converting to a katana location.
     SdfPath nonMasterPath = path;
-    if (data.GetUsdPrim().IsInMaster() && !data.GetInstancePath().IsEmpty())
+    if (data.GetUsdPrim().IsInPrototype() && !data.GetInstancePath().IsEmpty())
     {
         nonMasterPath = nonMasterPath.ReplacePrefix(
             data.GetMasterPath(), data.GetInstancePath());
@@ -1252,7 +1252,7 @@ std::string UsdKatanaUtils::_GetDisplayGroup(const UsdPrim& prim, const SdfPath&
             return "";
         }
 
-        if (parentPrim.IsInMaster())
+        if (parentPrim.IsInPrototype())
         {
             // If the prim is inside a master, then attempt to translate the
             // parentPath to the corresponding uninstanced path, assuming that
@@ -1354,7 +1354,7 @@ std::string UsdKatanaUtils::ConvertUsdMaterialPathToKatLocation(
 
 bool UsdKatanaUtils::ModelGroupIsAssembly(const UsdPrim& prim)
 {
-    if (!(prim.IsGroup() && prim.GetParent()) || prim.IsInMaster())
+    if (!(prim.IsGroup() && prim.GetParent()) || prim.IsInPrototype())
         return false;
 
     // XXX with bug/102670, this test will be trivial: prim.IsAssembly()
@@ -1464,7 +1464,7 @@ bool UsdKatanaUtils::ModelGroupNeedsProxy(const UsdPrim& prim)
 
 bool UsdKatanaUtils::IsModelAssemblyOrComponent(const UsdPrim& prim)
 {
-    if (!prim || !prim.IsModel() || prim.IsInMaster()) {
+    if (!prim || !prim.IsModel() || prim.IsInPrototype()) {
         return false;
     }
 
@@ -1666,7 +1666,7 @@ namespace
     {
         if (prim.IsInstance())
         {
-            const UsdPrim master = prim.GetMaster();
+            const UsdPrim master = prim.GetPrototype();
 
             if (master.IsValid())
             {

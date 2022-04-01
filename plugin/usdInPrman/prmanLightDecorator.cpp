@@ -31,14 +31,12 @@
 #include "pxr/usd/usdLux/distantLight.h"
 #include "pxr/usd/usdLux/domeLight.h"
 #include "pxr/usd/usdLux/geometryLight.h"
-#include "pxr/usd/usdLux/light.h"
+#include "pxr/usd/usdLux/lightAPI.h"
+#include "pxr/usd/usdLux/boundableLightBase.h"
 #include "pxr/usd/usdLux/rectLight.h"
 #include "pxr/usd/usdLux/shadowAPI.h"
 #include "pxr/usd/usdLux/shapingAPI.h"
 #include "pxr/usd/usdLux/sphereLight.h"
-#include "pxr/usd/usdRi/lightAPI.h"
-#include "pxr/usd/usdRi/pxrAovLight.h"
-#include "pxr/usd/usdRi/pxrEnvDayLight.h"
 #include "pxr/usd/usdRi/textureAPI.h"
 
 #include "usdKatana/attrMap.h"
@@ -80,7 +78,7 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInPrmanLuxLight_LocationDecorator, privateData,
         {
             return;
         }
-        const UsdLuxLight light = UsdLuxLight(lightPrim);
+        const UsdLuxBoundableLightBase light = UsdLuxBoundableLightBase(lightPrim);
         if (!light)
         {
             return;
@@ -115,14 +113,6 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInPrmanLuxLight_LocationDecorator, privateData,
             .Set("shadowDistance", shadowAPI.GetShadowDistanceAttr())
             .Set("shadowFalloff", shadowAPI.GetShadowFalloffAttr())
             .Set("shadowFalloffGamma", shadowAPI.GetShadowFalloffGammaAttr());
-
-        UsdRiLightAPI riLightAPI(lightPrim);
-        lightBuilder.Set("intensityNearDist", riLightAPI.GetRiIntensityNearDistAttr())
-            .Set("traceLightPaths", riLightAPI.GetRiTraceLightPathsAttr())
-            .Set("thinShadow", riLightAPI.GetRiShadowThinShadowAttr())
-            .Set("fixedSampleCount", riLightAPI.GetRiSamplingFixedSampleCountAttr())
-            .Set("importanceMultiplier", riLightAPI.GetRiSamplingImportanceMultiplierAttr())
-            .Set("lightGroup", riLightAPI.GetRiLightGroupAttr());
 
         FnKat::StringAttribute lightShader;
         if (UsdLuxSphereLight l = UsdLuxSphereLight(lightPrim))
@@ -175,39 +165,6 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInPrmanLuxLight_LocationDecorator, privateData,
             lightBuilder.Set("lightColorMap", l.GetTextureFileAttr())
                 .Set("colorMapGamma", textureAPI.GetRiTextureGammaAttr())
                 .Set("colorMapSaturation", textureAPI.GetRiTextureSaturationAttr());
-        }
-
-        // Prman specific light.
-        if (UsdRiPxrEnvDayLight l = UsdRiPxrEnvDayLight(lightPrim))
-        {
-            lightShader = FnKat::StringAttribute("PxrEnvDayLight");
-            lightBuilder.Set("day", l.GetDayAttr())
-                .Set("haziness", l.GetHazinessAttr())
-                .Set("hour", l.GetHourAttr())
-                .Set("latitude", l.GetLatitudeAttr())
-                .Set("longitude", l.GetLongitudeAttr())
-                .Set("month", l.GetMonthAttr())
-                .Set("skyTint", l.GetSkyTintAttr())
-                .Set("sunDirection", l.GetSunDirectionAttr())
-                .Set("sunSize", l.GetSunSizeAttr())
-                .Set("sunTint", l.GetSunTintAttr())
-                .Set("year", l.GetYearAttr())
-                .Set("zone", l.GetZoneAttr());
-        }
-
-        // Prman specific light.
-        if (UsdRiPxrAovLight l = UsdRiPxrAovLight(lightPrim))
-        {
-            lightShader = FnKat::StringAttribute("PxrAovLight");
-            lightBuilder.Set("aovName", l.GetAovNameAttr())
-                .Set("inPrimaryHit", l.GetInPrimaryHitAttr())
-                .Set("inReflection", l.GetInReflectionAttr())
-                .Set("inRefraction", l.GetInRefractionAttr())
-                .Set("invert", l.GetInvertAttr())
-                .Set("onVolumeBoundaries", l.GetOnVolumeBoundariesAttr())
-                .Set("useColor", l.GetUseColorAttr())
-                .Set("useThroughput", l.GetUseThroughputAttr());
-            // XXX aovSuffix, writeToDisk
         }
 
         FnKat::GroupBuilder primStatements;

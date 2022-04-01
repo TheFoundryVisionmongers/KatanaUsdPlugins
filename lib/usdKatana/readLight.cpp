@@ -45,7 +45,8 @@
 #include "pxr/usd/usdLux/distantLight.h"
 #include "pxr/usd/usdLux/domeLight.h"
 #include "pxr/usd/usdLux/geometryLight.h"
-#include "pxr/usd/usdLux/light.h"
+#include "pxr/usd/usdLux/lightAPI.h"
+#include "pxr/usd/usdLux/boundableLightBase.h"
 #include "pxr/usd/usdLux/rectLight.h"
 #include "pxr/usd/usdLux/shadowAPI.h"
 #include "pxr/usd/usdLux/shapingAPI.h"
@@ -75,7 +76,7 @@ static void _SetLightSizeFromRadius(UsdKatanaAttrMap& geomBuilder,
 
 static const std::unordered_map<std::string, std::string> s_rendererToContextName{{"prman", "ri"}};
 
-void __handleUsdLuxLightTypes(const UsdLuxLight& light,
+void __handleUsdLuxLightTypes(const UsdLuxBoundableLightBase& light,
                               const UsdPrim& lightPrim,
                               const UsdTimeCode& currentTimeCode,
                               const UsdKatanaUsdInPrivateData& data,
@@ -289,7 +290,7 @@ void __handleSdrRegistryLights(const UsdPrim& lightPrim,
     }
 }
 
-void UsdKatanaReadLight(const UsdLuxLight& light,
+void UsdKatanaReadLight(const UsdLuxBoundableLightBase& light,
                         const UsdKatanaUsdInPrivateData& data,
                         UsdKatanaAttrMap& attrs)
 {
