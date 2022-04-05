@@ -57,6 +57,7 @@
 #include <FnLogging/FnLogging.h>
 #include <pystring/pystring.h>
 
+#include <cctype>
 #include <map>
 #include <mutex>
 #include <stack>
