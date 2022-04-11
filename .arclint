@@ -38,7 +38,7 @@
     },
     "python-pylint": {
       "type": "pylint",
-      "bin": ["pylint"],
+      "bin": ["../Katana/pylintwrapper.exe", "../Katana/pylintwrapper"],
       "include": ["(\\.py$)"],
       "pylint.config": "../../Resources/DevTools/pylintrc"
     },
