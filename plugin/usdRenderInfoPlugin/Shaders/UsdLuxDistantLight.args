@@ -81,8 +81,8 @@
     <param name="intensity"
             label="Intensity"
             type="float"
-            default="1.0" min="0.0"
-            slider="1" slidermin="0.0" slidermax="100.0"
+            default="50000.0" min="0.0"
+            slider="1" slidermin="0.0" slidermax="100000.0"
             connectable="False"
             widget="default">
         <help>
