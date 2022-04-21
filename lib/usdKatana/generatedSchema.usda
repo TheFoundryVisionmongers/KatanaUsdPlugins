@@ -51,7 +51,7 @@ class "LookAPI" (
     )
 }
 
-class "LightAPI" (
+class "KatanaLightAPI" (
     doc = "Katana-specific entensions of UsdLuxLight"
 )
 {

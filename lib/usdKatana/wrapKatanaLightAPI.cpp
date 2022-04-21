@@ -27,12 +27,13 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "usdKatana/lightAPI.h"
+#include "usdKatana/katanaLightAPI.h"
 #include "pxr/usd/usd/schemaBase.h"
 
 #include "pxr/usd/sdf/primSpec.h"
 
 #include "pxr/usd/usd/pyConversions.h"
+#include "pxr/base/tf/pyAnnotatedBoolResult.h"
 #include "pxr/base/tf/pyContainerConversions.h"
 #include "pxr/base/tf/pyResultConversions.h"
 #include "pxr/base/tf/pyUtils.h"
@@ -54,38 +55,56 @@ namespace {
 // fwd decl.
 WRAP_CUSTOM;
 
-
+        
 static UsdAttribute
-_CreateIdAttr(UsdKatanaLightAPI &self,
+_CreateIdAttr(UsdKatanaKatanaLightAPI &self,
                                       object defaultVal, bool writeSparsely) {
     return self.CreateIdAttr(
         UsdPythonToSdfType(defaultVal, SdfValueTypeNames->StringArray), writeSparsely);
 }
-
+        
 static UsdAttribute
-_CreateCenterOfInterestAttr(UsdKatanaLightAPI &self,
+_CreateCenterOfInterestAttr(UsdKatanaKatanaLightAPI &self,
                                       object defaultVal, bool writeSparsely) {
     return self.CreateCenterOfInterestAttr(
         UsdPythonToSdfType(defaultVal, SdfValueTypeNames->Double), writeSparsely);
 }
 
 static std::string
-_Repr(const UsdKatanaLightAPI &self)
+_Repr(const UsdKatanaKatanaLightAPI &self)
 {
     std::string primRepr = TfPyRepr(self.GetPrim());
     return TfStringPrintf(
-        "UsdKatana.LightAPI(%s)",
+        "UsdKatana.KatanaLightAPI(%s)",
         primRepr.c_str());
+}
+
+struct UsdKatanaKatanaLightAPI_CanApplyResult : 
+    public TfPyAnnotatedBoolResult<std::string>
+{
+    UsdKatanaKatanaLightAPI_CanApplyResult(bool val, std::string const &msg) :
+        TfPyAnnotatedBoolResult<std::string>(val, msg) {}
+};
+
+static UsdKatanaKatanaLightAPI_CanApplyResult
+_WrapCanApply(const UsdPrim& prim)
+{
+    std::string whyNot;
+    bool result = UsdKatanaKatanaLightAPI::CanApply(prim, &whyNot);
+    return UsdKatanaKatanaLightAPI_CanApplyResult(result, whyNot);
 }
 
 } // anonymous namespace
 
-void wrapUsdKatanaLightAPI()
+void wrapUsdKatanaKatanaLightAPI()
 {
-    typedef UsdKatanaLightAPI This;
+    typedef UsdKatanaKatanaLightAPI This;
+
+    UsdKatanaKatanaLightAPI_CanApplyResult::Wrap<UsdKatanaKatanaLightAPI_CanApplyResult>(
+        "_CanApplyResult", "whyNot");
 
     class_<This, bases<UsdAPISchemaBase> >
-        cls("LightAPI");
+        cls("KatanaLightAPI");
 
     cls
         .def(init<UsdPrim>(arg("prim")))
@@ -94,6 +113,9 @@ void wrapUsdKatanaLightAPI()
 
         .def("Get", &This::Get, (arg("stage"), arg("path")))
         .staticmethod("Get")
+
+        .def("CanApply", &_WrapCanApply, (arg("prim")))
+        .staticmethod("CanApply")
 
         .def("Apply", &This::Apply, (arg("prim")))
         .staticmethod("Apply")
@@ -110,14 +132,14 @@ void wrapUsdKatanaLightAPI()
 
         .def(!self)
 
-
+        
         .def("GetIdAttr",
              &This::GetIdAttr)
         .def("CreateIdAttr",
              &_CreateIdAttr,
              (arg("defaultValue")=object(),
               arg("writeSparsely")=false))
-
+        
         .def("GetCenterOfInterestAttr",
              &This::GetCenterOfInterestAttr)
         .def("CreateCenterOfInterestAttr",
@@ -132,7 +154,7 @@ void wrapUsdKatanaLightAPI()
 }
 
 // ===================================================================== //
-// Feel free to add custom code below this line, it will be preserved by
+// Feel free to add custom code below this line, it will be preserved by 
 // the code generator.  The entry point for your custom code should look
 // minimally like the following:
 //
@@ -143,7 +165,7 @@ void wrapUsdKatanaLightAPI()
 // }
 //
 // Of course any other ancillary or support code may be provided.
-//
+// 
 // Just remember to wrap code in the appropriate delimiters:
 // 'namespace {', '}'.
 //

@@ -33,6 +33,7 @@
 #include "pxr/usd/sdf/primSpec.h"
 
 #include "pxr/usd/usd/pyConversions.h"
+#include "pxr/base/tf/pyAnnotatedBoolResult.h"
 #include "pxr/base/tf/pyContainerConversions.h"
 #include "pxr/base/tf/pyResultConversions.h"
 #include "pxr/base/tf/pyUtils.h"
@@ -54,7 +55,7 @@ namespace {
 // fwd decl.
 WRAP_CUSTOM;
 
-
+        
 static UsdAttribute
 _CreatePrimNameAttr(UsdKatanaLookAPI &self,
                                       object defaultVal, bool writeSparsely) {
@@ -71,11 +72,29 @@ _Repr(const UsdKatanaLookAPI &self)
         primRepr.c_str());
 }
 
+struct UsdKatanaLookAPI_CanApplyResult : 
+    public TfPyAnnotatedBoolResult<std::string>
+{
+    UsdKatanaLookAPI_CanApplyResult(bool val, std::string const &msg) :
+        TfPyAnnotatedBoolResult<std::string>(val, msg) {}
+};
+
+static UsdKatanaLookAPI_CanApplyResult
+_WrapCanApply(const UsdPrim& prim)
+{
+    std::string whyNot;
+    bool result = UsdKatanaLookAPI::CanApply(prim, &whyNot);
+    return UsdKatanaLookAPI_CanApplyResult(result, whyNot);
+}
+
 } // anonymous namespace
 
 void wrapUsdKatanaLookAPI()
 {
     typedef UsdKatanaLookAPI This;
+
+    UsdKatanaLookAPI_CanApplyResult::Wrap<UsdKatanaLookAPI_CanApplyResult>(
+        "_CanApplyResult", "whyNot");
 
     class_<This, bases<UsdAPISchemaBase> >
         cls("LookAPI");
@@ -87,6 +106,9 @@ void wrapUsdKatanaLookAPI()
 
         .def("Get", &This::Get, (arg("stage"), arg("path")))
         .staticmethod("Get")
+
+        .def("CanApply", &_WrapCanApply, (arg("prim")))
+        .staticmethod("CanApply")
 
         .def("Apply", &This::Apply, (arg("prim")))
         .staticmethod("Apply")
@@ -103,7 +125,7 @@ void wrapUsdKatanaLookAPI()
 
         .def(!self)
 
-
+        
         .def("GetPrimNameAttr",
              &This::GetPrimNameAttr)
         .def("CreatePrimNameAttr",
@@ -118,7 +140,7 @@ void wrapUsdKatanaLookAPI()
 }
 
 // ===================================================================== //
-// Feel free to add custom code below this line, it will be preserved by
+// Feel free to add custom code below this line, it will be preserved by 
 // the code generator.  The entry point for your custom code should look
 // minimally like the following:
 //
@@ -129,7 +151,7 @@ void wrapUsdKatanaLookAPI()
 // }
 //
 // Of course any other ancillary or support code may be provided.
-//
+// 
 // Just remember to wrap code in the appropriate delimiters:
 // 'namespace {', '}'.
 //

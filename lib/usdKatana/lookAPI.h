@@ -68,11 +68,6 @@ public:
     /// \sa UsdSchemaKind
     static const UsdSchemaKind schemaKind = UsdSchemaKind::SingleApplyAPI;
 
-    /// \deprecated
-    /// Same as schemaKind, provided to maintain temporary backward
-    /// compatibility with older generated schemas.
-    static const UsdSchemaKind schemaType = UsdSchemaKind::SingleApplyAPI;
-
     /// Construct a UsdKatanaLookAPI on UsdPrim \p prim .
     /// Equivalent to UsdKatanaLookAPI::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
@@ -115,22 +110,43 @@ public:
     Get(const UsdStagePtr &stage, const SdfPath &path);
 
 
-    /// Applies this <b>single-apply</b> API schema to the given \p prim.
-    /// This information is stored by adding "LookAPI" to the
-    /// token-valued, listOp metadata \em apiSchemas on the prim.
-    ///
-    /// \return A valid UsdKatanaLookAPI object is returned upon success.
-    /// An invalid (or empty) UsdKatanaLookAPI object is returned upon
-    /// failure. See \ref UsdPrim::ApplyAPI() for conditions
-    /// resulting in failure.
-    ///
+    /// Returns true if this <b>single-apply</b> API schema can be applied to 
+    /// the given \p prim. If this schema can not be a applied to the prim, 
+    /// this returns false and, if provided, populates \p whyNot with the 
+    /// reason it can not be applied.
+    /// 
+    /// Note that if CanApply returns false, that does not necessarily imply
+    /// that calling Apply will fail. Callers are expected to call CanApply
+    /// before calling Apply if they want to ensure that it is valid to 
+    /// apply a schema.
+    /// 
     /// \sa UsdPrim::GetAppliedSchemas()
     /// \sa UsdPrim::HasAPI()
+    /// \sa UsdPrim::CanApplyAPI()
     /// \sa UsdPrim::ApplyAPI()
     /// \sa UsdPrim::RemoveAPI()
     ///
     USDKATANA_API
-    static UsdKatanaLookAPI
+    static bool 
+    CanApply(const UsdPrim &prim, std::string *whyNot=nullptr);
+
+    /// Applies this <b>single-apply</b> API schema to the given \p prim.
+    /// This information is stored by adding "LookAPI" to the 
+    /// token-valued, listOp metadata \em apiSchemas on the prim.
+    /// 
+    /// \return A valid UsdKatanaLookAPI object is returned upon success. 
+    /// An invalid (or empty) UsdKatanaLookAPI object is returned upon 
+    /// failure. See \ref UsdPrim::ApplyAPI() for conditions 
+    /// resulting in failure. 
+    /// 
+    /// \sa UsdPrim::GetAppliedSchemas()
+    /// \sa UsdPrim::HasAPI()
+    /// \sa UsdPrim::CanApplyAPI()
+    /// \sa UsdPrim::ApplyAPI()
+    /// \sa UsdPrim::RemoveAPI()
+    ///
+    USDKATANA_API
+    static UsdKatanaLookAPI 
     Apply(const UsdPrim &prim);
 
 protected:
@@ -139,12 +155,6 @@ protected:
     /// \sa UsdSchemaKind
     USDKATANA_API
     UsdSchemaKind _GetSchemaKind() const override;
-
-    /// \deprecated
-    /// Same as _GetSchemaKind, provided to maintain temporary backward
-    /// compatibility with older generated schemas.
-    USDKATANA_API
-    UsdSchemaKind _GetSchemaType() const override;
 
 private:
     // needs to invoke _GetStaticTfType.
@@ -160,7 +170,7 @@ private:
 
 public:
     // --------------------------------------------------------------------- //
-    // PRIMNAME
+    // PRIMNAME 
     // --------------------------------------------------------------------- //
     /// When a Material derives from another, "base" Material (see
     /// \ref UsdShadeMaterial::SetBaseMaterial() "SetBaseMaterial()"), it seems
@@ -172,25 +182,25 @@ public:
     /// inherit not just the base Material prim itself, but all of the shader and
     /// other prims scoped underneath it, which would include the derived Material
     /// itself).
-    ///
+    /// 
     /// For UI's that want to present the hierarchy that derivation implies,
     /// we provide \em primName, which specifies the derived Material's
     /// "relative name" with respect to the base Material.
-    ///
+    /// 
     /// For example, a structure that looks like:
     /// - Metal
     /// - .. Brass
     /// - .. Aluminum
-    ///
+    /// 
     /// will be encoded as
     /// - Metal
     /// - Metal_Brass
     /// - Metal_Aluminum
-    ///
+    /// 
     /// We set derivedName on Metal_Brass and Metal_Aluminum to Brass and
     /// Aluminum, to be able to have proper child names if the hierarchy
     /// is reconstructed.
-    ///
+    /// 
     ///
     /// | ||
     /// | -- | -- |
@@ -201,7 +211,7 @@ public:
     USDKATANA_API
     UsdAttribute GetPrimNameAttr() const;
 
-    /// See GetPrimNameAttr(), and also
+    /// See GetPrimNameAttr(), and also 
     /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
     /// If specified, author \p defaultValue as the attribute's default,
     /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
@@ -211,11 +221,11 @@ public:
 
 public:
     // ===================================================================== //
-    // Feel free to add custom code below this line, it will be preserved by
-    // the code generator.
+    // Feel free to add custom code below this line, it will be preserved by 
+    // the code generator. 
     //
-    // Just remember to:
-    //  - Close the class declaration with };
+    // Just remember to: 
+    //  - Close the class declaration with }; 
     //  - Close the namespace with PXR_NAMESPACE_CLOSE_SCOPE
     //  - Close the include guard with #endif
     // ===================================================================== //

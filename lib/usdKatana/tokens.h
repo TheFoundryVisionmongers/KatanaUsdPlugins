@@ -33,10 +33,10 @@
 /// \file usdKatana/tokens.h
 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-//
+// 
 // This is an automatically generated file (by usdGenSchema.py).
 // Do not hand-edit!
-//
+// 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 #include "pxr/pxr.h"
@@ -69,39 +69,39 @@ PXR_NAMESPACE_OPEN_SCOPE
 struct UsdKatanaTokensType {
     USDKATANA_API UsdKatanaTokensType();
     /// \brief "geometry:centerOfInterest"
-    ///
-    /// UsdKatanaLightAPI
+    /// 
+    /// UsdKatanaKatanaLightAPI
     const TfToken geometryCenterOfInterest;
     /// \brief "katana:id"
-    ///
-    /// UsdKatanaLightAPI
+    /// 
+    /// UsdKatanaKatanaLightAPI
     const TfToken katanaId;
     /// \brief "__UsdIn.skipChild.Looks"
-    ///
+    /// 
     /// Special token for the usdKatana library.
     const TfToken katanaLooksChildNameExclusionAttrName;
     /// \brief "Looks"
-    ///
+    /// 
     /// Special token for the usdKatana library.
     const TfToken katanaLooksScopeName;
     /// \brief "/Looks/"
-    ///
+    /// 
     /// Special token for the usdKatana library.
     const TfToken katanaLooksScopePathSubstring;
     /// \brief "katana:primName"
-    ///
+    /// 
     /// UsdKatanaLookAPI
     const TfToken katanaPrimName;
     /// \brief "katana:suppressGroupToAssemblyPromotion"
-    ///
+    /// 
     /// UsdKatanaBlindDataObject
     const TfToken katanaSuppressGroupToAssemblyPromotion;
     /// \brief "katana:type"
-    ///
+    /// 
     /// UsdKatanaBlindDataObject
     const TfToken katanaType;
     /// \brief "katana:visible"
-    ///
+    /// 
     /// UsdKatanaBlindDataObject
     const TfToken katanaVisible;
     /// A vector of all of the tokens listed above.

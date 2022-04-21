@@ -42,7 +42,7 @@ TF_REGISTRY_FUNCTION(TfType)
 {
     TfType::Define<UsdKatanaLookAPI,
         TfType::Bases< UsdAPISchemaBase > >();
-
+    
 }
 
 TF_DEFINE_PRIVATE_TOKENS(
@@ -68,13 +68,17 @@ UsdKatanaLookAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
 
 
 /* virtual */
-UsdSchemaKind UsdKatanaLookAPI::_GetSchemaKind() const {
+UsdSchemaKind UsdKatanaLookAPI::_GetSchemaKind() const
+{
     return UsdKatanaLookAPI::schemaKind;
 }
 
-/* virtual */
-UsdSchemaKind UsdKatanaLookAPI::_GetSchemaType() const {
-    return UsdKatanaLookAPI::schemaType;
+/* static */
+bool
+UsdKatanaLookAPI::CanApply(
+    const UsdPrim &prim, std::string *whyNot)
+{
+    return prim.CanApplyAPI<UsdKatanaLookAPI>(whyNot);
 }
 
 /* static */
@@ -96,7 +100,7 @@ UsdKatanaLookAPI::_GetStaticTfType()
 }
 
 /* static */
-bool
+bool 
 UsdKatanaLookAPI::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();

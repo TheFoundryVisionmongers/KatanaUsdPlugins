@@ -30,7 +30,7 @@
 #include "usdKatana/readLight.h"
 #include "pxr/pxr.h"
 #include "usdKatana/attrMap.h"
-#include "usdKatana/lightAPI.h"
+#include "usdKatana/katanaLightAPI.h"
 #include "usdKatana/readPrim.h"
 #include "usdKatana/readXformable.h"
 #include "usdKatana/utils.h"
@@ -183,7 +183,7 @@ void __handleSdrRegistryLights(const UsdPrim& lightPrim,
                                FnKat::GroupBuilder& materialBuilder,
                                UsdKatanaAttrMap& geomBuilder)
 {
-    UsdKatanaLightAPI lightAPI(lightPrim);
+    UsdKatanaKatanaLightAPI lightAPI(lightPrim);
     geomBuilder.Set("centerOfInterest", lightAPI.GetCenterOfInterestAttr());
     VtValue lightShaderIdsVal;
     lightAPI.GetIdAttr().Get(&lightShaderIdsVal, currentTimeCode);

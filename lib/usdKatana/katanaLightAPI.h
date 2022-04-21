@@ -27,10 +27,10 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef USDKATANA_GENERATED_LIGHTAPI_H
-#define USDKATANA_GENERATED_LIGHTAPI_H
+#ifndef USDKATANA_GENERATED_KATANALIGHTAPI_H
+#define USDKATANA_GENERATED_KATANALIGHTAPI_H
 
-/// \file usdKatana/lightAPI.h
+/// \file usdKatana/katanaLightAPI.h
 
 #include "pxr/pxr.h"
 #include "usdKatana/api.h"
@@ -53,14 +53,14 @@ PXR_NAMESPACE_OPEN_SCOPE
 class SdfAssetPath;
 
 // -------------------------------------------------------------------------- //
-// LIGHTAPI                                                                   //
+// KATANALIGHTAPI                                                             //
 // -------------------------------------------------------------------------- //
 
-/// \class UsdKatanaLightAPI
+/// \class UsdKatanaKatanaLightAPI
 ///
 /// Katana-specific entensions of UsdLuxLight
 ///
-class UsdKatanaLightAPI : public UsdAPISchemaBase
+class UsdKatanaKatanaLightAPI : public UsdAPISchemaBase
 {
 public:
     /// Compile time constant representing what kind of schema this class is.
@@ -68,31 +68,26 @@ public:
     /// \sa UsdSchemaKind
     static const UsdSchemaKind schemaKind = UsdSchemaKind::SingleApplyAPI;
 
-    /// \deprecated
-    /// Same as schemaKind, provided to maintain temporary backward
-    /// compatibility with older generated schemas.
-    static const UsdSchemaKind schemaType = UsdSchemaKind::SingleApplyAPI;
-
-    /// Construct a UsdKatanaLightAPI on UsdPrim \p prim .
-    /// Equivalent to UsdKatanaLightAPI::Get(prim.GetStage(), prim.GetPath())
+    /// Construct a UsdKatanaKatanaLightAPI on UsdPrim \p prim .
+    /// Equivalent to UsdKatanaKatanaLightAPI::Get(prim.GetStage(), prim.GetPath())
     /// for a \em valid \p prim, but will not immediately throw an error for
     /// an invalid \p prim
-    explicit UsdKatanaLightAPI(const UsdPrim& prim=UsdPrim())
+    explicit UsdKatanaKatanaLightAPI(const UsdPrim& prim=UsdPrim())
         : UsdAPISchemaBase(prim)
     {
     }
 
-    /// Construct a UsdKatanaLightAPI on the prim held by \p schemaObj .
-    /// Should be preferred over UsdKatanaLightAPI(schemaObj.GetPrim()),
+    /// Construct a UsdKatanaKatanaLightAPI on the prim held by \p schemaObj .
+    /// Should be preferred over UsdKatanaKatanaLightAPI(schemaObj.GetPrim()),
     /// as it preserves SchemaBase state.
-    explicit UsdKatanaLightAPI(const UsdSchemaBase& schemaObj)
+    explicit UsdKatanaKatanaLightAPI(const UsdSchemaBase& schemaObj)
         : UsdAPISchemaBase(schemaObj)
     {
     }
 
     /// Destructor.
     USDKATANA_API
-    virtual ~UsdKatanaLightAPI();
+    virtual ~UsdKatanaKatanaLightAPI();
 
     /// Return a vector of names of all pre-declared attributes for this schema
     /// class and all its ancestor classes.  Does not include attributes that
@@ -101,36 +96,57 @@ public:
     static const TfTokenVector &
     GetSchemaAttributeNames(bool includeInherited=true);
 
-    /// Return a UsdKatanaLightAPI holding the prim adhering to this
+    /// Return a UsdKatanaKatanaLightAPI holding the prim adhering to this
     /// schema at \p path on \p stage.  If no prim exists at \p path on
     /// \p stage, or if the prim at that path does not adhere to this schema,
     /// return an invalid schema object.  This is shorthand for the following:
     ///
     /// \code
-    /// UsdKatanaLightAPI(stage->GetPrimAtPath(path));
+    /// UsdKatanaKatanaLightAPI(stage->GetPrimAtPath(path));
     /// \endcode
     ///
     USDKATANA_API
-    static UsdKatanaLightAPI
+    static UsdKatanaKatanaLightAPI
     Get(const UsdStagePtr &stage, const SdfPath &path);
 
 
-    /// Applies this <b>single-apply</b> API schema to the given \p prim.
-    /// This information is stored by adding "LightAPI" to the
-    /// token-valued, listOp metadata \em apiSchemas on the prim.
-    ///
-    /// \return A valid UsdKatanaLightAPI object is returned upon success.
-    /// An invalid (or empty) UsdKatanaLightAPI object is returned upon
-    /// failure. See \ref UsdPrim::ApplyAPI() for conditions
-    /// resulting in failure.
-    ///
+    /// Returns true if this <b>single-apply</b> API schema can be applied to 
+    /// the given \p prim. If this schema can not be a applied to the prim, 
+    /// this returns false and, if provided, populates \p whyNot with the 
+    /// reason it can not be applied.
+    /// 
+    /// Note that if CanApply returns false, that does not necessarily imply
+    /// that calling Apply will fail. Callers are expected to call CanApply
+    /// before calling Apply if they want to ensure that it is valid to 
+    /// apply a schema.
+    /// 
     /// \sa UsdPrim::GetAppliedSchemas()
     /// \sa UsdPrim::HasAPI()
+    /// \sa UsdPrim::CanApplyAPI()
     /// \sa UsdPrim::ApplyAPI()
     /// \sa UsdPrim::RemoveAPI()
     ///
     USDKATANA_API
-    static UsdKatanaLightAPI
+    static bool 
+    CanApply(const UsdPrim &prim, std::string *whyNot=nullptr);
+
+    /// Applies this <b>single-apply</b> API schema to the given \p prim.
+    /// This information is stored by adding "KatanaLightAPI" to the 
+    /// token-valued, listOp metadata \em apiSchemas on the prim.
+    /// 
+    /// \return A valid UsdKatanaKatanaLightAPI object is returned upon success. 
+    /// An invalid (or empty) UsdKatanaKatanaLightAPI object is returned upon 
+    /// failure. See \ref UsdPrim::ApplyAPI() for conditions 
+    /// resulting in failure. 
+    /// 
+    /// \sa UsdPrim::GetAppliedSchemas()
+    /// \sa UsdPrim::HasAPI()
+    /// \sa UsdPrim::CanApplyAPI()
+    /// \sa UsdPrim::ApplyAPI()
+    /// \sa UsdPrim::RemoveAPI()
+    ///
+    USDKATANA_API
+    static UsdKatanaKatanaLightAPI 
     Apply(const UsdPrim &prim);
 
 protected:
@@ -139,12 +155,6 @@ protected:
     /// \sa UsdSchemaKind
     USDKATANA_API
     UsdSchemaKind _GetSchemaKind() const override;
-
-    /// \deprecated
-    /// Same as _GetSchemaKind, provided to maintain temporary backward
-    /// compatibility with older generated schemas.
-    USDKATANA_API
-    UsdSchemaKind _GetSchemaType() const override;
 
 private:
     // needs to invoke _GetStaticTfType.
@@ -160,12 +170,12 @@ private:
 
 public:
     // --------------------------------------------------------------------- //
-    // ID
+    // ID 
     // --------------------------------------------------------------------- //
     /// Defines the light shader name used by Katana when
     /// creating the light location. This allows renderer-specific
     /// implementations of lights to be correctly created.
-    ///
+    /// 
     ///
     /// | ||
     /// | -- | -- |
@@ -176,7 +186,7 @@ public:
     USDKATANA_API
     UsdAttribute GetIdAttr() const;
 
-    /// See GetIdAttr(), and also
+    /// See GetIdAttr(), and also 
     /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
     /// If specified, author \p defaultValue as the attribute's default,
     /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
@@ -186,13 +196,13 @@ public:
 
 public:
     // --------------------------------------------------------------------- //
-    // CENTEROFINTEREST
+    // CENTEROFINTEREST 
     // --------------------------------------------------------------------- //
     /// Center of interest holds a distance extending from the light's
     /// origin in the direction it is facing. This defines a point at which the
     /// light can be pivoted around or translated towards or away from using
     /// Katana's lighting tools.
-    ///
+    /// 
     ///
     /// | ||
     /// | -- | -- |
@@ -203,7 +213,7 @@ public:
     USDKATANA_API
     UsdAttribute GetCenterOfInterestAttr() const;
 
-    /// See GetCenterOfInterestAttr(), and also
+    /// See GetCenterOfInterestAttr(), and also 
     /// \ref Usd_Create_Or_Get_Property for when to use Get vs Create.
     /// If specified, author \p defaultValue as the attribute's default,
     /// sparsely (when it makes sense to do so) if \p writeSparsely is \c true -
@@ -213,11 +223,11 @@ public:
 
 public:
     // ===================================================================== //
-    // Feel free to add custom code below this line, it will be preserved by
-    // the code generator.
+    // Feel free to add custom code below this line, it will be preserved by 
+    // the code generator. 
     //
-    // Just remember to:
-    //  - Close the class declaration with };
+    // Just remember to: 
+    //  - Close the class declaration with }; 
     //  - Close the namespace with PXR_NAMESPACE_CLOSE_SCOPE
     //  - Close the include guard with #endif
     // ===================================================================== //

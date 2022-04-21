@@ -27,7 +27,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "usdKatana/lightAPI.h"
+#include "usdKatana/katanaLightAPI.h"
 #include "pxr/usd/usd/schemaRegistry.h"
 #include "pxr/usd/usd/typed.h"
 #include "pxr/usd/usd/tokens.h"
@@ -40,64 +40,68 @@ PXR_NAMESPACE_OPEN_SCOPE
 // Register the schema with the TfType system.
 TF_REGISTRY_FUNCTION(TfType)
 {
-    TfType::Define<UsdKatanaLightAPI,
+    TfType::Define<UsdKatanaKatanaLightAPI,
         TfType::Bases< UsdAPISchemaBase > >();
 
 }
 
 TF_DEFINE_PRIVATE_TOKENS(
     _schemaTokens,
-    (LightAPI)
+    (KatanaLightAPI)
 );
 
 /* virtual */
-UsdKatanaLightAPI::~UsdKatanaLightAPI()
+UsdKatanaKatanaLightAPI::~UsdKatanaKatanaLightAPI()
 {
 }
 
 /* static */
-UsdKatanaLightAPI
-UsdKatanaLightAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
+UsdKatanaKatanaLightAPI
+UsdKatanaKatanaLightAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
 {
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return UsdKatanaLightAPI();
+        return UsdKatanaKatanaLightAPI();
     }
-    return UsdKatanaLightAPI(stage->GetPrimAtPath(path));
+    return UsdKatanaKatanaLightAPI(stage->GetPrimAtPath(path));
 }
 
 
 /* virtual */
-UsdSchemaKind UsdKatanaLightAPI::_GetSchemaKind() const {
-    return UsdKatanaLightAPI::schemaKind;
-}
-
-/* virtual */
-UsdSchemaKind UsdKatanaLightAPI::_GetSchemaType() const {
-    return UsdKatanaLightAPI::schemaType;
+UsdSchemaKind UsdKatanaKatanaLightAPI::_GetSchemaKind() const
+{
+    return UsdKatanaKatanaLightAPI::schemaKind;
 }
 
 /* static */
-UsdKatanaLightAPI
-UsdKatanaLightAPI::Apply(const UsdPrim &prim)
+bool
+UsdKatanaKatanaLightAPI::CanApply(
+    const UsdPrim &prim, std::string *whyNot)
 {
-    if (prim.ApplyAPI<UsdKatanaLightAPI>()) {
-        return UsdKatanaLightAPI(prim);
+    return prim.CanApplyAPI<UsdKatanaKatanaLightAPI>(whyNot);
+}
+
+/* static */
+UsdKatanaKatanaLightAPI
+UsdKatanaKatanaLightAPI::Apply(const UsdPrim &prim)
+{
+    if (prim.ApplyAPI<UsdKatanaKatanaLightAPI>()) {
+        return UsdKatanaKatanaLightAPI(prim);
     }
-    return UsdKatanaLightAPI();
+    return UsdKatanaKatanaLightAPI();
 }
 
 /* static */
 const TfType &
-UsdKatanaLightAPI::_GetStaticTfType()
+UsdKatanaKatanaLightAPI::_GetStaticTfType()
 {
-    static TfType tfType = TfType::Find<UsdKatanaLightAPI>();
+    static TfType tfType = TfType::Find<UsdKatanaKatanaLightAPI>();
     return tfType;
 }
 
 /* static */
 bool
-UsdKatanaLightAPI::_IsTypedSchema()
+UsdKatanaKatanaLightAPI::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();
     return isTyped;
@@ -105,19 +109,19 @@ UsdKatanaLightAPI::_IsTypedSchema()
 
 /* virtual */
 const TfType &
-UsdKatanaLightAPI::_GetTfType() const
+UsdKatanaKatanaLightAPI::_GetTfType() const
 {
     return _GetStaticTfType();
 }
 
 UsdAttribute
-UsdKatanaLightAPI::GetIdAttr() const
+UsdKatanaKatanaLightAPI::GetIdAttr() const
 {
     return GetPrim().GetAttribute(UsdKatanaTokens->katanaId);
 }
 
 UsdAttribute
-UsdKatanaLightAPI::CreateIdAttr(VtValue const &defaultValue, bool writeSparsely) const
+UsdKatanaKatanaLightAPI::CreateIdAttr(VtValue const &defaultValue, bool writeSparsely) const
 {
     return UsdSchemaBase::_CreateAttr(UsdKatanaTokens->katanaId,
                        SdfValueTypeNames->StringArray,
@@ -128,13 +132,13 @@ UsdKatanaLightAPI::CreateIdAttr(VtValue const &defaultValue, bool writeSparsely)
 }
 
 UsdAttribute
-UsdKatanaLightAPI::GetCenterOfInterestAttr() const
+UsdKatanaKatanaLightAPI::GetCenterOfInterestAttr() const
 {
     return GetPrim().GetAttribute(UsdKatanaTokens->geometryCenterOfInterest);
 }
 
 UsdAttribute
-UsdKatanaLightAPI::CreateCenterOfInterestAttr(VtValue const &defaultValue, bool writeSparsely) const
+UsdKatanaKatanaLightAPI::CreateCenterOfInterestAttr(VtValue const &defaultValue, bool writeSparsely) const
 {
     return UsdSchemaBase::_CreateAttr(UsdKatanaTokens->geometryCenterOfInterest,
                        SdfValueTypeNames->Double,
@@ -158,7 +162,7 @@ _ConcatenateAttributeNames(const TfTokenVector& left,const TfTokenVector& right)
 
 /*static*/
 const TfTokenVector&
-UsdKatanaLightAPI::GetSchemaAttributeNames(bool includeInherited)
+UsdKatanaKatanaLightAPI::GetSchemaAttributeNames(bool includeInherited)
 {
     static TfTokenVector localNames = {
         UsdKatanaTokens->katanaId,

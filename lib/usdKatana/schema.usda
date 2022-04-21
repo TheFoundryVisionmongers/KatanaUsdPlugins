@@ -93,11 +93,10 @@ class "LookAPI"(
     )
 }
 
-class "LightAPI"(
+class "KatanaLightAPI"(
     inherits = </APISchemaBase>
-    doc = """Katana-specific entensions of UsdLuxLight"""
+    doc = """Katana-specific extensions of UsdLuxLight"""
 ) {
-
     uniform string[] katana:id (
         doc = """Defines the light shader name used by Katana when
         creating the light location. This allows renderer-specific
