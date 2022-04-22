@@ -24,7 +24,6 @@ pxr_katana_python_plugin(
     MODULE_NAME USD.USDExportPlugins.bundle
     PYTHON_PLUGIN_REGISTRY_FILES
         KatanaLightAPIUsdExportPlugin.py
-        SdrLightUsdExportPlugin.py
     PYTHON_MODULE_FILES
     PLUGIN_TYPE UsdExportPlugins
 )

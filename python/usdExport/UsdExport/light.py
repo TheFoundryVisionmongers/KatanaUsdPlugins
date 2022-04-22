@@ -22,7 +22,11 @@
 
 import logging
 
+from fnpxr import Sdr
+
 from Katana import FnAttribute
+
+from UsdExport.common import (GetShaderNodeFromRegistry)
 
 log = logging.getLogger("UsdExport")
 
@@ -36,6 +40,11 @@ except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
 
+rendererPrefixMapping = {
+    "prman" : "ri",
+    "dl": "nsi"
+}
+
 def WriteLight(stage, lightSdfPath, materialAttrs):
     """
     Converts the given light material C{GroupAttribute} into a
@@ -46,26 +55,14 @@ def WriteLight(stage, lightSdfPath, materialAttrs):
     @type stage: C{Usd.Stage}
     @type lightSdfPath: C{Sdf.Path}
     @type materialAttrs: C{FnAttribute.GroupAttribute}
-    @rtype: C{UsdLux.Light} or C{None}
+    @rtype: C{Usd.Prim}
     @param stage: The USD stage to write the light to.
     @param lightSdfPath: The path to write the C{UsdLux.Light} to.
     @param materialAttrs: The ``light`` attribute from Katana's
         scenegraph for the light location.
-    @return: The C{Usd.Prim} created by this function or C{None} if
-        no light was created.
+    @return: The C{Usd.Prim} created by this function
     """
     # pylint: disable=too-many-locals
-    def collateProperties(prim):
-        if not isinstance(prim, Usd.PrimDefinition):
-            return {}
-
-        properties = {}
-        for propertyName in prim.GetPropertyNames():
-            propertySpec = prim.GetSchemaPropertySpec(propertyName)
-            if isinstance(propertySpec, Sdf.AttributeSpec):
-                properties[propertyName] = propertySpec.typeName
-
-        return properties
 
     def compareFnAttrToUsdParam(fnAttrName, paramName):
         """
@@ -83,52 +80,85 @@ def WriteLight(stage, lightSdfPath, materialAttrs):
 
         return sanitizedParamName == fnAttrName
 
-    lightPrim = stage.DefinePrim(lightSdfPath, "Light")
     if not materialAttrs:
         return
+
+    lightPrim = stage.DefinePrim(lightSdfPath)
+    lightApi = UsdLux.LightAPI.Apply(lightPrim)
+    UsdLux.ShadowAPI.Apply(lightPrim)
+    UsdLux.ShapingAPI.Apply(lightPrim)
 
     lights = ParseLightsFromMaterialAttrs(materialAttrs)
     for lightShaderName, lightShaderAttrs in lights.items():
         (renderer, lightShaderName) = lightShaderName
 
-        if renderer != "usd":
+        node = None
+        # Attempt to get the correct shader name. This resolves issues such as
+        # "UsdLuxRectLight" being "RectLight" in the Sdr registry.
+        shaderTypeName = Tf.Type.FindByName(lightShaderName)
+        if shaderTypeName == Tf.Type.Unknown:
+            node = GetShaderNodeFromRegistry(lightShaderName)
+        else:
+            lightShaderName = \
+                Usd.SchemaRegistry.GetSchemaTypeName(shaderTypeName)
+            node = GetShaderNodeFromRegistry(lightShaderName)
+
+        # Only continue if the shader exists in the Sdr Registry.
+        if node is None:
             continue
 
-        primType = _ResolveLightPrimType(lightShaderName)
-        lightPrim = stage.DefinePrim(lightSdfPath, primType)
+        primTypeName = _ResolveLightPrimType(lightShaderName)
+        if primTypeName:
+            lightPrim.SetTypeName(primTypeName)
 
-        shapingAPI = UsdLux.ShapingAPI(lightPrim)
-        shapingAPI.Apply(lightPrim)
-        shadowAPI = UsdLux.ShadowAPI(lightPrim)
-        shadowAPI.Apply(lightPrim)
+        renderer = rendererPrefixMapping.get(renderer, renderer)
+        lightApi.CreateShaderIdAttrForRenderContext(renderer,
+            lightShaderName)
 
-        knownLightProperties = {} # Maps property name to sdf type.
-        # Update the known properties with properties from the lux
-        # light, shaping and shadow schemas.
-        lightPrimDef = \
-            Usd.SchemaRegistry().FindConcretePrimDefinition(primType)
-        knownLightProperties.update(collateProperties(lightPrimDef))
-        knownLightProperties.update(
-            collateProperties(shapingAPI.GetSchemaClassPrimDefinition()))
-        knownLightProperties.update(
-            collateProperties(shadowAPI.GetSchemaClassPrimDefinition()))
+        for attrName, attr in lightShaderAttrs.childList():
+            nodeInput = node.GetInput(attrName)
 
-        # Process shader parameters.
-        for lightParamName, lightParamAttr in lightShaderAttrs.childList():
-            knownParamMatches = [i for i in knownLightProperties.keys() \
-                if compareFnAttrToUsdParam(lightParamName, i)]
-            if len(knownParamMatches) > 0:
-                matchingParam = knownParamMatches[0]
-                existingParamNames = lightPrim.GetAuthoredAttributes()
-                if not matchingParam in existingParamNames:
-                    lightPrim = _WriteParameter(lightPrim,
-                                                matchingParam,
-                                                knownLightProperties[matchingParam],
-                                                lightParamAttr)
+            # If we cannot find an input name directly, we must take some extra
+            # steps.
+            if nodeInput is None:
+                for tmpInputName in node.GetInputNames():
+                    tmpInput = node.GetInput(tmpInputName)
+                    # Check the attribute name against the implementation name.
+                    if attrName == tmpInput.GetImplementationName():
+                        attrName = tmpInputName
+                        nodeInput = tmpInput
+                        break
+                    # Check the attribute name against a sanitized version of
+                    # the input name.
+                    if compareFnAttrToUsdParam(attrName, tmpInput.GetName()):
+                        attrName = tmpInputName
+                        nodeInput = tmpInput
+                        break
+
+            if nodeInput is None:
+                _WriteCustomParameter(lightPrim, attrName, attr)
+                continue
+
+            if renderer != "usd":
+                primAttr = _CreatePrefixedAttribute(
+                    lightPrim,
+                    nodeInput,
+                    renderer,
+                    node.GetContext())
             else:
-                lightPrim = _WriteCustomParameter(lightPrim,
-                                                  lightParamName,
-                                                  lightParamAttr)
+                primAttr = _CreatePrefixedAttribute(
+                    lightPrim,
+                    nodeInput)
+
+            attrValue = attr.getData()
+            if len(attrValue) > 1:
+                attrValue = tuple(attrValue)
+            elif len(attrValue) == 1:
+                attrValue = attrValue[0]
+            else:
+                continue
+
+            primAttr.Set(attrValue)
 
     return lightPrim
 
@@ -147,7 +177,7 @@ def WriteLightList(stage, prim=None):
     flags = (Usd.PrimIsActive | Usd.PrimIsDefined | ~Usd.PrimIsAbstract)
     lightList = []
     def traverse(prim):
-        if  prim.IsA(UsdLux.Light) or \
+        if  prim.HasAPI(UsdLux.LightAPI) or \
             prim.IsA(UsdLux.LightFilter) or \
             prim.GetTypeName() == "Light":
             lightList.append(prim.GetPath())
@@ -194,24 +224,71 @@ def ParseLightsFromMaterialAttrs(materialAttrs):
 
     return lights
 
-def _WriteParameter(prim, paramName, typeName, fnAttr):
-    inputAttr = prim.CreateAttribute(paramName, typeName)
-    gfValue = ConvertParameterValueToGfType(fnAttr.getData(), typeName)
-    inputAttr.Set(gfValue)
+def _CreatePrefixedAttribute(prim, nodeInput, renderer = "", context = ""):
+    """
+    Gets the node from the Sdr Registry for a given light shader on a light
+    location and writes attributes matching inputs to that node with the
+    correct type as specified in that input.
 
-    return prim
+    @type prim: C{Usd.Prim}
+    @type nodeInput: C{Sdr.ShaderProperty}
+    @type renderer: C{str} or C{None}
+    @type context: C{str} or C{None}
+    @rtype: C{Usd.Attribute}
+    @param prim: The prim to create the attribute on.
+    @param nodeInput: The Sdr node input for this attribute.
+    @param renderer: The renderer name which prefixes the shader.
+    @param context: The context of the attribute, typically "light".
+    @return: The created Usd Attribute.
+    """
+    rendererPrefix = rendererPrefixMapping.get(
+        renderer, renderer)
+
+    attributeName = ""
+    if rendererPrefix:
+        attributeName += rendererPrefix + ":"
+    if context:
+        attributeName += context + ":"
+    if nodeInput:
+        nodeInputName = nodeInput.GetName()
+        if nodeInputName.startswith(attributeName):
+            attributeName = nodeInputName
+        else:
+            attributeName += nodeInputName
+    attributeName = f"inputs:{attributeName}"
+
+    attr = prim.CreateAttribute(
+        attributeName, nodeInput.GetTypeAsSdfType()[0])
+    if nodeInput:
+        attr.SetCustom(False)
+    return attr
 
 def _WriteCustomParameter(prim, paramName, fnAttr, paramType = None):
     if not isinstance(paramType, Sdf.ValueTypeName):
         paramType = FnAttributeToSdfType.get(type(fnAttr),
                                              Sdf.ValueTypeNames.Token)
 
-    return _WriteParameter(prim, paramName, paramType, fnAttr)
+    inputAttr = prim.CreateAttribute(paramName, paramType)
+    gfValue = ConvertParameterValueToGfType(fnAttr.getData(), paramType)
+    inputAttr.Set(gfValue)
 
 def _ResolveLightPrimType(shaderName):
-    lightType = Tf.Type.FindByName(shaderName)
-    if not lightType:
-        return "Light"
+    # Try to retrive from Sdr node metadata.
+    node = Sdr.Registry().GetNodeByName(shaderName)
+    if node:
+        typedSchema = node.GetMetadata().get("typedSchemaForAttrPruning", None)
+        if typedSchema and Usd.SchemaRegistry().IsConcrete(typedSchema):
+            return typedSchema
 
-    schemaType =  Usd.SchemaRegistry().GetConcreteSchemaTypeName(lightType)
-    return schemaType if schemaType else "Light"
+    # Try to retrieve directly from the shader name.
+    if Usd.SchemaRegistry().IsConcrete(shaderName):
+        return shaderName
+    # Try tp retrieve from a concrete schema name.
+    shaderTypeName = Tf.Type.FindByName(shaderName)
+    if shaderTypeName:
+        concreteSchemaTypeName = \
+            Usd.SchemaRegistry().GetConcreteSchemaTypeName(shaderTypeName)
+        if Usd.SchemaRegistry().IsConcrete(concreteSchemaTypeName):
+            return concreteSchemaTypeName
+
+    return None

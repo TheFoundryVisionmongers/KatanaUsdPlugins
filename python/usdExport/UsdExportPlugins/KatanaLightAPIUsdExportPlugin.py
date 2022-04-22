@@ -57,7 +57,7 @@ class KatanaLightApiUsdExportPlugin(BaseUsdExportPlugin):
         if not materialAttrs and not geometryAttrs:
             return
 
-        lightApi = UsdKatana.LightAPI(prim)
+        lightApi = UsdKatana.KatanaLightAPI(prim)
         lightApi.Apply(prim)
 
         if materialAttrs:
