@@ -85,6 +85,21 @@ FnLogSetup("UsdKatanaUtils");
 #include <string>
 
 PXR_NAMESPACE_OPEN_SCOPE
+
+#if defined(ARCH_OS_WINDOWS)
+TF_DEFINE_ENV_SETTING(
+    USD_KATANA_LOOK_TOKENS,
+    "Looks;looks;materials",
+    "Defines which prim names will allow for any child Material prims which have sibling materials "
+    "to become child materials where a Specializes composition arc exists between them.");
+#elif defined(ARCH_OS_LINUX)
+TF_DEFINE_ENV_SETTING(
+    USD_KATANA_LOOK_TOKENS,
+    "Looks:looks:materials",
+    "Defines which prim names will allow for any child Material prims which have sibling materials "
+    "to become child materials where a Specializes composition arc exists between them.");
+#endif
+
 namespace
 {
 void ApplyBlendShapeAnimation(const UsdSkelSkinningQuery& skinningQuery,
@@ -1844,6 +1859,31 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
         return defaultBuilder.build();
     }
     return VtKatanaMapOrCopy<GfVec3f>(timeToSampleMap);
+}
+
+TfTokenVector UsdKatanaUtils::GetLookTokens()
+{
+#if defined(ARCH_OS_WINDOWS)
+    static const std::string s_lookTokenSeparator = ";";
+#elif defined(ARCH_OS_LINUX)
+    static const std::string s_lookTokenSeparator = ":";
+#endif
+
+    static const TfTokenVector s_lookTokens{
+        []()
+        {
+            TfTokenVector lookTokens;
+            const std::string lookTokensStr = TfGetEnvSetting(USD_KATANA_LOOK_TOKENS);
+            const std::vector<std::string> lookTokensSplit =
+                TfStringSplit(lookTokensStr, s_lookTokenSeparator);
+            for (const std::string& token : lookTokensSplit)
+            {
+                lookTokens.push_back(TfToken(token));
+            }
+            return lookTokens;
+        }()};
+
+    return s_lookTokens;
 }
 
 namespace {

@@ -204,6 +204,8 @@ struct UsdKatanaUtils
     USDKATANA_API static FnKat::Attribute ApplySkinningToPoints(
         const UsdGeomPointBased& points,
         const UsdKatanaUsdInPrivateData& data);
+
+    USDKATANA_API static TfTokenVector GetLookTokens();
 };
 
 /// Utility class for building a light list.

@@ -94,45 +94,6 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_ModelOp, privateData, opArgs, interface)
 
     attrs.toInterface(interface);
 
-    // when checking for a looks group, swap in the master if the prim is an instance
-    UsdPrim lookPrim = (prim.IsInstance() && !privateData.GetMasterPath().IsEmpty()) ?
-        prim.GetMaster().GetChild(TfToken(UsdKatanaTokens->katanaLooksScopeName))
-            : prim.GetChild(TfToken(UsdKatanaTokens->katanaLooksScopeName));
-
-        
-        
-    if (lookPrim)
-    {
-        FnKat::GroupAttribute childOpArgs = opArgs;
-        
-        // across instances, we won't easily be able to over this attr onto
-        // the Looks scope. We'll check for it on the parent also.
-        UsdAttribute keyAttr = prim.GetAttribute(
-                TfToken("sharedLooksCacheKey"));
-        if (keyAttr.IsValid())
-        {
-            std::string cacheKey;
-            keyAttr.Get(&cacheKey);
-            
-            if (!cacheKey.empty())
-            {
-                childOpArgs = FnKat::GroupBuilder()
-                        .update(childOpArgs)
-                        .set("sharedLooksCacheKey",
-                                FnKat::StringAttribute(cacheKey))
-                        .build();
-            }
-        }
-       
-        interface.setAttr(UsdKatanaTokens->katanaLooksChildNameExclusionAttrName,
-                FnKat::IntAttribute(1));
-        interface.createChild(
-            TfToken(UsdKatanaTokens->katanaLooksScopeName), "UsdInCore_LooksGroupOp", childOpArgs,
-            FnKat::GeolibCookInterface::ResetRootTrue,
-            new UsdKatanaUsdInPrivateData(lookPrim, privateData.GetUsdInArgs(), &privateData),
-            UsdKatanaUsdInPrivateData::Delete);
-    }
-
     // early exit for models that are groups
     if (prim.IsGroup())
     {

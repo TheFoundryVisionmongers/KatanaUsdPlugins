@@ -31,17 +31,18 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-UsdKatanaTokensType::UsdKatanaTokensType() :
-    geometryCenterOfInterest("geometry:centerOfInterest", TfToken::Immortal),
-    katanaId("katana:id", TfToken::Immortal),
-    katanaLooksChildNameExclusionAttrName("__UsdIn.skipChild.Looks", TfToken::Immortal),
-    katanaLooksScopeName("Looks", TfToken::Immortal),
-    katanaLooksScopePathSubstring("/Looks/", TfToken::Immortal),
-    katanaPrimName("katana:primName", TfToken::Immortal),
-    katanaSuppressGroupToAssemblyPromotion("katana:suppressGroupToAssemblyPromotion", TfToken::Immortal),
-    katanaType("katana:type", TfToken::Immortal),
-    katanaVisible("katana:visible", TfToken::Immortal),
-    allTokens({
+UsdKatanaTokensType::UsdKatanaTokensType()
+    : geometryCenterOfInterest("geometry:centerOfInterest", TfToken::Immortal),
+      katanaId("katana:id", TfToken::Immortal),
+      katanaLooksChildNameExclusionAttrName("__UsdIn.skipChild.", TfToken::Immortal),
+      katanaLooksScopeName("Looks", TfToken::Immortal),
+      katanaLooksScopePathSubstring("/Looks/", TfToken::Immortal),
+      katanaPrimName("katana:primName", TfToken::Immortal),
+      katanaSuppressGroupToAssemblyPromotion("katana:suppressGroupToAssemblyPromotion",
+                                             TfToken::Immortal),
+      katanaType("katana:type", TfToken::Immortal),
+      katanaVisible("katana:visible", TfToken::Immortal),
+      allTokens({
         geometryCenterOfInterest,
         katanaId,
         katanaLooksChildNameExclusionAttrName,

@@ -739,7 +739,52 @@ public:
                 }
             }
         }
-        
+
+        if (!prim.IsPseudoRoot())
+        {
+            const TfTokenVector& lookTokens = UsdKatanaUtils::GetLookTokens();
+            // when checking for a looks group, swap in the master if the prim is an instance
+            UsdPrim resolvedPrim = (prim.IsInstance() && !privateData->GetMasterPath().IsEmpty())
+                                       ? prim.GetMaster()
+                                       : prim;
+            for (const TfToken& lookToken : lookTokens)
+            {
+                UsdPrim lookPrim = resolvedPrim.GetChild(lookToken);
+                if (lookPrim)
+                {
+                    FnKat::GroupAttribute childOpArgs = opArgs;
+
+                    // Across instances, we won't easily be able to over this attr onto
+                    // the Looks scope. We'll check for it on the parent also.
+                    UsdAttribute keyAttr = prim.GetAttribute(TfToken("sharedLooksCacheKey"));
+                    bool isValid = keyAttr.IsValid();
+                    if (isValid)
+                    {
+                        std::string cacheKey;
+                        keyAttr.Get(&cacheKey);
+
+                        if (!cacheKey.empty())
+                        {
+                            childOpArgs =
+                                FnKat::GroupBuilder()
+                                    .update(childOpArgs)
+                                    .set("sharedLooksCacheKey", FnKat::StringAttribute(cacheKey))
+                                    .build();
+                        }
+                    }
+                    interface.setAttr(
+                        UsdKatanaTokens->katanaLooksChildNameExclusionAttrName.GetString() +
+                            lookToken.GetString(),
+                        FnKat::IntAttribute(1));
+                    interface.createChild(lookToken, "UsdInCore_LooksGroupOp", childOpArgs,
+                                          FnKat::GeolibCookInterface::ResetRootTrue,
+                                          new UsdKatanaUsdInPrivateData(
+                                              lookPrim, privateData->GetUsdInArgs(), privateData),
+                                          UsdKatanaUsdInPrivateData::Delete);
+                }
+            }
+        }
+
         // advertise available variants for UIs to choose amongst
         UsdVariantSets variantSets = prim.GetVariantSets();
         std::vector<std::string> variantNames;
