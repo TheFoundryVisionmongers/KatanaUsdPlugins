@@ -27,7 +27,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxrUsdInShipped/declareCoreOps.h"
+#include "usdInShipped/declareCoreOps.h"
 
 #include "pxr/pxr.h"
 #include "usdKatana/attrMap.h"
@@ -58,17 +58,15 @@ namespace
 class ConvertedMaterialCache
 {
 public:
-    
-    typedef boost::shared_ptr<PxrUsdKatanaAttrMap> PxrUsdKatanaAttrMapRefPtr;
-    
-    
+    typedef boost::shared_ptr<UsdKatanaAttrMap> UsdKatanaAttrMapRefPtr;
+
     ConvertedMaterialCache(size_t maxEntries)
     : m_maxEntries(maxEntries)
     {
         
     }
-    
-    PxrUsdKatanaAttrMapRefPtr get(const std::string & key)
+
+    UsdKatanaAttrMapRefPtr get(const std::string& key)
     {
         boost::upgrade_lock<boost::upgrade_mutex> readerLock(m_mutex);
         
@@ -77,8 +75,8 @@ public:
         if (mapI == m_entryIteratorMap.end())
         {
             //std::cerr << "cache miss: " << key << std::endl;
-        
-            return PxrUsdKatanaAttrMapRefPtr();
+
+            return UsdKatanaAttrMapRefPtr();
         }
         
         //std::cerr << "cache hit: " << key << std::endl;
@@ -91,8 +89,8 @@ public:
         return (*((*mapI).second)).value;
         
     }
-    
-    void insert(const std::string & key, PxrUsdKatanaAttrMapRefPtr value)
+
+    void insert(const std::string& key, UsdKatanaAttrMapRefPtr value)
     {
         //std::cerr << "inserting: " << key << std::endl;
         
@@ -140,14 +138,10 @@ private:
     
     struct Entry
     {
-        Entry(const std::string & _key, PxrUsdKatanaAttrMapRefPtr _value)
-        : key(_key)
-        , value(_value)
-        {
-        }
-        
+        Entry(const std::string& _key, UsdKatanaAttrMapRefPtr _value) : key(_key), value(_value) {}
+
         std::string key;
-        PxrUsdKatanaAttrMapRefPtr value;
+        UsdKatanaAttrMapRefPtr value;
     };
     
     typedef std::list<Entry> EntryList;
@@ -172,11 +166,11 @@ void FlushMaterialCache()
 
 } // anonymous namespace
 
-
-
-
-PXRUSDKATANA_USDIN_PLUGIN_DEFINE_WITH_FLUSH(
-        PxrUsdInCore_LookOp, privateData, opArgs, interface, FlushMaterialCache)
+USDKATANA_USDIN_PLUGIN_DEFINE_WITH_FLUSH(UsdInCore_LookOp,
+                                         privateData,
+                                         opArgs,
+                                         interface,
+                                         FlushMaterialCache)
 {
     // always flatten individual materials
     bool flatten = true;
@@ -196,12 +190,9 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE_WITH_FLUSH(
     
     std::string looksGroupLocation = FnAttribute::StringAttribute(
             opArgs.getChildByName("looksGroupLocation")).getValue("", false);
-    
-    
-    
-    ConvertedMaterialCache::PxrUsdKatanaAttrMapRefPtr attrs;
-    
-    
+
+    ConvertedMaterialCache::UsdKatanaAttrMapRefPtr attrs;
+
     FnAttribute::Attribute looksCacheKeyPrefixAttr =
             opArgs.getChildByName("looksCacheKeyPrefixAttr");
     
@@ -227,12 +218,10 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE_WITH_FLUSH(
     
     if (!attrs)
     {
-        attrs = ConvertedMaterialCache::PxrUsdKatanaAttrMapRefPtr(
-                new PxrUsdKatanaAttrMap);
-        
-        typedef boost::upgrade_lock<PxrUsdKatanaAttrMap::Mutex> Lock;
-        
-        
+        attrs = ConvertedMaterialCache::UsdKatanaAttrMapRefPtr(new UsdKatanaAttrMap);
+
+        typedef boost::upgrade_lock<UsdKatanaAttrMap::Mutex> Lock;
+
         // empty read lock for scoping
         Lock readerLock;
         
@@ -245,9 +234,8 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE_WITH_FLUSH(
         if (!attrs->isBuilt())
         {
             // empty write lock for scoping
-            
-            typedef boost::upgrade_to_unique_lock<
-                    PxrUsdKatanaAttrMap::Mutex> WriteLock;
+
+            typedef boost::upgrade_to_unique_lock<UsdKatanaAttrMap::Mutex> WriteLock;
             typedef boost::shared_ptr<WriteLock> WriteLockRefPtr;
             
             WriteLockRefPtr writerLock;
@@ -261,19 +249,12 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE_WITH_FLUSH(
             // only allow the first one through to build
             if (!attrs->isBuilt())
             {
-                PxrUsdKatanaReadMaterial(
-                    materialSchema,
-                    flatten,
-                    privateData,
-                    *attrs,
-                    looksGroupLocation,
-                    interface.getOutputLocationPath());
-                
-                
+                UsdKatanaReadMaterial(materialSchema, flatten, privateData, *attrs,
+                                      looksGroupLocation, interface.getOutputLocationPath());
+
                 // Read blind data.
-                PxrUsdKatanaReadBlindData(
-                        UsdKatanaBlindDataObject(materialSchema), *attrs);
-                
+                UsdKatanaReadBlindData(UsdKatanaBlindDataObject(materialSchema), *attrs);
+
                 attrs->build();
                 
                 if (useCache)
@@ -299,20 +280,17 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE_WITH_FLUSH(
             opArgs.getChildByName("staticScene");
     if (staticScene.isValid())
     {
-        
-        interface.execOp("UsdIn.BuildIntermediate",
-                    opArgs
+        interface.execOp("UsdIn.BuildIntermediate", opArgs
 // katana 2.x doesn't allow private data to be overridden in execOp as it'll
 // automatically use that of the calling op while katana 3.x does allow it
 // to be overridden but requires it to be specified even if unchanged (as here).
 #if KATANA_VERSION_MAJOR >= 3
-                    ,
-                    new PxrUsdKatanaUsdInPrivateData(
-                                privateData.GetUsdInArgs()->GetRootPrim(),
-                                privateData.GetUsdInArgs(), &privateData),
-                    PxrUsdKatanaUsdInPrivateData::Delete
+                         ,
+                         new UsdKatanaUsdInPrivateData(privateData.GetUsdInArgs()->GetRootPrim(),
+                                                       privateData.GetUsdInArgs(), &privateData),
+                         UsdKatanaUsdInPrivateData::Delete
 #endif
-                    );
+        );
     }
     
 }

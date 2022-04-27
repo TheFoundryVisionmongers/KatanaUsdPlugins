@@ -45,8 +45,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-
-FnLogSetup("PxrUsdKatanaReadMesh");
+FnLogSetup("UsdKatanaReadMesh");
 
 TF_REGISTRY_FUNCTION(TfDebug)
 {
@@ -66,7 +65,7 @@ _GetPolyAttr(const UsdGeomMesh &mesh, double time)
     std::vector<int> vertsVec(vertsArray.begin(), vertsArray.end());
     std::vector<int> numVertsVec(numVertsArray.begin(), numVertsArray.end());
     std::vector<int> startVertsVec;
-    PxrUsdKatanaUtils::ConvertNumVertsToStartVerts(numVertsVec, &startVertsVec);
+    UsdKatanaUtils::ConvertNumVertsToStartVerts(numVertsVec, &startVertsVec);
 
     // Build Katana attribute.
     FnKat::GroupBuilder polyBuilder;
@@ -81,9 +80,10 @@ _GetPolyAttr(const UsdGeomMesh &mesh, double time)
     return polyBuilder.build();
 }
 
-static void
-_SetSubdivTagsGroup(PxrUsdKatanaAttrMap& attrs,
-                    const UsdGeomMesh &mesh, bool hierarchical, double time)
+static void _SetSubdivTagsGroup(UsdKatanaAttrMap& attrs,
+                                const UsdGeomMesh& mesh,
+                                bool hierarchical,
+                                double time)
 {
 
     TfToken interpolateBoundary; 
@@ -214,11 +214,9 @@ _SetSubdivTagsGroup(PxrUsdKatanaAttrMap& attrs,
     }
 }
 
-void
-PxrUsdKatanaReadMesh(
-        const UsdGeomMesh& mesh,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadMesh(const UsdGeomMesh& mesh,
+                       const UsdKatanaUsdInPrivateData& data,
+                       UsdKatanaAttrMap& attrs)
 {
     const double currentTime = data.GetCurrentTime();
 
@@ -226,7 +224,7 @@ PxrUsdKatanaReadMesh(
     // Set all general attributes for a gprim type.
     //
 
-    PxrUsdKatanaReadGprim(mesh, data, attrs);
+    UsdKatanaReadGprim(mesh, data, attrs);
 
     //
     // Set more specific Katana type.
@@ -249,12 +247,12 @@ PxrUsdKatanaReadMesh(
     //
 
     // position
-    attrs.set("geometry.point.P", PxrUsdKatanaGeomGetPAttr(mesh, data));
+    attrs.set("geometry.point.P", UsdKatanaGeomGetPAttr(mesh, data));
 
     /// Only use custom normals if the object is a polymesh.
     if (!isSubd){
         // normals
-        FnKat::Attribute normalsAttr = PxrUsdKatanaGeomGetNormalAttr(mesh, data);
+        FnKat::Attribute normalsAttr = UsdKatanaGeomGetNormalAttr(mesh, data);
         if (normalsAttr.isValid())
         {
             // XXX RfK currently doesn't support uniform normals for polymeshes.
@@ -270,15 +268,14 @@ PxrUsdKatanaReadMesh(
     }
 
     // velocity
-    FnKat::Attribute velocityAttr = PxrUsdKatanaGeomGetVelocityAttr(mesh, data);
+    FnKat::Attribute velocityAttr = UsdKatanaGeomGetVelocityAttr(mesh, data);
     if (velocityAttr.isValid())
     {
         attrs.set("geometry.point.v", velocityAttr);
     }
 
     // acceleration
-    FnKat::Attribute accelAttr =
-        PxrUsdKatanaGeomGetAccelerationAttr(mesh, data);
+    FnKat::Attribute accelAttr = UsdKatanaGeomGetAccelerationAttr(mesh, data);
     if (accelAttr.isValid())
     {
         attrs.set("geometry.point.accel", accelAttr);
@@ -294,12 +291,10 @@ PxrUsdKatanaReadMesh(
     }
 
     // SPT_HwColor primvar
-    attrs.set("geometry.arbitrary.SPT_HwColor", 
-              PxrUsdKatanaGeomGetDisplayColorAttr(mesh, data));
+    attrs.set("geometry.arbitrary.SPT_HwColor", UsdKatanaGeomGetDisplayColorAttr(mesh, data));
 
-    attrs.set(
-        "viewer.default.drawOptions.windingOrder",
-            PxrUsdKatanaGeomGetWindingOrderAttr(mesh, data));
+    attrs.set("viewer.default.drawOptions.windingOrder",
+              UsdKatanaGeomGetWindingOrderAttr(mesh, data));
 
     attrs.set("tabs.scenegraph.stopExpand", FnKat::IntAttribute(1));
 }

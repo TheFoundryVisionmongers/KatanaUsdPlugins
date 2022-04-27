@@ -27,29 +27,26 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxrUsdInShipped/declareCoreOps.h"
+#include "pxr/usd/usdLux/light.h"
+#include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
 #include "pxr/pxr.h"
+#include "pxr/usd/usdRi/pxrAovLight.h"
+#include "usdInShipped/declareCoreOps.h"
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readLight.h"
 #include "usdKatana/usdInPluginRegistry.h"
 #include "usdKatana/utils.h"
-#include "pxr/usd/usdLux/light.h"
-#include "pxr/usd/usdRi/pxrAovLight.h"
-#include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_LightOp, privateData, opArgs, interface)
+USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_LightOp, privateData, opArgs, interface)
 {
-    PxrUsdKatanaUsdInArgsRefPtr usdInArgs = privateData.GetUsdInArgs();
-    PxrUsdKatanaAttrMap attrs;
-    
+    UsdKatanaUsdInArgsRefPtr usdInArgs = privateData.GetUsdInArgs();
+    UsdKatanaAttrMap attrs;
+
     UsdLuxLight light(privateData.GetUsdPrim());
 
-    PxrUsdKatanaReadLight(
-        light,
-        privateData,
-        attrs);
+    UsdKatanaReadLight(light, privateData, attrs);
 
     attrs.toInterface(interface);
 
@@ -75,8 +72,7 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_LightOp, privateData, opArgs, inte
             for (const SdfPath &filterPath: filterPaths) {
                 const std::string ref_location = filterPath.GetName();
                 const std::string filter_location =
-                    PxrUsdKatanaUtils::
-                    ConvertUsdPathToKatLocation(filterPath, usdInArgs);
+                    UsdKatanaUtils::ConvertUsdPathToKatLocation(filterPath, usdInArgs);
                 sscb.createEmptyLocation(ref_location,
                     "light filter reference");
                 sscb.setAttrAtLocation(ref_location,
@@ -89,21 +85,17 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_LightOp, privateData, opArgs, inte
             for (const SdfPath &filterPath: filterPaths) {
                 if (UsdPrim filterPrim =
                     usdInArgs->GetStage()->GetPrimAtPath(filterPath)) {
-
                     interface.createChild(
                         filterPath.GetName(),
-                        // Use the top-level PxrUsdIn op to get proper
+                        // Use the top-level UsdIn op to get proper
                         // op dispatch, including site-specific plugins.
                         // (We can't use empty string to re-run this
                         // same op because we are already in the
                         // light-specific op, and we need to run a
                         // light-filter op instead.)
-                        "UsdIn",
-                        opArgs,
-                        FnKat::GeolibCookInterface::ResetRootFalse,
-                        new PxrUsdKatanaUsdInPrivateData(
-                            filterPrim, usdInArgs, &privateData),
-                        PxrUsdKatanaUsdInPrivateData::Delete);
+                        "UsdIn", opArgs, FnKat::GeolibCookInterface::ResetRootFalse,
+                        new UsdKatanaUsdInPrivateData(filterPrim, usdInArgs, &privateData),
+                        UsdKatanaUsdInPrivateData::Delete);
                 }
             }
         }
@@ -111,10 +103,7 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_LightOp, privateData, opArgs, inte
 }
 
 namespace {
-
-static
-void
-lightListFnc(PxrUsdKatanaUtilsLightListAccess& lightList)
+static void lightListFnc(UsdKatanaUtilsLightListAccess& lightList)
 {
     UsdPrim prim = lightList.GetPrim();
     if (prim && prim.IsA<UsdLuxLight>() || prim.GetTypeName() == "Light") {
@@ -131,8 +120,7 @@ lightListFnc(PxrUsdKatanaUtilsLightListAccess& lightList)
 
 }
 
-void
-registerPxrUsdInShippedLightLightListFnc()
+void registerUsdInShippedLightLightListFnc()
 {
-    PxrUsdKatanaUsdInPluginRegistry::RegisterLightListFnc(lightListFnc);
+    UsdKatanaUsdInPluginRegistry::RegisterLightListFnc(lightListFnc);
 }

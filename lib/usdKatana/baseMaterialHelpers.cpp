@@ -91,22 +91,17 @@ _NodeRepresentsLiveBaseMaterial(const PcpNodeRef &node)
     return isLiveBaseMaterial;
 }
 
-
-bool
-PxrUsdKatana_IsAttrValFromDirectReference(const UsdAttribute &attr)
+bool UsdKatana_IsAttrValFromDirectReference(const UsdAttribute& attr)
 {
     return _NodeRepresentsDirectReference( attr.GetResolveInfo().GetNode() );
 }
 
-
-bool
-PxrUsdKatana_IsAttrValFromBaseMaterial(const UsdAttribute &attr)
+bool UsdKatana_IsAttrValFromBaseMaterial(const UsdAttribute& attr)
 {
     return _NodeRepresentsLiveBaseMaterial( attr.GetResolveInfo().GetNode() );
 }
 
-bool
-PxrUsdKatana_IsPrimDefFromBaseMaterial(const UsdPrim &prim)
+bool UsdKatana_IsPrimDefFromBaseMaterial(const UsdPrim& prim)
 {
     for(const PcpNodeRef &n: prim.GetPrimIndex().GetNodeRange()) {
         for (const SdfLayerRefPtr &l: n.GetLayerStack()->GetLayers()) {
@@ -120,8 +115,7 @@ PxrUsdKatana_IsPrimDefFromBaseMaterial(const UsdPrim &prim)
     return false;
 }
 
-bool
-PxrUsdKatana_AreRelTargetsFromBaseMaterial(const UsdRelationship &rel)
+bool UsdKatana_AreRelTargetsFromBaseMaterial(const UsdRelationship& rel)
 {
     // Find the strongest opinion about the relationship targets.
     SdfRelationshipSpecHandle strongestRelSpec;

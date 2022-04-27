@@ -30,34 +30,27 @@
 
 #include "pxr/pxr.h"
 
-#include "pxrUsdInPrman/declarePackageOps.h"
+#include "usdInPrman/declarePackageOps.h"
 
 #include "usdKatana/bootstrap.h"
 #include "vtKatana/bootstrap.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInPrman_LocationDecorator);
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInPrmanLuxLight_LocationDecorator);
+DEFINE_GEOLIBOP_PLUGIN(UsdInPrman_LocationDecorator);
+DEFINE_GEOLIBOP_PLUGIN(UsdInPrmanLuxLight_LocationDecorator);
 
 void registerPlugins()
 {
-    USD_OP_REGISTER_PLUGIN(PxrUsdInPrman_LocationDecorator, 
-                       "UsdInPrman_LocationDecorator", 
-                       0, 
-                       1);
-    
-    PxrUsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(
-            "UsdInPrman_LocationDecorator");
-    USD_OP_REGISTER_PLUGIN(PxrUsdInPrmanLuxLight_LocationDecorator, 
-                       "UsdInPrmanLuxLight_LocationDecorator", 
-                       0, 
-                       1);
-    
-    PxrUsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(
-            "UsdInPrmanLuxLight_LocationDecorator");
+    USD_OP_REGISTER_PLUGIN(UsdInPrman_LocationDecorator, "UsdInPrman_LocationDecorator", 0, 1);
 
-    PxrUsdKatanaBootstrap();
+    UsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp("UsdInPrman_LocationDecorator");
+    USD_OP_REGISTER_PLUGIN(UsdInPrmanLuxLight_LocationDecorator,
+                           "UsdInPrmanLuxLight_LocationDecorator", 0, 1);
+
+    UsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(
+        "UsdInPrmanLuxLight_LocationDecorator");
+
+    UsdKatanaBootstrap();
     PxrVtKatanaBootstrap();
 }

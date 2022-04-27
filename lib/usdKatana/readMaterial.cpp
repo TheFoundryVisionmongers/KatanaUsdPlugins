@@ -67,7 +67,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-FnLogSetup("PxrUsdKatanaReadMaterial");
+FnLogSetup("UsdKatanaReadMaterial");
 
 static std::string
 _CreateShadingNode(
@@ -100,14 +100,12 @@ _UnrollInterfaceFromPrim(
         FnKat::GroupBuilder& materialBuilder,
         FnKat::GroupBuilder& interfaceBuilder);
 
-void
-PxrUsdKatanaReadMaterial(
-        const UsdShadeMaterial& material,
-        bool flatten,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs,
-        const std::string& looksGroupLocation,
-        const std::string& materialDestinationLocation)
+void UsdKatanaReadMaterial(const UsdShadeMaterial& material,
+                           bool flatten,
+                           const UsdKatanaUsdInPrivateData& data,
+                           UsdKatanaAttrMap& attrs,
+                           const std::string& looksGroupLocation,
+                           const std::string& materialDestinationLocation)
 {
     UsdPrim prim = material.GetPrim();
     UsdStageRefPtr stage = prim.GetStage();
@@ -135,10 +133,10 @@ PxrUsdKatanaReadMaterial(
     const std::string& parentPrefix = (looksGroupLocation.empty()) ?
         data.GetUsdInArgs()->GetRootLocationPath() : looksGroupLocation;
 
-    std::string fullKatanaPath = !materialDestinationLocation.empty()
+    std::string fullKatanaPath =
+        !materialDestinationLocation.empty()
             ? materialDestinationLocation
-            : PxrUsdKatanaUtils::ConvertUsdMaterialPathToKatLocation(
-                    primPath, data);
+            : UsdKatanaUtils::ConvertUsdMaterialPathToKatLocation(primPath, data);
 
     if (!fullKatanaPath.empty() &&
             pystring::startswith(fullKatanaPath, parentPrefix)) {
@@ -154,7 +152,7 @@ PxrUsdKatanaReadMaterial(
     attrs.set("material.katanaPath", FnKat::StringAttribute(katanaPath));
     attrs.set("material.usdPrimName", FnKat::StringAttribute(prim.GetName()));
 
-    PxrUsdKatanaReadPrim(material.GetPrim(), data, attrs);
+    UsdKatanaReadPrim(material.GetPrim(), data, attrs);
 
     attrs.set("type", FnKat::StringAttribute("material"));
 
@@ -388,7 +386,7 @@ _ProcessShaderConnections(
 
     // If the attribute value comes from a base material, leave it
     // empty -- we will inherit it from the parent katana material.
-    if (flatten || !PxrUsdKatana_IsAttrValFromBaseMaterial(attr))
+    if (flatten || !UsdKatana_IsAttrValFromBaseMaterial(attr))
     {
         bool isUdim = false;
         if (vtValue.IsHolding<SdfAssetPath>())
@@ -407,13 +405,13 @@ _ProcessShaderConnections(
                     const std::string path = SdfComputeAssetPathRelativeToLayer(layer, rawPath);
                     vtValue = VtValue(SdfAssetPath(path));
                     paramsBuilder.set(connectionId,
-                                      PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
+                                      UsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
                 }
             }
         }
         if (!isUdim)
         {
-            paramsBuilder.set(connectionId, PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
+            paramsBuilder.set(connectionId, UsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
         }
     }
 }
@@ -611,7 +609,7 @@ _CreateShadingNode(
         const std::string & targetName,
         bool flatten)
 {
-    std::string handle = PxrUsdKatanaUtils::GenerateShadingNodeHandle(shadingNode);
+    std::string handle = UsdKatanaUtils::GenerateShadingNodeHandle(shadingNode);
     if (handle.empty()) {
         return "";
     }
@@ -710,8 +708,7 @@ _CreateShadingNode(
             target = result;
         }
 
-        if (flatten ||
-            !PxrUsdKatana_IsPrimDefFromBaseMaterial(shadingNode))
+        if (flatten || !UsdKatana_IsPrimDefFromBaseMaterial(shadingNode))
         {
             shdNodeBuilder.set("name", FnKat::StringAttribute(handle));
             shdNodeBuilder.set("srcName", FnKat::StringAttribute(handle));
@@ -997,7 +994,7 @@ _GetMaterialAttr(
                 continue;
             }
 
-            paramPrefix = PxrUsdKatanaUtils::GenerateShadingNodeHandle(curr);
+            paramPrefix = UsdKatanaUtils::GenerateShadingNodeHandle(curr);
         }
 
         _UnrollInterfaceFromPrim(curr,
@@ -1020,8 +1017,8 @@ _GetMaterialAttr(
     materialBuilder.set("info.layoutVersion", FnKat::IntAttribute(2));
 
     FnKat::GroupBuilder statementsBuilder;
-    PxrUsdKatanaReadPrimPrmanStatements(materialPrim, currentTime,
-        statementsBuilder, prmanOutputTarget);
+    UsdKatanaReadPrimPrmanStatements(materialPrim, currentTime, statementsBuilder,
+                                     prmanOutputTarget);
     // Gather prman statements
     FnKat::GroupAttribute statements = statementsBuilder.build();
     if (statements.getNumberOfChildren()) {
@@ -1045,7 +1042,7 @@ _GetMaterialAttr(
         // Note that there are additional workarounds in using the
         // "derivesFrom"/BaseMaterial relationship in the non-op SGG that
         // would need to be replicated here if the USD Material AttributeFn
-        // were to use the PxrUsdIn op instead, particularly with respect to
+        // were to use the UsdIn op instead, particularly with respect to
         // the tree structure that the non-op the SGG creates
         // See _ConvertUsdMAterialPathToKatLocation in
         // katanapkg/plugin/sgg/usd/utils.cpp
@@ -1146,14 +1143,14 @@ _UnrollInterfaceFromPrim(const UsdPrim& prim,
                         const std::string path = SdfComputeAssetPathRelativeToLayer(layer, rawPath);
                         vtValue = VtValue(SdfAssetPath(path));
                         materialBuilder.set(TfStringPrintf("parameters.%s", renamedParam.c_str()),
-                                            PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
+                                            UsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
                     }
                 }
             }
             if (!isUdim)
             {
                 materialBuilder.set(TfStringPrintf("parameters.%s", renamedParam.c_str()),
-                                    PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
+                                    UsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
             }
         }
 
@@ -1169,8 +1166,7 @@ _UnrollInterfaceFromPrim(const UsdPrim& prim,
 
             TfToken inputName = consumer.GetBaseName();
 
-            std::string handle = PxrUsdKatanaUtils::GenerateShadingNodeHandle(
-                consumerPrim);
+            std::string handle = UsdKatanaUtils::GenerateShadingNodeHandle(consumerPrim);
 
             std::string srcKey = renamedParam + ".src";
 

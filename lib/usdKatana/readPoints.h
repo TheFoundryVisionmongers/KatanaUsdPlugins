@@ -27,8 +27,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_READPOINTS_H
-#define PXRUSDKATANA_READPOINTS_H
+#ifndef USDKATANA_READPOINTS_H
+#define USDKATANA_READPOINTS_H
 
 #include "pxr/pxr.h"
 
@@ -36,18 +36,15 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 #include "api.h"
 
-class PxrUsdKatanaAttrMap;
-class PxrUsdKatanaUsdInPrivateData;
+class UsdKatanaAttrMap;
+class UsdKatanaUsdInPrivateData;
 class UsdGeomPoints;
 
 /// \brief read \p points into \p attrs.
-USDKATANA_API void
-PxrUsdKatanaReadPoints(
-        const UsdGeomPoints& points,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs);
-
+USDKATANA_API void UsdKatanaReadPoints(const UsdGeomPoints& points,
+                                       const UsdKatanaUsdInPrivateData& data,
+                                       UsdKatanaAttrMap& attrs);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_READPOINTS_H
+#endif  // USDKATANA_READPOINTS_H

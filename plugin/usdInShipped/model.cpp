@@ -27,7 +27,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxrUsdInShipped/declareCoreOps.h"
+#include "usdInShipped/declareCoreOps.h"
 
 #include "pxr/pxr.h"
 #include "usdKatana/attrMap.h"
@@ -41,19 +41,18 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-
-PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_ModelOp, privateData, opArgs, interface)
+USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_ModelOp, privateData, opArgs, interface)
 {
-    PxrUsdKatanaAttrMap attrs;
+    UsdKatanaAttrMap attrs;
 
     const UsdPrim& prim = privateData.GetUsdPrim();
     
     if (prim.HasAssetInfo()) {
-        PxrUsdKatanaReadModel(prim, privateData, attrs);
-    } 
+        UsdKatanaReadModel(prim, privateData, attrs);
+    }
 
     // If 'type' has been set to something other than 'group' by
-    // a different PxrUsdIn plugin, leave it alone. It means a 
+    // a different UsdIn plugin, leave it alone. It means a
     // more specific USD type applied. Otherwise, set 'type' here
     // based on the model kind.
     //
@@ -62,7 +61,7 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_ModelOp, privateData, opArgs, inte
     {
         if (prim.IsGroup())
         {
-            if (PxrUsdKatanaUtils::ModelGroupIsAssembly(prim))
+            if (UsdKatanaUtils::ModelGroupIsAssembly(prim))
             {
                 interface.setAttr("type",
                     FnKat::StringAttribute("assembly"));
@@ -127,15 +126,11 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_ModelOp, privateData, opArgs, inte
        
         interface.setAttr(UsdKatanaTokens->katanaLooksChildNameExclusionAttrName,
                 FnKat::IntAttribute(1));
-        interface.createChild(TfToken(UsdKatanaTokens->katanaLooksScopeName),
-                "UsdInCore_LooksGroupOp",
-                childOpArgs,
-                FnKat::GeolibCookInterface::ResetRootTrue,
-                new PxrUsdKatanaUsdInPrivateData(
-                    lookPrim,
-                    privateData.GetUsdInArgs(),
-                    &privateData),
-                PxrUsdKatanaUsdInPrivateData::Delete);
+        interface.createChild(
+            TfToken(UsdKatanaTokens->katanaLooksScopeName), "UsdInCore_LooksGroupOp", childOpArgs,
+            FnKat::GeolibCookInterface::ResetRootTrue,
+            new UsdKatanaUsdInPrivateData(lookPrim, privateData.GetUsdInArgs(), &privateData),
+            UsdKatanaUsdInPrivateData::Delete);
     }
 
     // early exit for models that are groups
@@ -144,13 +139,9 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_ModelOp, privateData, opArgs, inte
         return;
     }
 
-    interface.createChild("ConstraintTargets", 
-            "UsdInCore_ConstraintsOp", 
-            FnKat::GroupAttribute(), 
-            FnKat::GeolibCookInterface::ResetRootTrue,
-            new PxrUsdKatanaUsdInPrivateData(
-                prim,
-                privateData.GetUsdInArgs(),
-                &privateData),
-            PxrUsdKatanaUsdInPrivateData::Delete);
+    interface.createChild(
+        "ConstraintTargets", "UsdInCore_ConstraintsOp", FnKat::GroupAttribute(),
+        FnKat::GeolibCookInterface::ResetRootTrue,
+        new UsdKatanaUsdInPrivateData(prim, privateData.GetUsdInArgs(), &privateData),
+        UsdKatanaUsdInPrivateData::Delete);
 }

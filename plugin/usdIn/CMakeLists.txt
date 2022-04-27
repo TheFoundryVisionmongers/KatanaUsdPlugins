@@ -1,4 +1,4 @@
-set(PXR_PACKAGE pxrUsdIn)
+set(PXR_PACKAGE usdIn)
 
 set(vtKatana_LIBRARY "")
 if (NOT ${KATANA_API_VERSION} VERSION_LESS "3.0.0")
@@ -16,5 +16,5 @@ pxr_plugin(${PXR_PACKAGE}
         Boost::date_time
 
     CPPFILES
-        pxrUsdIn.cpp
+        usdIn.cpp
 )

@@ -39,12 +39,10 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace
 {
-
 // Allows for attr hints to be described via attrs. This is used by
-// PxrUsdInVariantSelect to populate its pop-up menus with contextually
+// UsdInVariantSelect to populate its pop-up menus with contextually
 // relevant values.
-class PxrUsdInUtilExtraHintsDap :
-        public FnDefaultAttributeProducer::DefaultAttributeProducer
+class UsdInUtilExtraHintsDap : public FnDefaultAttributeProducer::DefaultAttributeProducer
 {
 public:
     static FnAttribute::GroupAttribute cook(
@@ -53,9 +51,8 @@ public:
             const std::string & inputLocationPath,
             int inputIndex)
     {
-        FnAttribute::GroupAttribute entries =
-                interface.getAttr("__pxrUsdInExtraHints");
-        
+        FnAttribute::GroupAttribute entries = interface.getAttr("__usdInExtraHints");
+
         if (!entries.isValid() || entries.getNumberOfChildren() == 0)
         {
             return FnAttribute::GroupAttribute();
@@ -82,12 +79,10 @@ public:
     }
 };
 
-DEFINE_DEFAULTATTRIBUTEPRODUCER_PLUGIN(PxrUsdInUtilExtraHintsDap)
-
+DEFINE_DEFAULTATTRIBUTEPRODUCER_PLUGIN(UsdInUtilExtraHintsDap)
 }
 
-void registerPxrUsdInShippedUiUtils()
+void registerUsdInShippedUiUtils()
 {
-    REGISTER_PLUGIN(PxrUsdInUtilExtraHintsDap,
-            "UsdInUtilExtraHintsDap", 0, 1);
+    REGISTER_PLUGIN(UsdInUtilExtraHintsDap, "UsdInUtilExtraHintsDap", 0, 1);
 }

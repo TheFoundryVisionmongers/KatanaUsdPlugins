@@ -27,8 +27,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_NURBSPATCH_H
-#define PXRUSDKATANA_NURBSPATCH_H
+#ifndef USDKATANA_NURBSPATCH_H
+#define USDKATANA_NURBSPATCH_H
 
 #include "pxr/pxr.h"
 
@@ -37,18 +37,15 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 #include "api.h"
 
-class PxrUsdKatanaAttrMap;
-class PxrUsdKatanaUsdInPrivateData;
+class UsdKatanaAttrMap;
+class UsdKatanaUsdInPrivateData;
 class UsdGeomNurbsPatch;
 
 /// \brief read \p nurbspatch into \p attrs.
-USDKATANA_API void
-PxrUsdKatanaReadNurbsPatch(
-        const UsdGeomNurbsPatch& nurbsPatch,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs);
-
+USDKATANA_API void UsdKatanaReadNurbsPatch(const UsdGeomNurbsPatch& nurbsPatch,
+                                           const UsdKatanaUsdInPrivateData& data,
+                                           UsdKatanaAttrMap& attrs);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_NURBSPATCH_H
+#endif  // USDKATANA_NURBSPATCH_H

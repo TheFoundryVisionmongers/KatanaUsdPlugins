@@ -27,7 +27,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxrUsdInShipped/declareCoreOps.h"
+#include "usdInShipped/declareCoreOps.h"
 
 #include "pxr/pxr.h"
 #include "usdKatana/attrMap.h"
@@ -37,21 +37,21 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_PointInstancerOp, privateData, opArgs, interface)
+USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_PointInstancerOp, privateData, opArgs, interface)
 {
     UsdGeomPointInstancer instancer =
         UsdGeomPointInstancer(privateData.GetUsdPrim());
 
     // Generate input attr map for consumption by the reader.
     //
-    PxrUsdKatanaAttrMap inputAttrMap;
+    UsdKatanaAttrMap inputAttrMap;
 
     // Get the instancer's Katana location.
     //
     inputAttrMap.set("outputLocationPath",
             FnKat::StringAttribute(interface.getOutputLocationPath()));
 
-    // Pass along PxrUsdIn op args.
+    // Pass along UsdIn op args.
     //
     inputAttrMap.set("opArgs", opArgs);
 
@@ -61,12 +61,11 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_PointInstancerOp, privateData, opA
     // Sources attr map: describes the instancer's "instance source" children.
     // Instances attr map: describes the instancer's "instance array" child.
     //
-    PxrUsdKatanaAttrMap instancerAttrMap;
-    PxrUsdKatanaAttrMap sourcesAttrMap;
-    PxrUsdKatanaAttrMap instancesAttrMap;
-    PxrUsdKatanaReadPointInstancer(
-            instancer, privateData, instancerAttrMap, sourcesAttrMap,
-            instancesAttrMap, inputAttrMap);
+    UsdKatanaAttrMap instancerAttrMap;
+    UsdKatanaAttrMap sourcesAttrMap;
+    UsdKatanaAttrMap instancesAttrMap;
+    UsdKatanaReadPointInstancer(instancer, privateData, instancerAttrMap, sourcesAttrMap,
+                                instancesAttrMap, inputAttrMap);
 
     // Send instancer attrs directly to the interface.
     //
@@ -96,7 +95,7 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_PointInstancerOp, privateData, opA
 
     // Create "instance source" children using BuildIntermediate.
     //
-    PxrUsdKatanaUsdInArgsRefPtr usdInArgs = privateData.GetUsdInArgs();
+    UsdKatanaUsdInArgsRefPtr usdInArgs = privateData.GetUsdInArgs();
     FnKat::GroupAttribute childAttrs = sourcesSSCAttrs.getChildByName("c");
     for (int64_t i = 0; i < childAttrs.getNumberOfChildren(); ++i)
     {
@@ -132,33 +131,26 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_PointInstancerOp, privateData, opA
                     ab.isolatePath = primPath;
 
                     interface.createChild(
-                        nameToUse,
-                        "UsdIn",
+                        nameToUse, "UsdIn",
                         FnKat::GroupBuilder()
                             .update(interface.getOpArg())
                             .set("childOfIntermediate", FnKat::IntAttribute(1))
                             .set("staticScene", sourceAttrs)
                             .build(),
                         FnKat::GeolibCookInterface::ResetRootFalse,
-                        new PxrUsdKatanaUsdInPrivateData(prim, ab.build(),
-                                &privateData),
-                        PxrUsdKatanaUsdInPrivateData::Delete);
+                        new UsdKatanaUsdInPrivateData(prim, ab.build(), &privateData),
+                        UsdKatanaUsdInPrivateData::Delete);
                 }
             }
         }
         else
         {
             interface.createChild(
-                childAttrs.getChildName(i),
-                "UsdIn.BuildIntermediate",
-                FnKat::GroupBuilder()
-                    .update(opArgs)
-                    .set("staticScene", sourceAttrs)
-                    .build(),
+                childAttrs.getChildName(i), "UsdIn.BuildIntermediate",
+                FnKat::GroupBuilder().update(opArgs).set("staticScene", sourceAttrs).build(),
                 FnKat::GeolibCookInterface::ResetRootFalse,
-                new PxrUsdKatanaUsdInPrivateData(
-                        usdInArgs->GetRootPrim(), usdInArgs, &privateData),
-                PxrUsdKatanaUsdInPrivateData::Delete);
+                new UsdKatanaUsdInPrivateData(usdInArgs->GetRootPrim(), usdInArgs, &privateData),
+                UsdKatanaUsdInPrivateData::Delete);
         }
     }
 

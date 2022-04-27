@@ -44,14 +44,11 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+FnLogSetup("UsdKatanaReadXformable");
 
-FnLogSetup("PxrUsdKatanaReadXformable");
-
-bool
-PxrUsdKatanaReadXformable(
-        const UsdGeomXformable& xformable,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        FnAttribute::GroupAttribute& attr)
+bool UsdKatanaReadXformable(const UsdGeomXformable& xformable,
+                            const UsdKatanaUsdInPrivateData& data,
+                            FnAttribute::GroupAttribute& attr)
 {
     //
     // Calculate and set the xform attribute.
@@ -91,8 +88,9 @@ PxrUsdKatanaReadXformable(
 
             // Convert to vector.
             const double *matArray = mat.GetArray();
-            std::vector<double> &matVec = matBuilder.get(isMotionBackward ?
-                PxrUsdKatanaUtils::ReverseTimeSample(relSampleTime) : relSampleTime);
+            std::vector<double>& matVec =
+                matBuilder.get(isMotionBackward ? UsdKatanaUtils::ReverseTimeSample(relSampleTime)
+                                                : relSampleTime);
 
             matVec.resize(16);
             for (int i = 0; i < 16; ++i)
@@ -141,16 +139,15 @@ PxrUsdKatanaReadXformable(
     return false;
 }
 
-void
-PxrUsdKatanaReadXformable(
-        const UsdGeomXformable& xformable,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadXformable(const UsdGeomXformable& xformable,
+                            const UsdKatanaUsdInPrivateData& data,
+                            UsdKatanaAttrMap& attrs)
 {
-    PxrUsdKatanaReadPrim(xformable.GetPrim(), data, attrs);
+    UsdKatanaReadPrim(xformable.GetPrim(), data, attrs);
 
     FnAttribute::GroupAttribute attr;
-    if (PxrUsdKatanaReadXformable(xformable, data, attr)) {
+    if (UsdKatanaReadXformable(xformable, data, attr))
+    {
         attrs.set("xform", attr);
     }
 }

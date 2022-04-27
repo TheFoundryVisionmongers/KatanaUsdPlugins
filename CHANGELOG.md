@@ -194,7 +194,7 @@ installed into an include folder in the install folder.
 
 - Removed the :kat:node:`Pxr` prefix from the node type names to make them
     match Katana naming conventions, eg. :kat:node:`UsdIn` instead of
-    :kat:node:`PxrUsdIn`. See `Table of Name Changes`_.
+    :kat:node:`UsdIn`. See `Table of Name Changes`_.
 - Changed the name of the Op types to ensure we don't clash with
     externally-built Katana USD Plug-ins.
 - Updated Attribute names to more generic names.

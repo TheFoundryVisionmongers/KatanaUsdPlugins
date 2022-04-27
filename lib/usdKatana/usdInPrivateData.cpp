@@ -27,8 +27,9 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
 #include "usdKatana/usdInPrivateData.h"
+#include <string>
+#include "pxr/pxr.h"
 #include "usdKatana/utils.h"
 
 #include "pxr/base/gf/interval.h"
@@ -76,16 +77,14 @@ bool GetUpperBoundedClosestTimes(const std::vector<double>& timeSamples,
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-
-PxrUsdKatanaUsdInPrivateData::PxrUsdKatanaUsdInPrivateData(
-        const UsdPrim& prim,
-        PxrUsdKatanaUsdInArgsRefPtr usdInArgs,
-        const PxrUsdKatanaUsdInPrivateData* parentData)
+UsdKatanaUsdInPrivateData::UsdKatanaUsdInPrivateData(const UsdPrim& prim,
+                                                     UsdKatanaUsdInArgsRefPtr usdInArgs,
+                                                     const UsdKatanaUsdInPrivateData* parentData)
     : _prim(prim), _usdInArgs(usdInArgs), _extGb(0)
 {
     // None of the below is safe or relevant if the prim is not valid
-    // This is most commonly due to an invalid isolatePath -- which is 
-    // already reported as a katana error from pxrUsdIn.cpp
+    // This is most commonly due to an invalid isolatePath -- which is
+    // already reported as a katana error from usdIn.cpp
     if (!prim)
     {
         return;
@@ -145,7 +144,7 @@ PxrUsdKatanaUsdInPrivateData::PxrUsdKatanaUsdInPrivateData(
     const std::string sessionPath = usdInArgs->GetSessionLocationPath();
     FnKat::GroupAttribute sessionAttr = usdInArgs->GetSessionAttr();
 
-    // XXX: If an isolatePath has been specified, it means the PxrUsdIn is
+    // XXX: If an isolatePath has been specified, it means the UsdIn is
     // probably loading USD contents below the USD root. This can prevent
     // overrides from trickling down the hierarchy, e.g. the overrides for /A/B
     // won't get applied to children if the isolatePath is /A/B/C/D.
@@ -387,8 +386,7 @@ PxrUsdKatanaUsdInPrivateData::PxrUsdKatanaUsdInPrivateData(
     _evaluateUsdSkelBindings = _usdInArgs->GetEvaluateUsdSkelBindings();
 }
 
-const bool
-PxrUsdKatanaUsdInPrivateData::IsMotionBackward() const
+const bool UsdKatanaUsdInPrivateData::IsMotionBackward() const
 {
     if (_motionSampleTimesOverride.size() > 0)
     {
@@ -404,9 +402,8 @@ PxrUsdKatanaUsdInPrivateData::IsMotionBackward() const
     }
 }
 
-std::vector<PxrUsdKatanaUsdInPrivateData::UsdKatanaTimePair>
-PxrUsdKatanaUsdInPrivateData::GetUsdAndKatanaTimes(
-        const UsdAttribute& attr) const
+std::vector<UsdKatanaUsdInPrivateData::UsdKatanaTimePair>
+UsdKatanaUsdInPrivateData::GetUsdAndKatanaTimes(const UsdAttribute& attr) const
 {
     const std::vector<double> motionSampleTimes = GetMotionSampleTimes(attr);
     std::vector<UsdKatanaTimePair> result(motionSampleTimes.size());
@@ -416,13 +413,12 @@ PxrUsdKatanaUsdInPrivateData::GetUsdAndKatanaTimes(
 
         UsdKatanaTimePair& pair = result[i];
         pair.usdTime = _currentTime + t;
-        pair.katanaTime = isMotionBackward ?
-            PxrUsdKatanaUtils::ReverseTimeSample(t) : t;
+        pair.katanaTime = isMotionBackward ? UsdKatanaUtils::ReverseTimeSample(t) : t;
     } 
     return result;
 }
 
-const std::vector<double> PxrUsdKatanaUsdInPrivateData::GetSkelMotionSampleTimes(
+const std::vector<double> UsdKatanaUsdInPrivateData::GetSkelMotionSampleTimes(
     const UsdSkelAnimQuery& skelAnimQuery,
     std::vector<double>& blendShapeMotionSampleTimes,
     std::vector<double>& jointTransformMotionSampleTimes) const
@@ -571,15 +567,14 @@ const std::vector<double> PxrUsdKatanaUsdInPrivateData::GetSkelMotionSampleTimes
     return result;
 }
 
-const std::vector<double>
-PxrUsdKatanaUsdInPrivateData::GetMotionSampleTimes(
+const std::vector<double> UsdKatanaUsdInPrivateData::GetMotionSampleTimes(
     const UsdAttribute& attr,
     bool fallBackToShutterBoundary) const
 {
     static std::vector<double> noMotion = {0.0};
 
-    if ((attr && !PxrUsdKatanaUtils::IsAttributeVarying(attr, _currentTime)) ||
-            _motionSampleTimesFallback.size() < 2)
+    if ((attr && !UsdKatanaUtils::IsAttributeVarying(attr, _currentTime)) ||
+        _motionSampleTimesFallback.size() < 2)
     {
         return noMotion;
     }
@@ -720,8 +715,8 @@ PxrUsdKatanaUsdInPrivateData::GetMotionSampleTimes(
     return result;
 }
 
-void PxrUsdKatanaUsdInPrivateData::setExtensionOpArg(
-        const std::string & name, FnAttribute::Attribute attr) const
+void UsdKatanaUsdInPrivateData::setExtensionOpArg(const std::string& name,
+                                                  FnAttribute::Attribute attr) const
 {
     if (!_extGb)
     {
@@ -731,9 +726,9 @@ void PxrUsdKatanaUsdInPrivateData::setExtensionOpArg(
     _extGb->set("ext." + name, attr);
 }
 
-
-FnAttribute::Attribute PxrUsdKatanaUsdInPrivateData::getExtensionOpArg(
-        const std::string & name, FnAttribute::GroupAttribute opArgs) const
+FnAttribute::Attribute UsdKatanaUsdInPrivateData::getExtensionOpArg(
+    const std::string& name,
+    FnAttribute::GroupAttribute opArgs) const
 {
     if (name.empty())
     {
@@ -743,10 +738,8 @@ FnAttribute::Attribute PxrUsdKatanaUsdInPrivateData::getExtensionOpArg(
     return opArgs.getChildByName("ext." + name);
 }
 
-
-FnAttribute::GroupAttribute
-PxrUsdKatanaUsdInPrivateData::updateExtensionOpArgs(
-        FnAttribute::GroupAttribute opArgs) const
+FnAttribute::GroupAttribute UsdKatanaUsdInPrivateData::updateExtensionOpArgs(
+    FnAttribute::GroupAttribute opArgs) const
 {
     if (!_extGb)
     {
@@ -759,27 +752,22 @@ PxrUsdKatanaUsdInPrivateData::updateExtensionOpArgs(
         .build();
 }
 
-
-UsdShadeMaterialBindingAPI::CollectionQueryCache *
-PxrUsdKatanaUsdInPrivateData::GetCollectionQueryCache() const
+UsdShadeMaterialBindingAPI::CollectionQueryCache*
+UsdKatanaUsdInPrivateData::GetCollectionQueryCache() const
 {
     return _collectionQueryCache.get();
    
 }
 
-UsdShadeMaterialBindingAPI::BindingsCache *
-PxrUsdKatanaUsdInPrivateData::GetBindingsCache() const
+UsdShadeMaterialBindingAPI::BindingsCache* UsdKatanaUsdInPrivateData::GetBindingsCache() const
 {
     return _bindingsCache.get();
 }
 
-
-PxrUsdKatanaUsdInPrivateData *
-PxrUsdKatanaUsdInPrivateData::GetPrivateData(
-        const FnKat::GeolibCookInterface& interface)
+UsdKatanaUsdInPrivateData* UsdKatanaUsdInPrivateData::GetPrivateData(
+    const FnKat::GeolibCookInterface& interface)
 {
-    return static_cast<PxrUsdKatanaUsdInPrivateData*>(
-            interface.getPrivateData());
+    return static_cast<UsdKatanaUsdInPrivateData*>(interface.getPrivateData());
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

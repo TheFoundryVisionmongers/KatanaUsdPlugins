@@ -27,7 +27,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxrUsdInShipped/declareCoreOps.h"
+#include "usdInShipped/declareCoreOps.h"
 
 #include "pxr/pxr.h"
 #include "usdKatana/attrMap.h"
@@ -40,7 +40,7 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_ConstraintsOp, privateData, opArgs, interface)
+USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_ConstraintsOp, privateData, opArgs, interface)
 {
     //
     // Construct the group attribute argument for the StaticSceneCreate
@@ -81,9 +81,8 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_ConstraintsOp, privateData, opArgs
                                         nameElements.end(), "_");
             }
 
-            PxrUsdKatanaAttrMap attrs;
-            PxrUsdKatanaReadConstraintTarget(
-                constraintTarget, privateData, attrs);
+            UsdKatanaAttrMap attrs;
+            UsdKatanaReadConstraintTarget(constraintTarget, privateData, attrs);
 
             gb.set("c." + constraintName + ".a", attrs.build());
         }

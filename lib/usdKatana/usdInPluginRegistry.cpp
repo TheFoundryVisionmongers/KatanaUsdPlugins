@@ -27,8 +27,11 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
 #include "usdKatana/usdInPluginRegistry.h"
+#include <map>
+#include <string>
+#include <vector>
+#include "pxr/pxr.h"
 
 #include "pxr/usd/kind/registry.h"
 #include "pxr/usd/usd/schemaBase.h"
@@ -48,19 +51,15 @@ static _UsdTypeRegistry _usdTypeReg;
 static _UsdTypeRegistry _usdTypeSiteReg;
 
 /* static */
-void 
-PxrUsdKatanaUsdInPluginRegistry::_RegisterUsdType(
-        const std::string& tfTypeName,
-        const std::string& opName)
+void UsdKatanaUsdInPluginRegistry::_RegisterUsdType(const std::string& tfTypeName,
+                                                    const std::string& opName)
 {
     _usdTypeReg[tfTypeName] = opName;
 }
 
 /* static */
-void 
-PxrUsdKatanaUsdInPluginRegistry::_RegisterUsdTypeForSite(
-        const std::string& tfTypeName,
-        const std::string& opName)
+void UsdKatanaUsdInPluginRegistry::_RegisterUsdTypeForSite(const std::string& tfTypeName,
+                                                           const std::string& opName)
 {
     _usdTypeSiteReg[tfTypeName] = opName;
 }
@@ -81,19 +80,14 @@ _DoFindUsdType(
 
 
 /* static */
-bool 
-PxrUsdKatanaUsdInPluginRegistry::FindUsdType(
-        const TfToken& usdTypeName,
-        std::string* opName)
+bool UsdKatanaUsdInPluginRegistry::FindUsdType(const TfToken& usdTypeName, std::string* opName)
 {
     return _DoFindUsdType(usdTypeName, opName, _usdTypeReg);
 }
 
 /* static */
-bool 
-PxrUsdKatanaUsdInPluginRegistry::FindUsdTypeForSite(
-        const TfToken& usdTypeName,
-        std::string* opName)
+bool UsdKatanaUsdInPluginRegistry::FindUsdTypeForSite(const TfToken& usdTypeName,
+                                                      std::string* opName)
 {
     return _DoFindUsdType(usdTypeName, opName, _usdTypeSiteReg);
 }
@@ -103,36 +97,28 @@ static _KindRegistry _kindReg;
 static _KindRegistry _kindExtReg;
 
 /* static */
-void 
-PxrUsdKatanaUsdInPluginRegistry::RegisterKind(
-        const TfToken& kind,
-        const std::string& opName)
+void UsdKatanaUsdInPluginRegistry::RegisterKind(const TfToken& kind, const std::string& opName)
 {
     _kindReg[kind] = opName;
 }
 
 /* static */
-void 
-PxrUsdKatanaUsdInPluginRegistry::RegisterKindForSite(
-        const TfToken& kind,
-        const std::string& opName)
+void UsdKatanaUsdInPluginRegistry::RegisterKindForSite(const TfToken& kind,
+                                                       const std::string& opName)
 {
     _kindExtReg[kind] = opName;
 }
 
 /* static */
-bool
-PxrUsdKatanaUsdInPluginRegistry::HasKindsForSite()
+bool UsdKatanaUsdInPluginRegistry::HasKindsForSite()
 {
     return _kindExtReg.size() > 0;
 }
 
 /* static */
-bool 
-PxrUsdKatanaUsdInPluginRegistry::_DoFindKind(
-        const TfToken& kind,
-        std::string* opName,
-        const _KindRegistry& reg)
+bool UsdKatanaUsdInPluginRegistry::_DoFindKind(const TfToken& kind,
+                                               std::string* opName,
+                                               const _KindRegistry& reg)
 {
     // can cache this if it becomes an issue.
     TfToken currKind = kind;
@@ -153,40 +139,32 @@ PxrUsdKatanaUsdInPluginRegistry::_DoFindKind(
 }
 
 /* static */
-bool 
-PxrUsdKatanaUsdInPluginRegistry::FindKind(
-        const TfToken& kind,
-        std::string* opName)
+bool UsdKatanaUsdInPluginRegistry::FindKind(const TfToken& kind, std::string* opName)
 {
     return _DoFindKind(kind, opName, _kindReg);
 }
 
 /* static */
-bool 
-PxrUsdKatanaUsdInPluginRegistry::FindKindForSite(
-        const TfToken& kind,
-        std::string* opName)
+bool UsdKatanaUsdInPluginRegistry::FindKindForSite(const TfToken& kind, std::string* opName)
 {
     return _DoFindKind(kind, opName, _kindExtReg);
 }
 
-typedef std::map<std::string, PxrUsdKatanaUsdInPluginRegistry::OpDirectExecFnc>
-        _OpDirectExecFncTable;
+typedef std::map<std::string, UsdKatanaUsdInPluginRegistry::OpDirectExecFnc> _OpDirectExecFncTable;
 
 static _OpDirectExecFncTable _opDirectExecFncTable;
 
-void PxrUsdKatanaUsdInPluginRegistry::RegisterOpDirectExecFnc(
-       const std::string& opName,
-       OpDirectExecFnc fnc)
+void UsdKatanaUsdInPluginRegistry::RegisterOpDirectExecFnc(const std::string& opName,
+                                                           OpDirectExecFnc fnc)
 {
     _opDirectExecFncTable[opName] = fnc;
 }
-    
-void PxrUsdKatanaUsdInPluginRegistry::ExecuteOpDirectExecFnc(
-        const std::string& opName,
-        const PxrUsdKatanaUsdInPrivateData& privateData,
-        FnKat::GroupAttribute opArgs,
-        FnKat::GeolibCookInterface& interface)
+
+void UsdKatanaUsdInPluginRegistry::ExecuteOpDirectExecFnc(
+    const std::string& opName,
+    const UsdKatanaUsdInPrivateData& privateData,
+    FnKat::GroupAttribute opArgs,
+    FnKat::GeolibCookInterface& interface)
 {
     _OpDirectExecFncTable::iterator I = _opDirectExecFncTable.find(opName);
     
@@ -196,21 +174,15 @@ void PxrUsdKatanaUsdInPluginRegistry::ExecuteOpDirectExecFnc(
     }
 }
 
-
-typedef std::vector<PxrUsdKatanaUsdInPluginRegistry::LightListFnc>
-        _LightListFncList;
+typedef std::vector<UsdKatanaUsdInPluginRegistry::LightListFnc> _LightListFncList;
 static _LightListFncList _lightListFncList;
 
-
-void
-PxrUsdKatanaUsdInPluginRegistry::RegisterLightListFnc(LightListFnc fnc)
+void UsdKatanaUsdInPluginRegistry::RegisterLightListFnc(LightListFnc fnc)
 {
     _lightListFncList.push_back(fnc);
 }
 
-void
-PxrUsdKatanaUsdInPluginRegistry::ExecuteLightListFncs(
-        PxrUsdKatanaUtilsLightListAccess& lightList)
+void UsdKatanaUsdInPluginRegistry::ExecuteLightListFncs(UsdKatanaUtilsLightListAccess& lightList)
 {
     for (auto i : _lightListFncList)
     {
@@ -218,16 +190,11 @@ PxrUsdKatanaUsdInPluginRegistry::ExecuteLightListFncs(
     }
 }
 
-
-typedef std::vector<PxrUsdKatanaUsdInPluginRegistry::OpDirectExecFnc>
-        _LocationDecoratorFncList;
+typedef std::vector<UsdKatanaUsdInPluginRegistry::OpDirectExecFnc> _LocationDecoratorFncList;
 
 static _LocationDecoratorFncList _locationDecoratorFncList;
 
-
-void
-PxrUsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(
-        const std::string& opName)
+void UsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(const std::string& opName)
 {
     _OpDirectExecFncTable::iterator I = _opDirectExecFncTable.find(opName);
     
@@ -238,11 +205,10 @@ PxrUsdKatanaUsdInPluginRegistry::RegisterLocationDecoratorOp(
     
 }
 
-FnKat::GroupAttribute
-PxrUsdKatanaUsdInPluginRegistry::ExecuteLocationDecoratorOps(
-        const PxrUsdKatanaUsdInPrivateData& privateData,
-        FnKat::GroupAttribute opArgs,
-        FnKat::GeolibCookInterface& interface)
+FnKat::GroupAttribute UsdKatanaUsdInPluginRegistry::ExecuteLocationDecoratorOps(
+    const UsdKatanaUsdInPrivateData& privateData,
+    FnKat::GroupAttribute opArgs,
+    FnKat::GeolibCookInterface& interface)
 {
     for (auto i : _locationDecoratorFncList)
     {

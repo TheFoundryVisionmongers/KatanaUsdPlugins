@@ -1,4 +1,4 @@
-set(PXR_PACKAGE pxrUsdInPrman)
+set(PXR_PACKAGE usdInPrman)
 
 set(vtKatana_LIBRARY "")
 if (NOT ${KATANA_API_VERSION} VERSION_LESS "3.0.0")

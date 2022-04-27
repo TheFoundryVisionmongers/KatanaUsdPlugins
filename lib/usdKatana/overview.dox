@@ -16,7 +16,7 @@
 \publicLib
 \endif
 
-\subpage usd_katana_plugins_pxrUsdIn_page_front
+\subpage usd_katana_plugins_usdIn_page_front
 
 */
 
@@ -29,24 +29,24 @@
 \endif
 
 The \c read* files have functions that take \c UsdSchema objects and populate
-\c PxrUsdKatanaAttrMap with attributes.  For now, all the logic is bundled but if
+\c UsdKatanaAttrMap with attributes.  For now, all the logic is bundled but if
 other ops need access to just specific pieces of that data, we can expose other
 functions.
 
-\section PxrUsdInPlugins Extending PxrUsdIn Plugins
+\section UsdInPlugins Extending UsdIn Plugins
 
 This library provides a mechanism to create new ops that handle different types
-and kinds.  To teach the \c PxrUsdIn op about new types (or kinds), first
+and kinds.  To teach the \c UsdIn op about new types (or kinds), first
 declare your op:
 
 \code
-PXRUSDKATANA_USDIN_PLUGIN_DECLARE(MyOp)
+USDKATANA_USDIN_PLUGIN_DECLARE(MyOp)
 \endcode
 
 and then define the ops behavior:
 
 \code
-PXRUSDKATANA_USDIN_PLUGIN_DEFINE(MyOp, args, interface)
+USDKATANA_USDIN_PLUGIN_DEFINE(MyOp, args, interface)
 {
     // all ops need to be safe to run concurrently
 }
@@ -56,7 +56,7 @@ The above function body should be written as if it were the definition of the
 function:
 \code
 void Function(
-    const PxrUsdKatanaUsdInPrivateData& args,
+    const UsdKatanaUsdInPrivateData& args,
     Foundry::Katana::GeolibCookInterface& interface);
 \endcode
 
@@ -65,14 +65,14 @@ Finally, the plugin needs to be registered with Katana and the registry:
 REGISTER_PLUGIN(MyOp, "MyOp", 0, 1);
 
 // for UsdMyType
-PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdMyType>("MyOp");
+UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdMyType>("MyOp");
 
 // for kind
-PxrUsdKatanaUsdInPluginRegistry::RegisterKind(TfToken("myKind"), "MyOp");
+UsdKatanaUsdInPluginRegistry::RegisterKind(TfToken("myKind"), "MyOp");
 \endcode
 
-\sa PxrUsdKatanaUsdInPluginRegistry
-\sa PxrUsdKatanaUsdInPrivateData
-\sa PxrUsdKatanaUsdInArgs
+\sa UsdKatanaUsdInPluginRegistry
+\sa UsdKatanaUsdInPrivateData
+\sa UsdKatanaUsdInArgs
 
 */

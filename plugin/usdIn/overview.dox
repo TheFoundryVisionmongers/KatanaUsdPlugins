@@ -1,9 +1,9 @@
 /*!
 \if ( PIXAR_MFB_BUILD )
-\mainpage PxrUsdIn: Op for Reading USD
+\mainpage UsdIn: Op for Reading USD
 \publicLib
 \else
-\page usd_katana_plugins_pxrUsdIn_page_front PxrUsdIn: Op for Reading USD
+\page usd_katana_plugins_UsdIn_page_front UsdIn: Op for Reading USD
 \endif
 
 This is the main op for reading in a USD stage into Katana.
@@ -41,7 +41,7 @@ if (traverseChildren) {
 
 
 \section interOpCommunication Communicating between ops
-Currently, the type ops and kind ops communicate with \c PxrUsdIn by doing
+Currently, the type ops and kind ops communicate with \c UsdIn by doing
 \code
 interface.setAttr("__UsdIn.<subAttrPath>", attr);
 \endcode
@@ -51,8 +51,8 @@ Some possible values for \c subAttrPath and \c attr are:
 - \c skipAllChildren as an \c IntAttribute
 - \c skipChild.childName as an \c IntAttribute
 
-\section extending Extending PxrUsdIn
-To teach \c PxrUsdIn about new types or kinds, please see the documentation in
+\section extending Extending UsdIn
+To teach \c UsdIn about new types or kinds, please see the documentation in
 \c usdKatana.
 
 */

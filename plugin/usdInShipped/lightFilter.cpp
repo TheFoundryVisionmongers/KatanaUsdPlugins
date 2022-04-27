@@ -27,33 +27,27 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxrUsdInShipped/declareCoreOps.h"
+#include "pxr/usd/usdLux/lightFilter.h"
 #include "pxr/pxr.h"
+#include "usdInShipped/declareCoreOps.h"
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readLightFilter.h"
 #include "usdKatana/usdInPluginRegistry.h"
 #include "usdKatana/utils.h"
-#include "pxr/usd/usdLux/lightFilter.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_LightFilterOp, privateData, opArgs, interface)
+USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_LightFilterOp, privateData, opArgs, interface)
 {
-    PxrUsdKatanaAttrMap attrs;
-    
-    PxrUsdKatanaReadLightFilter(
-        UsdLuxLightFilter(privateData.GetUsdPrim()),
-        privateData,
-        attrs);
+    UsdKatanaAttrMap attrs;
+
+    UsdKatanaReadLightFilter(UsdLuxLightFilter(privateData.GetUsdPrim()), privateData, attrs);
 
     attrs.toInterface(interface);
 }
 
 namespace {
-
-static
-void
-lightListFnc(PxrUsdKatanaUtilsLightListAccess& lightList)
+static void lightListFnc(UsdKatanaUtilsLightListAccess& lightList)
 {
     UsdPrim prim = lightList.GetPrim();
     if (prim && prim.IsA<UsdLuxLightFilter>()) {
@@ -68,8 +62,7 @@ lightListFnc(PxrUsdKatanaUtilsLightListAccess& lightList)
 
 }
 
-void
-registerPxrUsdInShippedLightFilterLightListFnc()
+void registerUsdInShippedLightFilterLightListFnc()
 {
-    PxrUsdKatanaUsdInPluginRegistry::RegisterLightListFnc(lightListFnc);
+    UsdKatanaUsdInPluginRegistry::RegisterLightListFnc(lightListFnc);
 }

@@ -27,13 +27,14 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_USDIN_ARGS_H
-#define PXRUSDKATANA_USDIN_ARGS_H
+#ifndef USDKATANA_USDIN_ARGS_H
+#define USDKATANA_USDIN_ARGS_H
 
+#include <string>
+#include "pxr/base/tf/refPtr.h"
 #include "pxr/pxr.h"
 #include "pxr/usd/usdGeom/bboxCache.h"
 #include "pxr/usd/usdSkel/cache.h"
-#include "pxr/base/tf/refPtr.h"
 
 #include "api.h"
 
@@ -50,8 +51,8 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-class PxrUsdKatanaUsdInArgs;
-typedef TfRefPtr<PxrUsdKatanaUsdInArgs> PxrUsdKatanaUsdInArgsRefPtr;
+class UsdKatanaUsdInArgs;
+typedef TfRefPtr<UsdKatanaUsdInArgs> UsdKatanaUsdInArgsRefPtr;
 
 /// The sessionAttr is a structured GroupAttribute argument for delivering
 /// edits to the session layer of the stage. It replaces the earlier
@@ -85,50 +86,37 @@ typedef TfRefPtr<PxrUsdKatanaUsdInArgs> PxrUsdKatanaUsdInArgsRefPtr;
 /// a root separate from its own. This is typically use for cases of recursive
 /// op expansion sharing the same cached stage.
 
-
-class PxrUsdKatanaUsdInArgs : public TfRefBase
+class UsdKatanaUsdInArgs : public TfRefBase
 {
 
 public:
 
     typedef std::map<std::string, std::vector<std::string> > StringListMap;
 
-    USDKATANA_API static PxrUsdKatanaUsdInArgsRefPtr New(
-            UsdStageRefPtr stage,
-            const std::string& rootLocation,
-            const std::string& isolatePath,
-            const std::string& sessionLocation,
-            FnAttribute::GroupAttribute sessionAttr,
-            const std::string& ignoreLayerRegex,
-            double currentTime,
-            double shutterOpen,
-            double shutterClose,
-            const std::vector<double>& motionSampleTimes,
-            const StringListMap& extraAttributesOrNamespaces,
-            const std::vector<TfToken>& materialBindingPurposes,
-            bool prePopulate,
-            bool verbose,
-            const std::set<std::string>& outputTargets,
-            const bool evaluateUsdSkelBindings,
-            const char * errorMessage = 0) {
-        return TfCreateRefPtr(new PxrUsdKatanaUsdInArgs(
-                    stage, 
-                    rootLocation,
-                    isolatePath,
-                    sessionLocation,
-                    sessionAttr,
-                    ignoreLayerRegex,
-                    currentTime,
-                    shutterOpen,
-                    shutterClose, 
-                    motionSampleTimes,
-                    extraAttributesOrNamespaces,
-                    materialBindingPurposes,
-                    prePopulate,
-                    verbose,
-                    outputTargets,
-                    evaluateUsdSkelBindings,
-                    errorMessage));
+    USDKATANA_API static UsdKatanaUsdInArgsRefPtr New(
+        UsdStageRefPtr stage,
+        const std::string& rootLocation,
+        const std::string& isolatePath,
+        const std::string& sessionLocation,
+        FnAttribute::GroupAttribute sessionAttr,
+        const std::string& ignoreLayerRegex,
+        double currentTime,
+        double shutterOpen,
+        double shutterClose,
+        const std::vector<double>& motionSampleTimes,
+        const StringListMap& extraAttributesOrNamespaces,
+        const std::vector<TfToken>& materialBindingPurposes,
+        bool prePopulate,
+        bool verbose,
+        const std::set<std::string>& outputTargets,
+        const bool evaluateUsdSkelBindings,
+        const char* errorMessage = 0)
+    {
+        return TfCreateRefPtr(new UsdKatanaUsdInArgs(
+            stage, rootLocation, isolatePath, sessionLocation, sessionAttr, ignoreLayerRegex,
+            currentTime, shutterOpen, shutterClose, motionSampleTimes, extraAttributesOrNamespaces,
+            materialBindingPurposes, prePopulate, verbose, outputTargets, evaluateUsdSkelBindings,
+            errorMessage));
     }
 
     // bounds computation is kind of important, so we centralize it here.
@@ -219,25 +207,25 @@ public:
         return _errorMessage;
     }
 private:
-    PxrUsdKatanaUsdInArgs(UsdStageRefPtr stage,
-                          const std::string& rootLocation,
-                          const std::string& isolatePath,
-                          const std::string& sessionLocation,
-                          FnAttribute::GroupAttribute sessionAttr,
-                          const std::string& ignoreLayerRegex,
-                          double currentTime,
-                          double shutterOpen,
-                          double shutterClose,
-                          const std::vector<double>& motionSampleTimes,
-                          const StringListMap& extraAttributesOrNamespaces,
-                          const std::vector<TfToken>& materialBindingPurposes,
-                          bool prePopulate,
-                          bool verbose,
-                          const std::set<std::string>& outputTargets,
-                          bool evaluateUsdSkelBindings,
-                          const char* errorMessage = 0);
+    UsdKatanaUsdInArgs(UsdStageRefPtr stage,
+                       const std::string& rootLocation,
+                       const std::string& isolatePath,
+                       const std::string& sessionLocation,
+                       FnAttribute::GroupAttribute sessionAttr,
+                       const std::string& ignoreLayerRegex,
+                       double currentTime,
+                       double shutterOpen,
+                       double shutterClose,
+                       const std::vector<double>& motionSampleTimes,
+                       const StringListMap& extraAttributesOrNamespaces,
+                       const std::vector<TfToken>& materialBindingPurposes,
+                       bool prePopulate,
+                       bool verbose,
+                       const std::set<std::string>& outputTargets,
+                       bool evaluateUsdSkelBindings,
+                       const char* errorMessage = 0);
 
-    ~PxrUsdKatanaUsdInArgs();
+    ~UsdKatanaUsdInArgs();
 
     UsdStageRefPtr _stage;
 
@@ -287,7 +275,7 @@ struct ArgsBuilder
     double shutterOpen;
     double shutterClose;
     std::vector<double> motionSampleTimes;
-    PxrUsdKatanaUsdInArgs::StringListMap extraAttributesOrNamespaces;
+    UsdKatanaUsdInArgs::StringListMap extraAttributesOrNamespaces;
     std::vector<TfToken> materialBindingPurposes;
     bool prePopulate;
     bool verbose;
@@ -305,31 +293,18 @@ struct ArgsBuilder
     , errorMessage(0)
     {
     }
-    
-    PxrUsdKatanaUsdInArgsRefPtr build()
+
+    UsdKatanaUsdInArgsRefPtr build()
     {
-        return PxrUsdKatanaUsdInArgs::New(
-            stage,
-            rootLocation,
-            isolatePath,
-            sessionLocation,
-            sessionAttr.isValid() ? sessionAttr :
-                    FnAttribute::GroupAttribute(true),
-            ignoreLayerRegex,
-            currentTime,
-            shutterOpen,
-            shutterClose,
-            motionSampleTimes,
-            extraAttributesOrNamespaces,
-            materialBindingPurposes,
-            prePopulate,
-            verbose,
-            outputTargets,
-            evaluateUsdSkelBindings,
-            errorMessage);
+        return UsdKatanaUsdInArgs::New(
+            stage, rootLocation, isolatePath, sessionLocation,
+            sessionAttr.isValid() ? sessionAttr : FnAttribute::GroupAttribute(true),
+            ignoreLayerRegex, currentTime, shutterOpen, shutterClose, motionSampleTimes,
+            extraAttributesOrNamespaces, materialBindingPurposes, prePopulate, verbose,
+            outputTargets, evaluateUsdSkelBindings, errorMessage);
     }
 
-    void update(PxrUsdKatanaUsdInArgsRefPtr other)
+    void update(UsdKatanaUsdInArgsRefPtr other)
     {
         stage = other->GetStage();
         rootLocation = other->GetRootLocationPath();
@@ -350,7 +325,7 @@ struct ArgsBuilder
         errorMessage = other->GetErrorMessage().c_str();
     }
 
-    PxrUsdKatanaUsdInArgsRefPtr buildWithError(std::string errorStr)
+    UsdKatanaUsdInArgsRefPtr buildWithError(std::string errorStr)
     {
         errorMessage = errorStr.c_str();
         return build();
@@ -361,4 +336,4 @@ struct ArgsBuilder
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_USDIN_ARGS_H
+#endif  // USDKATANA_USDIN_ARGS_H

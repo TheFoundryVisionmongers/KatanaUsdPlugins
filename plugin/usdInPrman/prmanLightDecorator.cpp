@@ -22,7 +22,7 @@
 //
 #include "pxr/pxr.h"
 
-#include "pxrUsdInPrman/declarePackageOps.h"
+#include "usdInPrman/declarePackageOps.h"
 
 #include "pxr/base/tf/envSetting.h"
 #include "pxr/base/tf/getenv.h"
@@ -52,10 +52,7 @@ TF_DEFINE_ENV_SETTING(USD_IMPORT_USD_LUX_LIGHTS_WITH_PRMAN_SHADERS,
                       "information as well. Off by default. RfK must also be setup in the"
                       "environment.");
 
-PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInPrmanLuxLight_LocationDecorator,
-                                 privateData,
-                                 opArgs,
-                                 interface)
+USDKATANA_USDIN_PLUGIN_DEFINE(UsdInPrmanLuxLight_LocationDecorator, privateData, opArgs, interface)
 {
     static const bool importUsdLuxAsPrman =
         TfGetEnvSetting(USD_IMPORT_USD_LUX_LIGHTS_WITH_PRMAN_SHADERS);
@@ -89,7 +86,7 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInPrmanLuxLight_LocationDecorator,
             return;
         }
         const UsdTimeCode currentTimeCode = privateData.GetCurrentTime();
-        PxrUsdKatanaAttrMap lightBuilder;
+        UsdKatanaAttrMap lightBuilder;
         lightBuilder.SetUSDTimeCode(currentTimeCode);
         FnKat::GroupBuilder materialBuilder;
 
@@ -214,8 +211,8 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInPrmanLuxLight_LocationDecorator,
         }
 
         FnKat::GroupBuilder primStatements;
-        PxrUsdKatanaReadPrimPrmanStatements(lightPrim, currentTimeCode.GetValue(), primStatements,
-                                            true);
+        UsdKatanaReadPrimPrmanStatements(lightPrim, currentTimeCode.GetValue(), primStatements,
+                                         true);
         // Gather prman statements
         interface.setAttr("prmanStatements", primStatements.build());
         // materialBuilder.set("prmanLightParams", lightBuilder.build());

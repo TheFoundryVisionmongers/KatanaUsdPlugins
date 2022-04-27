@@ -20,7 +20,7 @@
 # KIND, either express or implied. See the Apache License for the specific
 # language governing permissions and limitations under the Apache License.
 
-include(PxrUsdUtils)
+include(UsdUtils)
 # Sets up interfaces for required thirdparty libraries, defines functions
 # to keep this logic separate
 include(SetupInterfaces)

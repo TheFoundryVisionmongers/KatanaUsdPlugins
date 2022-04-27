@@ -45,8 +45,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-
-FnLogSetup("PxrUsdKatanaReadConstraintTarget");
+FnLogSetup("UsdKatanaReadConstraintTarget");
 
 static FnKat::Attribute
 _BuildLocatorGeometryAttr( const float* color=NULL )
@@ -95,10 +94,8 @@ _BuildLocatorGeometryAttr( const float* color=NULL )
     return geometryBuilder.build();
 }
 
-FnKat::Attribute
-_BuildMatrixAttr(
-        const UsdGeomConstraintTarget& constraintTarget,
-        const PxrUsdKatanaUsdInPrivateData& data)
+FnKat::Attribute _BuildMatrixAttr(const UsdGeomConstraintTarget& constraintTarget,
+                                  const UsdKatanaUsdInPrivateData& data)
 {
     // Eval transform.
     UsdAttribute constraintAttr = constraintTarget.GetAttr();
@@ -123,8 +120,8 @@ _BuildMatrixAttr(
         // Convert to vector.
         const double *matArray = mat.GetArray();
 
-        std::vector<double> &matVec = matBuilder.get(isMotionBackward ?
-            PxrUsdKatanaUtils::ReverseTimeSample(relSampleTime) : relSampleTime);
+        std::vector<double>& matVec = matBuilder.get(
+            isMotionBackward ? UsdKatanaUtils::ReverseTimeSample(relSampleTime) : relSampleTime);
 
         matVec.resize(16);
         for (int i = 0; i < 16; ++i) {
@@ -135,11 +132,9 @@ _BuildMatrixAttr(
     return matBuilder.build();
 }
 
-void
-PxrUsdKatanaReadConstraintTarget(
-        const UsdGeomConstraintTarget& constraintTarget,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadConstraintTarget(const UsdGeomConstraintTarget& constraintTarget,
+                                   const UsdKatanaUsdInPrivateData& data,
+                                   UsdKatanaAttrMap& attrs)
 {
     //
     // Give constraint target locations a generic 'locator' type.

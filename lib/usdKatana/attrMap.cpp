@@ -33,11 +33,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-
-void
-PxrUsdKatanaAttrMap::set(
-        const std::string& path,
-        const Foundry::Katana::Attribute& attr)
+void UsdKatanaAttrMap::set(const std::string& path, const Foundry::Katana::Attribute& attr)
 {
     // on mutation, seed the groupBuilder with the lastBuild value and clear
     if (_lastBuilt.isValid())
@@ -49,22 +45,17 @@ PxrUsdKatanaAttrMap::set(
     _groupBuilder.set(path, attr);
 }
 
-PxrUsdKatanaAttrMap&
-PxrUsdKatanaAttrMap::Set(
-        const std::string& path,
-        const UsdAttribute& attr)
+UsdKatanaAttrMap& UsdKatanaAttrMap::Set(const std::string& path, const UsdAttribute& attr)
 {
     VtValue val;
     if (attr.HasAuthoredValue() && attr.Get(&val, _usdTimeCode)) {
-        FnKat::Attribute kat_attr =
-            PxrUsdKatanaUtils::ConvertVtValueToKatAttr(val);
+        FnKat::Attribute kat_attr = UsdKatanaUtils::ConvertVtValueToKatAttr(val);
         _groupBuilder.set(path, kat_attr);
     }
     return *this;
 }
 
-void
-PxrUsdKatanaAttrMap::del(const std::string& path)
+void UsdKatanaAttrMap::del(const std::string& path)
 {
     // on mutation, seed the groupBuilder with the lastBuild value and clear
     if (_lastBuilt.isValid())
@@ -76,8 +67,7 @@ PxrUsdKatanaAttrMap::del(const std::string& path)
     _groupBuilder.del(path);
 }
 
-FnAttribute::GroupAttribute
-PxrUsdKatanaAttrMap::build()
+FnAttribute::GroupAttribute UsdKatanaAttrMap::build()
 {
     if (_lastBuilt.isValid())
     {
@@ -88,8 +78,7 @@ PxrUsdKatanaAttrMap::build()
     return _lastBuilt;
 }
 
-void
-PxrUsdKatanaAttrMap::toInterface(FnKat::GeolibCookInterface& interface)
+void UsdKatanaAttrMap::toInterface(FnKat::GeolibCookInterface& interface)
 {
     FnAttribute::GroupAttribute groupAttr = build();
     size_t numChildren = groupAttr.getNumberOfChildren();
@@ -123,7 +112,7 @@ PxrUsdKatanaAttrMap::toInterface(FnKat::GeolibCookInterface& interface)
     }
 }
 
-bool PxrUsdKatanaAttrMap::isBuilt()
+bool UsdKatanaAttrMap::isBuilt()
 {
     return _lastBuilt.isValid();
 }

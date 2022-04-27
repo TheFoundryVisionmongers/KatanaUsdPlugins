@@ -196,9 +196,9 @@ nb.setParametersTemplateAttr(gb.build())
 #-----------------------------------------------------------------------------
 
 # Given a graphState and the current parameter values, return the opArgs to
-# PxrUsdIn. This logic was previously exclusive to buildOpChain but was
+# UsdIn. This logic was previously exclusive to buildOpChain but was
 # refactored to be callable directly -- initially in service of flushStage
-def buildPxrUsdInOpArgsAtGraphState(self, graphState):
+def buildUsdInOpArgsAtGraphState(self, graphState):
     gb = FnAttribute.GroupBuilder()
     
     frameTime = graphState.getTime()
@@ -270,18 +270,17 @@ def buildPxrUsdInOpArgsAtGraphState(self, graphState):
     if isinstance(argsOverride, FnAttribute.GroupAttribute):
         gb.update(argsOverride)
 
-    pxrUsdInArgs = gb.build()
+    usdInArgs = gb.build()
     
-    return pxrUsdInArgs
+    return usdInArgs
 
-nb.setCustomMethod('buildPxrUsdInOpArgsAtGraphState',
-        buildPxrUsdInOpArgsAtGraphState)
+nb.setCustomMethod('buildUsdInOpArgsAtGraphState', buildUsdInOpArgsAtGraphState)
 
 #-----------------------------------------------------------------------------
 
 kArgsCookTmpKeyToken = 'UsdIn_argsCookTmpKey'
 
-# While it's possible to call buildPxrUsdInOpArgsAtGraphState directly, it's
+# While it's possible to call buildUsdInOpArgsAtGraphState directly, it's
 # usually more meaningful to call it with a graphState relative to a
 # downstream node as UsdInVariantSelect (and its sibling) contribute to
 # the graphState and resulting opArgs. This wraps up the inconvenience of
@@ -291,7 +290,7 @@ kArgsCookTmpKeyToken = 'UsdIn_argsCookTmpKey'
 # NOTE: should a better way of tracking graphState appear in a future version
 #       of Katana, the implementation details here are hidden within this
 #       method.
-def buildPxrUsdInOpArgsFromDownstreamNode(
+def buildUsdInOpArgsFromDownstreamNode(
         self, downstreamNode, graphState, portIndex=0):
     if not hasattr(self, '_argsCookTmp'):
         self._argsCookTmp = {}
@@ -319,13 +318,12 @@ def buildPxrUsdInOpArgsFromDownstreamNode(
         # TODO, exception?
         pass
 
-nb.setCustomMethod('buildPxrUsdInOpArgsFromDownstreamNode',
-        buildPxrUsdInOpArgsFromDownstreamNode)
+nb.setCustomMethod('buildUsdInOpArgsFromDownstreamNode', buildUsdInOpArgsFromDownstreamNode)
 
 #-----------------------------------------------------------------------------
 
 def flushStage(self, viewNode, graphState, portIndex=0):
-    opArgs = self.buildPxrUsdInOpArgsFromDownstreamNode(viewNode, graphState,
+    opArgs = self.buildUsdInOpArgsFromDownstreamNode(viewNode, graphState,
             portIndex=portIndex)
     
     if isinstance(opArgs, FnAttribute.GroupAttribute):
@@ -370,25 +368,25 @@ def buildOpChain(self, interface):
         return
     
     graphState = interface.getGraphState()
-    pxrUsdInArgs = self.buildPxrUsdInOpArgsAtGraphState(graphState)
+    usdInArgs = self.buildUsdInOpArgsAtGraphState(graphState)
     
     # When buildOpChain is reached as result of a call to
-    # buildPxrUsdInOpArgsFromDownstreamNode, an additional entry will be
+    # buildUsdInOpArgsFromDownstreamNode, an additional entry will be
     # present in the graphState (otherwise not meaningful to the cooked scene).
     # If found, we'll record opArgs at the specified key in a member variable
     # dict.
     argsCookTmpKey = graphState.getDynamicEntry(kArgsCookTmpKeyToken)
     if isinstance(argsCookTmpKey, FnAttribute.StringAttribute):
-        self._argsCookTmp[argsCookTmpKey.getValue('', False)] = pxrUsdInArgs
+        self._argsCookTmp[argsCookTmpKey.getValue('', False)] = usdInArgs
     
     
     # our primary op in the chain that will create the root location
     sscb = FnGeolibServices.OpArgsBuilders.StaticSceneCreate(True)
 
     sscb.addSubOpAtLocation(self.getScenegraphLocation(
-        interface.getFrameTime()), 'UsdIn', pxrUsdInArgs)
+        interface.getFrameTime()), 'UsdIn', usdInArgs)
     sscb.addSubOpAtLocation(
-        '/root/world', 'UsdIn.UpdateGlobalLists', pxrUsdInArgs)
+        '/root/world', 'UsdIn.UpdateGlobalLists', usdInArgs)
 
     sscb.setAttrAtLocation('/root', 'info.usdLoader', FnAttribute.StringAttribute('UsdIn'))
 
@@ -403,14 +401,14 @@ nb.setBuildOpChainFnc(buildOpChain)
 # XXX prePopulate exists in some production data with an incorrect default
 #     value. Assume all studio uses of it prior to this fix intend for
 #     it to be enabled.
-def pxrUsdInUpgradeToVersionTwo(nodeElement):
+def usdInUpgradeToVersionTwo(nodeElement):
     prePopulateElement = NodegraphAPI.Xio.Node_getParameter(
             nodeElement, 'prePopulate')
     if prePopulateElement:
         NodegraphAPI.Xio.Parameter_setValue(prePopulateElement, 1)
 
 nb.setNodeTypeVersion(2)
-nb.setNodeTypeVersionUpdateFnc(2, pxrUsdInUpgradeToVersionTwo)
+nb.setNodeTypeVersionUpdateFnc(2, usdInUpgradeToVersionTwo)
 
 
 
@@ -512,7 +510,7 @@ def appendToParametersOpChain(self, interface):
         variantSetName = self.getParameter(
                 'args.variantSetName.value').getValue(frameTime)
     
-    # This makes use of the attrs recognized by PxrUsdInUtilExtraHintsDap
+    # This makes use of the attrs recognized by UsdInUtilExtraHintsDap
     # to provide the hinting from incoming attr values.
     uiscript = '''
         local variantSetName = Interface.GetOpArg('user.variantSetName'):getValue()
@@ -525,7 +523,7 @@ def appendToParametersOpChain(self, interface):
             variantSetNames[#variantSetNames + 1] = variantsGroup:getChildName(i)
         end
         
-        Interface.SetAttr("__pxrUsdInExtraHints." ..
+        Interface.SetAttr("__usdInExtraHints." ..
                 Attribute.DelimiterEncode("__variantUI.variantSetName"),
                         GroupBuilder()
                             :set('widget', StringAttribute('popup'))
@@ -543,7 +541,7 @@ def appendToParametersOpChain(self, interface):
             end
         end
         
-        Interface.SetAttr("__pxrUsdInExtraHints." ..
+        Interface.SetAttr("__usdInExtraHints." ..
                 Attribute.DelimiterEncode("__variantUI.variantSelection"),
                         GroupBuilder()
                             :set('widget', StringAttribute('popup'))
@@ -984,7 +982,7 @@ nb.build()
 
 #-----------------------------------------------------------------------------
 
-nb = Nodes3DAPI.NodeTypeBuilder('PxrUsdInResolveMaterialBindings')
+nb = Nodes3DAPI.NodeTypeBuilder('UsdInResolveMaterialBindings')
 
 nb.setInputPortNames(("in",))
 
@@ -999,7 +997,7 @@ nb.setHintsForParameter('purpose', {
     "materialAssign" attribute. An empty value is treated as "allPurpose". The
     sources of these values are within the "usd.materialBindings.*" attribute
     -- which will be present if "usePurposeBasedMaterialBinding" is enabled
-    on the upstream PxrUsdIn.
+    on the upstream UsdIn.
     """,
 })
 
@@ -1012,7 +1010,7 @@ nb.setHintsForParameter('omitIfParentValueMatches', {
 })
 
 def buildOpChain(self, interface):
-    interface.appendOp("PxrUsdInResolveMaterialBindings",
+    interface.appendOp("UsdInResolveMaterialBindings",
             FnAttribute.GroupBuilder()
             .set("purpose", interface.buildAttrFromParam(
                     self.getParameter('purpose')))

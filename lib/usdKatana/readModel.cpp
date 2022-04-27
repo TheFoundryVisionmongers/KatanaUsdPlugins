@@ -44,8 +44,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-
-FnLogSetup("PxrUsdKatanaReadModel");
+FnLogSetup("UsdKatanaReadModel");
 
 /*
  * Traverse the model hierarchy to build up a list of all named
@@ -94,14 +93,11 @@ _BuildGlobalCoordinateSystems(
     return result;
 }
 
-void
-PxrUsdKatanaReadModel(
-        const UsdPrim& prim,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadModel(const UsdPrim& prim,
+                        const UsdKatanaUsdInPrivateData& data,
+                        UsdKatanaAttrMap& attrs)
 {
-    attrs.set("modelName", FnKat::StringAttribute(
-        PxrUsdKatanaUtils::GetAssetName(prim)));
+    attrs.set("modelName", FnKat::StringAttribute(UsdKatanaUtils::GetAssetName(prim)));
 
     //
     // Set the 'globals.coordinateSystems' attribute.
@@ -123,9 +119,9 @@ PxrUsdKatanaReadModel(
     // groups or kinds that need a proxy.
     //
 
-    if (!isGroup || PxrUsdKatanaUtils::ModelGroupNeedsProxy(prim))
+    if (!isGroup || UsdKatanaUtils::ModelGroupNeedsProxy(prim))
     {
-        attrs.set("proxies", PxrUsdKatanaUtils::GetViewerProxyAttr(data));
+        attrs.set("proxies", UsdKatanaUtils::GetViewerProxyAttr(data));
     }
 
     // Everything beyond this point does not apply to groups, so 
@@ -136,8 +132,8 @@ PxrUsdKatanaReadModel(
         return;
     }
 
-    attrs.set("modelInstanceName", FnKat::StringAttribute(
-        PxrUsdKatanaUtils::GetModelInstanceName(prim)));
+    attrs.set("modelInstanceName",
+              FnKat::StringAttribute(UsdKatanaUtils::GetModelInstanceName(prim)));
 
     //
     // Set attributes for variant sets that apply (e.g. modelingVariant, 

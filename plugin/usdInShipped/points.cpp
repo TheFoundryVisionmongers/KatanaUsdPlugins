@@ -27,7 +27,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxrUsdInShipped/declareCoreOps.h"
+#include "usdInShipped/declareCoreOps.h"
 
 #include "pxr/pxr.h"
 #include "usdKatana/attrMap.h"
@@ -37,12 +37,11 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInCore_PointsOp, privateData, opArgs, interface)
+USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_PointsOp, privateData, opArgs, interface)
 {
-    PxrUsdKatanaAttrMap attrs;
+    UsdKatanaAttrMap attrs;
 
-    PxrUsdKatanaReadPoints(
-        UsdGeomPoints(privateData.GetUsdPrim()), privateData, attrs);
+    UsdKatanaReadPoints(UsdGeomPoints(privateData.GetUsdPrim()), privateData, attrs);
 
     attrs.toInterface(interface);
 }

@@ -27,15 +27,15 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_ATTRMAP_H
-#define PXRUSDKATANA_ATTRMAP_H
+#ifndef USDKATANA_ATTRMAP_H
+#define USDKATANA_ATTRMAP_H
 
-#include "pxr/pxr.h"
+#include <string>
 #include <FnAttribute/FnGroupBuilder.h>
 #include <FnGeolib/op/FnGeolibOp.h>
+#include "pxr/pxr.h"
 #include "pxr/usd/usd/attribute.h"
-
-#include "api.h"
+#include "usdKatana/api.h"
 
 #include <boost/thread/shared_mutex.hpp>
 
@@ -49,7 +49,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 ///
 /// This class is here in case we need to have different behavior than the
 /// GroupBuilder.
-class PxrUsdKatanaAttrMap
+class UsdKatanaAttrMap
 {
 public:
     /// Configure this object to evaluate USD attributes at the given time.
@@ -60,7 +60,7 @@ public:
     /// Set the katana attribute \p path by evaluating the given
     /// USD attribute \p attr at the time configured in SetUSDTime().
     /// Returns this object by reference so these calls can be chained.
-    USDKATANA_API PxrUsdKatanaAttrMap& Set(const std::string& path, const UsdAttribute& attr);
+    USDKATANA_API UsdKatanaAttrMap& Set(const std::string& path, const UsdAttribute& attr);
 
     /// \brief set \p attr at \p path.
     USDKATANA_API void set(const std::string& path, const Foundry::Katana::Attribute& attr);
@@ -86,7 +86,6 @@ public:
     Mutex & getInstanceMutex() { return m_mutex; }
 
 private:
-
     Foundry::Katana::GroupBuilder _groupBuilder;
 
     // Cache the last call to _groupBuilder.build() so that instances can be
@@ -99,10 +98,9 @@ private:
     
     // per-instance mutex available for external use.
     Mutex m_mutex;
-    
 };
 
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_ATTRMAP_H
+#endif  // USDKATANA_ATTRMAP_H

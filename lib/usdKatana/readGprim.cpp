@@ -52,23 +52,17 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+FnLogSetup("UsdKatanaReadGprim");
 
-FnLogSetup("PxrUsdKatanaReadGprim");
-
-void
-PxrUsdKatanaReadGprim(
-        const UsdGeomGprim& gprim,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadGprim(const UsdGeomGprim& gprim,
+                        const UsdKatanaUsdInPrivateData& data,
+                        UsdKatanaAttrMap& attrs)
 {
-    PxrUsdKatanaReadXformable(gprim, data, attrs);
+    UsdKatanaReadXformable(gprim, data, attrs);
 }
 
-
-FnKat::Attribute
-PxrUsdKatanaGeomGetDisplayColorAttr(
-        const UsdGeomGprim& gprim,
-        const PxrUsdKatanaUsdInPrivateData& data)
+FnKat::Attribute UsdKatanaGeomGetDisplayColorAttr(const UsdGeomGprim& gprim,
+                                                  const UsdKatanaUsdInPrivateData& data)
 {
     // Eval color.
     VtArray<GfVec3f> color;
@@ -99,10 +93,8 @@ PxrUsdKatanaGeomGetDisplayColorAttr(
     return groupBuilder.build();
 }
 
-Foundry::Katana::Attribute
-PxrUsdKatanaGeomGetWindingOrderAttr(
-        const UsdGeomGprim& gprim,
-        const PxrUsdKatanaUsdInPrivateData& data)
+Foundry::Katana::Attribute UsdKatanaGeomGetWindingOrderAttr(const UsdGeomGprim& gprim,
+                                                            const UsdKatanaUsdInPrivateData& data)
 {
     TfToken orientation = UsdGeomTokens->rightHanded;
     gprim.GetOrientationAttr().Get(&orientation);
@@ -127,11 +119,10 @@ namespace {
 
 #if KATANA_VERSION_MAJOR >= 3
 
-template <typename T_USD, typename T_ATTR> FnKat::Attribute
-_ConvertGeomAttr(
-    const UsdAttribute& usdAttr,
-    const int tupleSize,
-    const PxrUsdKatanaUsdInPrivateData& data)
+template <typename T_USD, typename T_ATTR>
+FnKat::Attribute _ConvertGeomAttr(const UsdAttribute& usdAttr,
+                                  const int tupleSize,
+                                  const UsdKatanaUsdInPrivateData& data)
 {
     if (!usdAttr.HasValue())
     {
@@ -163,9 +154,7 @@ _ConvertGeomAttr(
             }
         }
         float correctedSampleTime =
-            isMotionBackward
-                ? PxrUsdKatanaUtils::ReverseTimeSample(relSampleTime)
-                : relSampleTime;
+            isMotionBackward ? UsdKatanaUtils::ReverseTimeSample(relSampleTime) : relSampleTime;
         timeToSampleMap.insert({correctedSampleTime, attrArray});
     }
 
@@ -181,11 +170,10 @@ _ConvertGeomAttr(
 
 #else
 
-template <typename T_USD, typename T_ATTR> FnKat::Attribute
-_ConvertGeomAttr(
-    const UsdAttribute& usdAttr,
-    const int tupleSize,
-    const PxrUsdKatanaUsdInPrivateData& data)
+template <typename T_USD, typename T_ATTR>
+FnKat::Attribute _ConvertGeomAttr(const UsdAttribute& usdAttr,
+                                  const int tupleSize,
+                                  const UsdKatanaUsdInPrivateData& data)
 {
     if (!usdAttr.HasValue())
     {
@@ -222,11 +210,10 @@ _ConvertGeomAttr(
             break;
         }
 
-        std::vector<typename T_ATTR::value_type> &attrVec = 
-            attrBuilder.get(isMotionBackward ?
-            PxrUsdKatanaUtils::ReverseTimeSample(relSampleTime) : relSampleTime);
+        std::vector<typename T_ATTR::value_type>& attrVec = attrBuilder.get(
+            isMotionBackward ? UsdKatanaUtils::ReverseTimeSample(relSampleTime) : relSampleTime);
 
-        PxrUsdKatanaUtils::ConvertArrayToVector(attrArray, &attrVec);
+        UsdKatanaUtils::ConvertArrayToVector(attrArray, &attrVec);
     }
 
     // Varying topology was found, build for the current frame only.
@@ -237,8 +224,8 @@ _ConvertGeomAttr(
 
         usdAttr.Get(&attrArray, currentTime);
         std::vector<typename T_ATTR::value_type> &attrVec = defaultBuilder.get(0);
-        PxrUsdKatanaUtils::ConvertArrayToVector(attrArray, &attrVec);
-        
+        UsdKatanaUtils::ConvertArrayToVector(attrArray, &attrVec);
+
         return defaultBuilder.build();
     }
 
@@ -249,15 +236,13 @@ _ConvertGeomAttr(
 
 } // anon namespace
 
-FnKat::Attribute PxrUsdKatanaGeomGetPAttr(
-    const UsdGeomPointBased& points,
-    const PxrUsdKatanaUsdInPrivateData& data)
+FnKat::Attribute UsdKatanaGeomGetPAttr(const UsdGeomPointBased& points,
+                                       const UsdKatanaUsdInPrivateData& data)
 {
     FnKat::Attribute skinnedPointsAttr;
     if (data.GetEvaluateUsdSkelBindings())
     {
-        skinnedPointsAttr = PxrUsdKatanaUtils::ApplySkinningToPoints(
-            points, data);
+        skinnedPointsAttr = UsdKatanaUtils::ApplySkinningToPoints(points, data);
     }
 
     if (skinnedPointsAttr.isValid())
@@ -268,29 +253,23 @@ FnKat::Attribute PxrUsdKatanaGeomGetPAttr(
         points.GetPointsAttr(), 3, data);
 }
 
-Foundry::Katana::Attribute
-PxrUsdKatanaGeomGetNormalAttr(
-    const UsdGeomPointBased& points,
-    const PxrUsdKatanaUsdInPrivateData& data)
+Foundry::Katana::Attribute UsdKatanaGeomGetNormalAttr(const UsdGeomPointBased& points,
+                                                      const UsdKatanaUsdInPrivateData& data)
 {
     return _ConvertGeomAttr<GfVec3f, FnKat::FloatAttribute>(
             points.GetNormalsAttr(), 3, data);
 }
 
-Foundry::Katana::Attribute
-PxrUsdKatanaGeomGetVelocityAttr(
-    const UsdGeomPointBased& points,
-    const PxrUsdKatanaUsdInPrivateData& data)
+Foundry::Katana::Attribute UsdKatanaGeomGetVelocityAttr(const UsdGeomPointBased& points,
+                                                        const UsdKatanaUsdInPrivateData& data)
 {
     return _ConvertGeomAttr<GfVec3f, FnKat::FloatAttribute>(
             points.GetVelocitiesAttr(), 3, data);
 
 }
 
-Foundry::Katana::Attribute
-PxrUsdKatanaGeomGetAccelerationAttr(
-    const UsdGeomPointBased& points,
-    const PxrUsdKatanaUsdInPrivateData& data)
+Foundry::Katana::Attribute UsdKatanaGeomGetAccelerationAttr(const UsdGeomPointBased& points,
+                                                            const UsdKatanaUsdInPrivateData& data)
 {
     return _ConvertGeomAttr<GfVec3f, FnKat::FloatAttribute>(
             points.GetAccelerationsAttr(), 3, data);

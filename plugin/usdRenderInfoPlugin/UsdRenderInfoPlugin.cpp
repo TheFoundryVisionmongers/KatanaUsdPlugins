@@ -487,7 +487,7 @@ bool UsdRenderInfoPlugin::buildRendererObjectInfo(
                 }
                 const VtValue& defaultValue = shaderInput->GetDefaultValue();
                 FnKat::Attribute defaultAttr =
-                    PxrUsdKatanaUtils::ConvertVtValueToKatAttr(defaultValue);
+                    UsdKatanaUtils::ConvertVtValueToKatAttr(defaultValue);
                 EnumPairVector enumValues;
                 FnAttribute::GroupBuilder hintsGroupBuilder;
 

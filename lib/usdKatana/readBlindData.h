@@ -27,15 +27,15 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_BLINDDATAREADER_H
-#define PXRUSDKATANA_BLINDDATAREADER_H
+#ifndef USDKATANA_BLINDDATAREADER_H
+#define USDKATANA_BLINDDATAREADER_H
 
 #include "pxr/pxr.h"
-#include "api.h"
+#include "usdKatana/api.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-class PxrUsdKatanaAttrMap;
+class UsdKatanaAttrMap;
 class UsdKatanaBlindDataObject;
 
 /// \brief read \p kbd into \p attrs.
@@ -44,12 +44,9 @@ class UsdKatanaBlindDataObject;
 /// otherwise expressable with the available usd schemas.  
 ///
 /// Usage of this is not recommended.
-USDKATANA_API void
-PxrUsdKatanaReadBlindData(
-        const UsdKatanaBlindDataObject& kbd,
-        PxrUsdKatanaAttrMap& attrs);
-
+USDKATANA_API void UsdKatanaReadBlindData(const UsdKatanaBlindDataObject& kbd,
+                                          UsdKatanaAttrMap& attrs);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_BLINDDATAREADER_H
+#endif  // USDKATANA_BLINDDATAREADER_H

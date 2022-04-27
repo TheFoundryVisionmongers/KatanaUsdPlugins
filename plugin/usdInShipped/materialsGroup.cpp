@@ -42,7 +42,7 @@
 #include "usdKatana/readMaterial.h"
 #include "usdKatana/utils.h"
 
-#include "pxrUsdInShipped/declareCoreOps.h"
+#include "usdInShipped/declareCoreOps.h"
 
 #include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
 
@@ -60,14 +60,14 @@ PXR_NAMESPACE_USING_DIRECTIVE
 // therefore the envvar (and terminology) for enabling it remains here.
 // 
 // We start with a reasonable constant.
-TF_DEFINE_ENV_SETTING(
-    USD_KATANA_CACHE_MATERIALGROUPS, true,
-    "Toggle inclusion of a cache key representing this scope " \
-    "(respected by PxrUsdInCore_LookOp)");
+TF_DEFINE_ENV_SETTING(USD_KATANA_CACHE_MATERIALGROUPS,
+                      true,
+                      "Toggle inclusion of a cache key representing this scope "
+                      "(respected by UsdInCore_LookOp)");
 
-
-FnKat::Attribute _GetCacheKey(const PxrUsdKatanaUsdInPrivateData& privateData) {
-    PxrUsdKatanaUsdInArgsRefPtr args = privateData.GetUsdInArgs();
+FnKat::Attribute _GetCacheKey(const UsdKatanaUsdInPrivateData& privateData)
+{
+    UsdKatanaUsdInArgsRefPtr args = privateData.GetUsdInArgs();
 
     std::string location;
     UsdPrim prim = privateData.GetUsdPrim();
@@ -88,10 +88,7 @@ FnKat::Attribute _GetCacheKey(const PxrUsdKatanaUsdInPrivateData& privateData) {
     return cacheKey;
 }
 
-
-
-PXRUSDKATANA_USDIN_PLUGIN_DEFINE(
-    PxrUsdInCore_LooksGroupOp, privateData, opArgs, interface)
+USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_LooksGroupOp, privateData, opArgs, interface)
 {
     // leave for debugging purposes
     // TfStopwatch timer_loadUsdMaterialGroup;
@@ -130,7 +127,7 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(
         std::vector<std::string> usdPrimPathValues;
         std::vector<std::string> usdPrimNameValues;
     };
-    
+
     std::map<std::string, usdPrimInfo> primInfoPerLocation;
 
     UsdPrim prim = privateData.GetUsdPrim();
@@ -138,12 +135,9 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(
     const std::string& rootLocation = interface.getRootLocationPath();
 
     for (UsdPrim child : prim.GetChildren()) {
-        
-        std::string materialLocation = 
-            PxrUsdKatanaUtils::ConvertUsdMaterialPathToKatLocation(
-                child.GetPath(), privateData);
-        
-        
+        std::string materialLocation =
+            UsdKatanaUtils::ConvertUsdMaterialPathToKatLocation(child.GetPath(), privateData);
+
         std::string relativeMaterialLocation =
                 materialLocation.substr(rootLocation.size()+1);
 
@@ -190,33 +184,27 @@ PXRUSDKATANA_USDIN_PLUGIN_DEFINE(
     //      warrant caching it.
     
     auto args = sscb.build();
-    
-    
+
     interface.execOp("UsdIn.BuildIntermediate",
-                FnKat::GroupBuilder()
-                        .update(interface.getOpArg())
-                        .set("staticScene", args)
-                        .set("looksGroupLocation",
-                                FnAttribute::StringAttribute(
-                                        interface.getOutputLocationPath()))
-                        .set("forceFlattenLooks",
-                                FnAttribute::IntAttribute(0))
-                        .set("looksCacheKeyPrefixAttr",
-                                cacheKeyAttr)
-                        .build()
+                     FnKat::GroupBuilder()
+                         .update(interface.getOpArg())
+                         .set("staticScene", args)
+                         .set("looksGroupLocation",
+                              FnAttribute::StringAttribute(interface.getOutputLocationPath()))
+                         .set("forceFlattenLooks", FnAttribute::IntAttribute(0))
+                         .set("looksCacheKeyPrefixAttr", cacheKeyAttr)
+                         .build()
 
 // katana 2.x doesn't allow private data to be overridden in execOp as it'll
 // automatically use that of the calling op while katana 3.x does allow it
 // to be overridden but requires it to be specified even if unchanged (as here).
 #if KATANA_VERSION_MAJOR >= 3
-                ,
-                new PxrUsdKatanaUsdInPrivateData(
-                            privateData.GetUsdInArgs()->GetRootPrim(),
-                            privateData.GetUsdInArgs(), &privateData),
-                PxrUsdKatanaUsdInPrivateData::Delete
+                         ,
+                     new UsdKatanaUsdInPrivateData(privateData.GetUsdInArgs()->GetRootPrim(),
+                                                   privateData.GetUsdInArgs(), &privateData),
+                     UsdKatanaUsdInPrivateData::Delete
 #endif
-                );
-
+    );
 
     // leave for debugging purposes
     // timer_loadUsdMaterialGroup.Stop();

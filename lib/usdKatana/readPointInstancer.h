@@ -27,30 +27,28 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_READPOINTINSTANCER_H
-#define PXRUSDKATANA_READPOINTINSTANCER_H
+#ifndef USDKATANA_READPOINTINSTANCER_H
+#define USDKATANA_READPOINTINSTANCER_H
 
+#include <vector>
 #include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
 #include "api.h"
 
-class PxrUsdKatanaAttrMap;
-class PxrUsdKatanaUsdInPrivateData;
+class UsdKatanaAttrMap;
+class UsdKatanaUsdInPrivateData;
 class UsdGeomPointInstancer;
 
 /// \brief Read \p point instancer into \p attrs.
-USDKATANA_API void
-PxrUsdKatanaReadPointInstancer(
-        const UsdGeomPointInstancer& instancer,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& instancerAttrMap,
-        PxrUsdKatanaAttrMap& sourcesAttrMap,
-        PxrUsdKatanaAttrMap& instancesAttrMap,
-        PxrUsdKatanaAttrMap& inputAttrMap);
-
+USDKATANA_API void UsdKatanaReadPointInstancer(const UsdGeomPointInstancer& instancer,
+                                               const UsdKatanaUsdInPrivateData& data,
+                                               UsdKatanaAttrMap& instancerAttrMap,
+                                               UsdKatanaAttrMap& sourcesAttrMap,
+                                               UsdKatanaAttrMap& instancesAttrMap,
+                                               UsdKatanaAttrMap& inputAttrMap);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_READPOINTINSTANCER_H
+#endif  // USDKATANA_READPOINTINSTANCER_H

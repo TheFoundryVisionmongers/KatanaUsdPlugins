@@ -29,16 +29,13 @@
 //
 #include "pxr/pxr.h"
 
-#include "pxrUsdInPrman/declarePackageOps.h"
+#include "usdInPrman/declarePackageOps.h"
 
 #include "pxr/usd/usdGeom/mesh.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
-
-
-PXRUSDKATANA_USDIN_PLUGIN_DEFINE(PxrUsdInPrman_LocationDecorator,
-        privateData, opArgs, interface)
+USDKATANA_USDIN_PLUGIN_DEFINE(UsdInPrman_LocationDecorator, privateData, opArgs, interface)
 {
     if (!privateData.hasOutputTarget("prman"))
     {

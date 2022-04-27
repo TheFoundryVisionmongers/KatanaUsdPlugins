@@ -370,7 +370,7 @@ function(_replace_root_python_module INPUT_FILE OUTPUT_FILE)
     endif()
 
     # Either the output file didn't exist, or there have been other changes
-    message(STATUS "PxrUsdUtils.cmake: Converting Python namespace and installing file to: ${OUTPUT_FILE}")
+    message(STATUS "UsdUtils.cmake: Converting Python namespace and installing file to: ${OUTPUT_FILE}")
     file(WRITE ${OUTPUT_FILE} "${filedata}")
 endfunction()
 

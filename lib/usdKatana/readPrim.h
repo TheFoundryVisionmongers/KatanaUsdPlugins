@@ -27,8 +27,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_READPRIM_H
-#define PXRUSDKATANA_READPRIM_H
+#ifndef USDKATANA_READPRIM_H
+#define USDKATANA_READPRIM_H
 
 #include "pxr/pxr.h"
 
@@ -37,32 +37,25 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 #include "api.h"
 
-class PxrUsdKatanaAttrMap;
-class PxrUsdKatanaUsdInPrivateData;
+class UsdKatanaAttrMap;
+class UsdKatanaUsdInPrivateData;
 class UsdPrim;
 class UsdGeomImageable;
 
 /// \brief read \p prim into \p attrs.
-USDKATANA_API void
-PxrUsdKatanaReadPrim(
-        const UsdPrim& prim,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs);
+USDKATANA_API void UsdKatanaReadPrim(const UsdPrim& prim,
+                                     const UsdKatanaUsdInPrivateData& data,
+                                     UsdKatanaAttrMap& attrs);
 
-USDKATANA_API void
-PxrUsdKatanaReadPrimPrmanStatements(
-        const UsdPrim& prim,
-        double currentTime,
-        Foundry::Katana::GroupBuilder& statementBuilder,
-        const bool prmanOutputTarget);
+USDKATANA_API void UsdKatanaReadPrimPrmanStatements(const UsdPrim& prim,
+                                                    double currentTime,
+                                                    Foundry::Katana::GroupBuilder& statementBuilder,
+                                                    const bool prmanOutputTarget);
 
-USDKATANA_API Foundry::Katana::Attribute
-PxrUsdKatanaGeomGetPrimvarGroup(
-        const UsdGeomImageable& imageable,
-        const PxrUsdKatanaUsdInPrivateData& data);
-
+USDKATANA_API Foundry::Katana::Attribute UsdKatanaGeomGetPrimvarGroup(
+    const UsdGeomImageable& imageable,
+    const UsdKatanaUsdInPrivateData& data);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_REAGPRIM_H
-
+#endif  // USDKATANA_REAGPRIM_H

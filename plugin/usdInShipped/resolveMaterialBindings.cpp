@@ -24,7 +24,7 @@
 #include <FnGeolib/op/FnGeolibOp.h>
 #include <FnAttribute/FnGroupBuilder.h>
 
-class PxrUsdInResolveMaterialBindingsOp : public FnKat::GeolibOp
+class UsdInResolveMaterialBindingsOp : public FnKat::GeolibOp
 {
 public:
 
@@ -110,11 +110,9 @@ public:
 
 };
 
+DEFINE_GEOLIBOP_PLUGIN(UsdInResolveMaterialBindingsOp)
 
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInResolveMaterialBindingsOp)
-
-void registerPxrUsdInResolveMaterialBindingsOp()
+void registerUsdInResolveMaterialBindingsOp()
 {
-    REGISTER_PLUGIN(PxrUsdInResolveMaterialBindingsOp,
-            "PxrUsdInResolveMaterialBindings", 0, 1);
+    REGISTER_PLUGIN(UsdInResolveMaterialBindingsOp, "UsdInResolveMaterialBindings", 0, 1);
 }

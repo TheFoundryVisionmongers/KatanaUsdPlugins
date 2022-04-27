@@ -65,11 +65,9 @@ _GetWidthAttr(const UsdGeomPoints& points, double currentTime)
 #endif // KATANA_VERSION_MAJOR >= 3
 }
 
-void
-PxrUsdKatanaReadPoints(
-        const UsdGeomPoints& points,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadPoints(const UsdGeomPoints& points,
+                         const UsdKatanaUsdInPrivateData& data,
+                         UsdKatanaAttrMap& attrs)
 {
     const double currentTime = data.GetCurrentTime();
 
@@ -77,7 +75,7 @@ PxrUsdKatanaReadPoints(
     // Set all general attributes for a gprim type.
     //
 
-    PxrUsdKatanaReadGprim(points, data, attrs);
+    UsdKatanaReadGprim(points, data, attrs);
 
     //
     // Set more specific Katana type.
@@ -90,26 +88,24 @@ PxrUsdKatanaReadPoints(
     //
 
     // position
-    attrs.set("geometry.point.P", PxrUsdKatanaGeomGetPAttr(points, data));
+    attrs.set("geometry.point.P", UsdKatanaGeomGetPAttr(points, data));
 
     // velocity
-    FnKat::Attribute velocitiesAttr =
-        PxrUsdKatanaGeomGetVelocityAttr(points, data);
+    FnKat::Attribute velocitiesAttr = UsdKatanaGeomGetVelocityAttr(points, data);
     if (velocitiesAttr.isValid())
     {
         attrs.set("geometry.point.v", velocitiesAttr);
     }
 
     // acceleration
-    FnKat::Attribute accelAttr =
-        PxrUsdKatanaGeomGetAccelerationAttr(points, data);
+    FnKat::Attribute accelAttr = UsdKatanaGeomGetAccelerationAttr(points, data);
     if (accelAttr.isValid())
     {
         attrs.set("geometry.point.accel", accelAttr);
     }
 
     // normals
-    FnKat::Attribute normalsAttr = PxrUsdKatanaGeomGetNormalAttr(points, data);
+    FnKat::Attribute normalsAttr = UsdKatanaGeomGetNormalAttr(points, data);
     if (normalsAttr.isValid())
     {
         // XXX RfK doesn't support uniform curve normals.

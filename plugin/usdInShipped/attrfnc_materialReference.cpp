@@ -41,7 +41,7 @@
 #include "usdKatana/readMaterial.h"
 #include "usdKatana/usdInPrivateData.h"
 
-#include "pxrUsdInShipped/attrfnc_materialReference.h"
+#include "usdInShipped/attrfnc_materialReference.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -111,23 +111,16 @@ MaterialReferenceAttrFncCache::createValue(
 
     ArgsBuilder ab;
     ab.stage = stage;
-    PxrUsdKatanaUsdInArgsRefPtr usdInArgs = ab.build();
-    PxrUsdKatanaUsdInPrivateData data(prim, usdInArgs);
+    UsdKatanaUsdInArgsRefPtr usdInArgs = ab.build();
+    UsdKatanaUsdInPrivateData data(prim, usdInArgs);
 
     UsdShadeMaterial materialSchema(prim);
-    PxrUsdKatanaAttrMap attrs;
-    PxrUsdKatanaReadMaterial(
-        materialSchema,
-        bool(flatten),
-        data,
-        attrs,
-        looksGroupLocation);
+    UsdKatanaAttrMap attrs;
+    UsdKatanaReadMaterial(materialSchema, bool(flatten), data, attrs, looksGroupLocation);
 
     // include all the blind data
     UsdKatanaBlindDataObject kbd(prim);
-    PxrUsdKatanaReadBlindData(
-        kbd,
-        attrs);
+    UsdKatanaReadBlindData(kbd, attrs);
 
     FnAttribute::GroupAttribute allMaterialAttributes = attrs.build();
     return IMPLPtr(new FnAttribute::GroupAttribute(

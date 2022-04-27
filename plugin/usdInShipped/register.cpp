@@ -27,13 +27,13 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxrUsdInShipped/declareCoreOps.h"
+#include "usdInShipped/declareCoreOps.h"
 
 #include <FnGeolib/op/FnGeolibOp.h>
 
 #include "pxr/pxr.h"
-#include "usdKatana/usdInPluginRegistry.h"
 #include "usdKatana/bootstrap.h"
+#include "usdKatana/usdInPluginRegistry.h"
 #include "vtKatana/bootstrap.h"
 
 #include "pxr/usd/kind/registry.h"
@@ -46,119 +46,124 @@
 #include "pxr/usd/usdGeom/scope.h"
 #include "pxr/usd/usdGeom/subset.h"
 #include "pxr/usd/usdGeom/xform.h"
-#include "pxr/usd/usdShade/material.h"
-#include "pxr/usd/usdSkel/root.h"
 #include "pxr/usd/usdLux/cylinderLight.h"
-#include "pxr/usd/usdLux/domeLight.h"
-#include "pxr/usd/usdLux/distantLight.h"
-#include "pxr/usd/usdLux/geometryLight.h"
 #include "pxr/usd/usdLux/diskLight.h"
-#include "pxr/usd/usdLux/sphereLight.h"
-#include "pxr/usd/usdLux/rectLight.h"
+#include "pxr/usd/usdLux/distantLight.h"
+#include "pxr/usd/usdLux/domeLight.h"
+#include "pxr/usd/usdLux/geometryLight.h"
 #include "pxr/usd/usdLux/lightFilter.h"
+#include "pxr/usd/usdLux/rectLight.h"
+#include "pxr/usd/usdLux/sphereLight.h"
 #include "pxr/usd/usdRi/pxrAovLight.h"
-#include "pxr/usd/usdRi/pxrEnvDayLight.h"
-#include "pxr/usd/usdRi/pxrIntMultLightFilter.h"
 #include "pxr/usd/usdRi/pxrBarnLightFilter.h"
 #include "pxr/usd/usdRi/pxrCookieLightFilter.h"
-#include "pxr/usd/usdRi/pxrRodLightFilter.h"
+#include "pxr/usd/usdRi/pxrEnvDayLight.h"
+#include "pxr/usd/usdRi/pxrIntMultLightFilter.h"
 #include "pxr/usd/usdRi/pxrRampLightFilter.h"
+#include "pxr/usd/usdRi/pxrRodLightFilter.h"
+#include "pxr/usd/usdShade/material.h"
+#include "pxr/usd/usdSkel/root.h"
 
-#include "pxrUsdInShipped/attrfnc_materialReference.h"
+#include "usdInShipped/attrfnc_materialReference.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+void registerUsdInShippedLightLightListFnc();
+void registerUsdInShippedLightFilterLightListFnc();
+void registerUsdInShippedUiUtils();
+void registerUsdInResolveMaterialBindingsOp();
 
-void registerPxrUsdInShippedLightLightListFnc();
-void registerPxrUsdInShippedLightFilterLightListFnc();
-void registerPxrUsdInShippedUiUtils();
-void registerPxrUsdInResolveMaterialBindingsOp();
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_XformOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_ScopeOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_MeshOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_GeomSubsetOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_NurbsPatchOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_PointInstancerOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_PointsOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_BasisCurvesOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_LookOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_LightOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_LightFilterOp)
 
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_XformOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_ScopeOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_MeshOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_GeomSubsetOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_NurbsPatchOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_PointInstancerOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_PointsOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_BasisCurvesOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_LookOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_LightOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_LightFilterOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_ModelOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_CameraOp)
 
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_ModelOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_CameraOp)
-
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_ConstraintsOp)
-DEFINE_GEOLIBOP_PLUGIN(PxrUsdInCore_LooksGroupOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_ConstraintsOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_LooksGroupOp)
 
 DEFINE_ATTRIBUTEFUNCTION_PLUGIN(MaterialReferenceAttrFnc);
 DEFINE_ATTRIBUTEFUNCTION_PLUGIN(LibraryMaterialNamesAttrFnc);
 
 void registerPlugins()
 {
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_XformOp, "PxrUsdInCore_XformOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_ScopeOp, "PxrUsdInCore_ScopeOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_MeshOp, "PxrUsdInCore_MeshOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_GeomSubsetOp, "PxrUsdInCore_GeomSubsetOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_NurbsPatchOp, "PxrUsdInCore_NurbsPatchOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_PointInstancerOp, "PxrUsdInCore_PointInstancerOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_PointsOp, "PxrUsdInCore_PointsOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_BasisCurvesOp, "PxrUsdInCore_BasisCurvesOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_LookOp, "PxrUsdInCore_LookOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_LightOp, "PxrUsdInCore_LightOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_LightFilterOp, "PxrUsdInCore_LightFilterOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_XformOp, "UsdInCore_XformOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_ScopeOp, "UsdInCore_ScopeOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_MeshOp, "UsdInCore_MeshOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_GeomSubsetOp, "UsdInCore_GeomSubsetOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_NurbsPatchOp, "UsdInCore_NurbsPatchOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_PointInstancerOp, "UsdInCore_PointInstancerOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_PointsOp, "UsdInCore_PointsOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_BasisCurvesOp, "UsdInCore_BasisCurvesOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_LookOp, "UsdInCore_LookOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_LightOp, "UsdInCore_LightOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_LightFilterOp, "UsdInCore_LightFilterOp", 0, 1);
 
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_ModelOp, "PxrUsdInCore_ModelOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_CameraOp, "PxrUsdInCore_CameraOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_ModelOp, "UsdInCore_ModelOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_CameraOp, "UsdInCore_CameraOp", 0, 1);
 
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_ConstraintsOp, "UsdInCore_ConstraintsOp", 0, 1);
-    USD_OP_REGISTER_PLUGIN(PxrUsdInCore_LooksGroupOp, "UsdInCore_LooksGroupOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_ConstraintsOp, "UsdInCore_ConstraintsOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_LooksGroupOp, "UsdInCore_LooksGroupOp", 0, 1);
 
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomXform>("PxrUsdInCore_XformOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomScope>("PxrUsdInCore_ScopeOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomMesh>("PxrUsdInCore_MeshOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomSubset>("PxrUsdInCore_GeomSubsetOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomNurbsPatch>("PxrUsdInCore_NurbsPatchOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomPointInstancer>("PxrUsdInCore_PointInstancerOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomPoints>("PxrUsdInCore_PointsOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomBasisCurves>("PxrUsdInCore_BasisCurvesOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdShadeMaterial>("PxrUsdInCore_LookOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdSkelRoot>("PxrUsdInCore_XformOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomXform>("UsdInCore_XformOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomScope>("UsdInCore_ScopeOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomMesh>("UsdInCore_MeshOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomSubset>("UsdInCore_GeomSubsetOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomNurbsPatch>("UsdInCore_NurbsPatchOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomPointInstancer>(
+        "UsdInCore_PointInstancerOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomPoints>("UsdInCore_PointsOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomBasisCurves>("UsdInCore_BasisCurvesOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdShadeMaterial>("UsdInCore_LookOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdSkelRoot>("UsdInCore_XformOp");
 
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxLight>("PxrUsdInCore_LightOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxCylinderLight>("PxrUsdInCore_LightOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDomeLight>("PxrUsdInCore_LightOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxGeometryLight>("PxrUsdInCore_LightOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDistantLight>("PxrUsdInCore_LightOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxSphereLight>("PxrUsdInCore_LightOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDiskLight>("PxrUsdInCore_LightOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxRectLight>("PxrUsdInCore_LightOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrAovLight>("PxrUsdInCore_LightOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrEnvDayLight>("PxrUsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxLight>("UsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxCylinderLight>("UsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDomeLight>("UsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxGeometryLight>("UsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDistantLight>("UsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxSphereLight>("UsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDiskLight>("UsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxRectLight>("UsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrAovLight>("UsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrEnvDayLight>("UsdInCore_LightOp");
 
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrIntMultLightFilter>("PxrUsdInCore_LightFilterOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrBarnLightFilter>("PxrUsdInCore_LightFilterOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrCookieLightFilter>("PxrUsdInCore_LightFilterOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrRampLightFilter>("PxrUsdInCore_LightFilterOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrRodLightFilter>("PxrUsdInCore_LightFilterOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrIntMultLightFilter>(
+        "UsdInCore_LightFilterOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrBarnLightFilter>(
+        "UsdInCore_LightFilterOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrCookieLightFilter>(
+        "UsdInCore_LightFilterOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrRampLightFilter>(
+        "UsdInCore_LightFilterOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdRiPxrRodLightFilter>(
+        "UsdInCore_LightFilterOp");
 
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomCamera>("PxrUsdInCore_CameraOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomCamera>("UsdInCore_CameraOp");
 
     // register a default op to handle prims with unknown types
-    PxrUsdKatanaUsdInPluginRegistry::RegisterUnknownUsdType("PxrUsdInCore_ScopeOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUnknownUsdType("UsdInCore_ScopeOp");
 
-    PxrUsdKatanaUsdInPluginRegistry::RegisterKind(KindTokens->model, "PxrUsdInCore_ModelOp");
-    PxrUsdKatanaUsdInPluginRegistry::RegisterKind(KindTokens->subcomponent, "PxrUsdInCore_ModelOp");
-    
-    registerPxrUsdInShippedLightLightListFnc();
-    registerPxrUsdInShippedLightFilterLightListFnc();
-    registerPxrUsdInShippedUiUtils();
-    registerPxrUsdInResolveMaterialBindingsOp();
-    
-    REGISTER_PLUGIN(MaterialReferenceAttrFnc, "PxrUsdInMaterialReference", 0, 1);
-    REGISTER_PLUGIN(LibraryMaterialNamesAttrFnc, "PxrUsdInLibraryMaterialNames", 0, 1);
+    UsdKatanaUsdInPluginRegistry::RegisterKind(KindTokens->model, "UsdInCore_ModelOp");
+    UsdKatanaUsdInPluginRegistry::RegisterKind(KindTokens->subcomponent, "UsdInCore_ModelOp");
 
-    PxrUsdKatanaBootstrap();
+    registerUsdInShippedLightLightListFnc();
+    registerUsdInShippedLightFilterLightListFnc();
+    registerUsdInShippedUiUtils();
+    registerUsdInResolveMaterialBindingsOp();
+
+    REGISTER_PLUGIN(MaterialReferenceAttrFnc, "UsdInMaterialReference", 0, 1);
+    REGISTER_PLUGIN(LibraryMaterialNamesAttrFnc, "UsdInLibraryMaterialNames", 0, 1);
+
+    UsdKatanaBootstrap();
     PxrVtKatanaBootstrap();
 }

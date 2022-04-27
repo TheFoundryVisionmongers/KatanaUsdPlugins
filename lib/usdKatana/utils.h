@@ -27,8 +27,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_ATTRUTILS_H
-#define PXRUSDKATANA_ATTRUTILS_H
+#ifndef USDKATANA_ATTRUTILS_H
+#define USDKATANA_ATTRUTILS_H
 
 #include "pxr/pxr.h"
 #include "usdKatana/attrMap.h"
@@ -56,8 +56,8 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 class UsdCollectionAPI;
 
-struct PxrUsdKatanaUtils {
-
+struct UsdKatanaUtils
+{
     /// Reverse a motion time sample. This is used for building
     /// multi-sampled attributes when motion blur is backward.
     USDKATANA_API static double ReverseTimeSample(double sample);
@@ -117,13 +117,13 @@ struct PxrUsdKatanaUtils {
             const std::string &sessionPathString = "",
             bool allowOutsideIsolation = false);
     USDKATANA_API static std::string ConvertUsdPathToKatLocation(
-            const SdfPath &path,
-            const PxrUsdKatanaUsdInPrivateData& data,
-            bool allowOutsideIsolation = false);
+        const SdfPath& path,
+        const UsdKatanaUsdInPrivateData& data,
+        bool allowOutsideIsolation = false);
     USDKATANA_API static std::string ConvertUsdPathToKatLocation(
-            const SdfPath &path,
-            const PxrUsdKatanaUsdInArgsRefPtr &usdInArgs,
-            bool allowOutsideIsolation = false);
+        const SdfPath& path,
+        const UsdKatanaUsdInArgsRefPtr& usdInArgs,
+        bool allowOutsideIsolation = false);
 
     /// USD Looks can have Katana child-parent relationships, which means that
     /// we'll have to do some extra processing to find the correct path that
@@ -133,8 +133,8 @@ struct PxrUsdKatanaUtils {
             const SdfPath& path);
     static std::string _GetDisplayName(const UsdPrim &prim);
     USDKATANA_API static std::string ConvertUsdMaterialPathToKatLocation(
-            const SdfPath &path,
-            const PxrUsdKatanaUsdInPrivateData& data);
+        const SdfPath& path,
+        const UsdKatanaUsdInPrivateData& data);
 
     // XXX: should move these into readModel.h maybe.
     /// \name Model Utilities
@@ -157,8 +157,8 @@ struct PxrUsdKatanaUtils {
 
     /// Creates the 'proxies' group attribute for consumption by the viewer.
     USDKATANA_API static FnKat::GroupAttribute GetViewerProxyAttr(
-            const PxrUsdKatanaUsdInPrivateData& data);
-    
+        const UsdKatanaUsdInPrivateData& data);
+
     /// Creates the 'proxies' group attribute directly from fields
     USDKATANA_API static FnKat::GroupAttribute GetViewerProxyAttr(
             double currentTime,
@@ -203,11 +203,12 @@ struct PxrUsdKatanaUtils {
 
     USDKATANA_API static FnKat::Attribute ApplySkinningToPoints(
         const UsdGeomPointBased& points,
-        const PxrUsdKatanaUsdInPrivateData& data);
+        const UsdKatanaUsdInPrivateData& data);
 };
 
 /// Utility class for building a light list.
-class PxrUsdKatanaUtilsLightListAccess {
+class UsdKatanaUtilsLightListAccess
+{
 public:
     /// Get the Usd prim at the current light path.
     USDKATANA_API UsdPrim GetPrim() const;
@@ -236,10 +237,9 @@ public:
     void AddToCustomStringList(const std::string& tag,const std::string& value);
 
 protected:
-    USDKATANA_API PxrUsdKatanaUtilsLightListAccess(
-        FnKat::GeolibCookInterface &interface,
-        const PxrUsdKatanaUsdInArgsRefPtr& usdInArgs);
-    USDKATANA_API ~PxrUsdKatanaUtilsLightListAccess();
+    USDKATANA_API UsdKatanaUtilsLightListAccess(FnKat::GeolibCookInterface& interface,
+                                                const UsdKatanaUsdInArgsRefPtr& usdInArgs);
+    USDKATANA_API ~UsdKatanaUtilsLightListAccess();
 
     /// Change the light path being accessed.
     USDKATANA_API void SetPath(const SdfPath& lightPath);
@@ -253,7 +253,7 @@ private:
 
 private:
     FnKat::GeolibCookInterface& _interface;
-    PxrUsdKatanaUsdInArgsRefPtr _usdInArgs;
+    UsdKatanaUsdInArgsRefPtr _usdInArgs;
     FnKat::GroupBuilder _lightListBuilder;
     std::map<std::string, FnKat::StringBuilder> _customStringLists;
     SdfPath _lightPath;
@@ -261,19 +261,20 @@ private:
 };
 
 /// Utility class for building a light list.
-class PxrUsdKatanaUtilsLightListEditor :
-    public PxrUsdKatanaUtilsLightListAccess {
+class UsdKatanaUtilsLightListEditor : public UsdKatanaUtilsLightListAccess
+{
 public:
-    PxrUsdKatanaUtilsLightListEditor(
-        FnKat::GeolibCookInterface &interface,
-        const PxrUsdKatanaUsdInArgsRefPtr& usdInArgs) :
-        PxrUsdKatanaUtilsLightListAccess(interface, usdInArgs) { }
+    UsdKatanaUtilsLightListEditor(FnKat::GeolibCookInterface& interface,
+                                  const UsdKatanaUsdInArgsRefPtr& usdInArgs)
+        : UsdKatanaUtilsLightListAccess(interface, usdInArgs)
+    {
+    }
 
-    // Allow access to protected members.  PxrUsdKatanaUtilsLightListAccess
+    // Allow access to protected members.  UsdKatanaUtilsLightListAccess
     // is handed out to calls that need limited access and this class is
     // used for full access.
-    using PxrUsdKatanaUtilsLightListAccess::SetPath;
-    using PxrUsdKatanaUtilsLightListAccess::Build;
+    using UsdKatanaUtilsLightListAccess::Build;
+    using UsdKatanaUtilsLightListAccess::SetPath;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

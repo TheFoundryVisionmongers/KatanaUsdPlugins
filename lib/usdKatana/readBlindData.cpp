@@ -40,10 +40,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 FnLogSetup("UsdKatanaReadBlindData");
 
-void
-PxrUsdKatanaReadBlindData(
-        const UsdKatanaBlindDataObject& kbd,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadBlindData(const UsdKatanaBlindDataObject& kbd, UsdKatanaAttrMap& attrs)
 {
     std::vector<UsdProperty> blindProps = kbd.GetKbdAttributes();
     TF_FOR_ALL(blindPropIter, blindProps) {
@@ -75,8 +72,7 @@ PxrUsdKatanaReadBlindData(
                 // we set asShaderParam=true because we want the attribute to be
                 // generated "as is", we *do not* want the prmanStatement style
                 // "type"/"value" declaration to be created.
-                attrs.set(attrName, 
-                    PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
+                attrs.set(attrName, UsdKatanaUtils::ConvertVtValueToKatAttr(vtValue));
             }
             else if (blindAttr.GetResolveInfo().ValueIsBlocked())
             {

@@ -27,8 +27,10 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
 #include "usdKatana/usdInArgs.h"
+#include <set>
+#include <string>
+#include "pxr/pxr.h"
 #include "usdKatana/utils.h"
 
 #include "pxr/usd/usdGeom/boundable.h"
@@ -37,41 +39,39 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-
-PxrUsdKatanaUsdInArgs::PxrUsdKatanaUsdInArgs(
-        UsdStageRefPtr stage,
-        const std::string& rootLocation,
-        const std::string& isolatePath,
-        const std::string& sessionLocation,
-        FnAttribute::GroupAttribute sessionAttr,
-        const std::string& ignoreLayerRegex,
-        double currentTime,
-        double shutterOpen,
-        double shutterClose,
-        const std::vector<double>& motionSampleTimes,
-        const StringListMap& extraAttributesOrNamespaces,
-        const std::vector<TfToken>& materialBindingPurposes,
-        bool prePopulate,
-        bool verbose,
-        const std::set<std::string>& outputTargets,
-        const bool evaluateUsdSkelBindings,
-        const char * errorMessage) :
-    _stage(stage),
-    _rootLocation(rootLocation),
-    _isolatePath(isolatePath),
-    _sessionLocation(sessionLocation),
-    _sessionAttr(sessionAttr),
-    _ignoreLayerRegex(ignoreLayerRegex),
-    _currentTime(currentTime),
-    _shutterOpen(shutterOpen),
-    _shutterClose(shutterClose),
-    _motionSampleTimes(motionSampleTimes),
-    _extraAttributesOrNamespaces(extraAttributesOrNamespaces),
-    _materialBindingPurposes(materialBindingPurposes),
-    _prePopulate(prePopulate),
-    _verbose(verbose),
-    _outputTargets(outputTargets),
-    _evaluateUsdSkelBindings(evaluateUsdSkelBindings)
+UsdKatanaUsdInArgs::UsdKatanaUsdInArgs(UsdStageRefPtr stage,
+                                       const std::string& rootLocation,
+                                       const std::string& isolatePath,
+                                       const std::string& sessionLocation,
+                                       FnAttribute::GroupAttribute sessionAttr,
+                                       const std::string& ignoreLayerRegex,
+                                       double currentTime,
+                                       double shutterOpen,
+                                       double shutterClose,
+                                       const std::vector<double>& motionSampleTimes,
+                                       const StringListMap& extraAttributesOrNamespaces,
+                                       const std::vector<TfToken>& materialBindingPurposes,
+                                       bool prePopulate,
+                                       bool verbose,
+                                       const std::set<std::string>& outputTargets,
+                                       const bool evaluateUsdSkelBindings,
+                                       const char* errorMessage)
+    : _stage(stage),
+      _rootLocation(rootLocation),
+      _isolatePath(isolatePath),
+      _sessionLocation(sessionLocation),
+      _sessionAttr(sessionAttr),
+      _ignoreLayerRegex(ignoreLayerRegex),
+      _currentTime(currentTime),
+      _shutterOpen(shutterOpen),
+      _shutterClose(shutterClose),
+      _motionSampleTimes(motionSampleTimes),
+      _extraAttributesOrNamespaces(extraAttributesOrNamespaces),
+      _materialBindingPurposes(materialBindingPurposes),
+      _prePopulate(prePopulate),
+      _verbose(verbose),
+      _outputTargets(outputTargets),
+      _evaluateUsdSkelBindings(evaluateUsdSkelBindings)
 {
     if (errorMessage)
     {
@@ -79,15 +79,12 @@ PxrUsdKatanaUsdInArgs::PxrUsdKatanaUsdInArgs(
     }
 }
 
-PxrUsdKatanaUsdInArgs::~PxrUsdKatanaUsdInArgs() 
-{
-}
+UsdKatanaUsdInArgs::~UsdKatanaUsdInArgs() {}
 
-std::vector<GfBBox3d>
-PxrUsdKatanaUsdInArgs::ComputeBounds(
-        const UsdPrim& prim,
-        const std::vector<double>& motionSampleTimes,
-        bool applyLocalTransform)
+std::vector<GfBBox3d> UsdKatanaUsdInArgs::ComputeBounds(
+    const UsdPrim& prim,
+    const std::vector<double>& motionSampleTimes,
+    bool applyLocalTransform)
 {
     std::vector<GfBBox3d> ret;
 
@@ -143,8 +140,7 @@ PxrUsdKatanaUsdInArgs::ComputeBounds(
     return ret;
 }
 
-UsdPrim 
-PxrUsdKatanaUsdInArgs::GetRootPrim() const
+UsdPrim UsdKatanaUsdInArgs::GetRootPrim() const
 {
     if (_isolatePath.empty()) {
         return _stage->GetPseudoRoot();
