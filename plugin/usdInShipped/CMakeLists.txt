@@ -1,4 +1,4 @@
-set(PXR_PACKAGE usdInShipped)
+set(PXR_PACKAGE pxrUsdInShipped)
 
 set(vtKatana_LIBRARY "")
 if (NOT ${KATANA_API_VERSION} VERSION_LESS "3.0.0")
@@ -41,4 +41,33 @@ pxr_plugin(${PXR_PACKAGE}
         scope.cpp
         uiUtils.cpp
         xform.cpp
+)
+
+pxr_test_scripts(
+    testenv/Basic/testPxrUsdInShippedBasic.py
+    testenv/PointInstancer/testPxrUsdInShippedPointInstancer.py
+)
+
+pxr_install_test_dir(
+    SRC testenv/Basic
+    DEST testPxrUsdInShippedBasic
+)
+
+pxr_install_test_dir(
+    SRC testenv/PointInstancer/oss
+    DEST testPxrUsdInShippedPointInstancer
+)
+
+pxr_register_test(testPxrUsdInShippedBasic
+    COMMAND "${KATANA_API_BASE_DIR}/katana --script ${CMAKE_INSTALL_PREFIX}/tests/testPxrUsdInShippedBasic"
+    EXPECTED_RETURN_CODE 0
+    ENV
+        KATANA_RESOURCES=${CMAKE_INSTALL_PREFIX}/third_party/katana/plugin
+)
+
+pxr_register_test(testPxrUsdInShippedPointInstancer
+    COMMAND "${KATANA_API_BASE_DIR}/katana --script ${CMAKE_INSTALL_PREFIX}/tests/testPxrUsdInShippedPointInstancer"
+    EXPECTED_RETURN_CODE 0
+    ENV
+        KATANA_RESOURCES=${CMAKE_INSTALL_PREFIX}/third_party/katana/plugin
 )
