@@ -35,7 +35,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-#include "api.h"
+#include "usdKatana/api.h"
 
 class UsdKatanaAttrMap;
 class UsdKatanaUsdInPrivateData;

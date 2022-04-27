@@ -33,7 +33,7 @@
 #include "pxr/pxr.h"
 #include "usdKatana/usdInArgs.h"
 
-#include "api.h"
+#include "usdKatana/api.h"
 
 #include "pxr/usd/usd/prim.h"
 #include "pxr/usd/usdShade/materialBindingAPI.h"

@@ -36,7 +36,7 @@
 #include "pxr/usd/usdGeom/bboxCache.h"
 #include "pxr/usd/usdSkel/cache.h"
 
-#include "api.h"
+#include "usdKatana/api.h"
 
 #include <tbb/enumerable_thread_specific.h>
 

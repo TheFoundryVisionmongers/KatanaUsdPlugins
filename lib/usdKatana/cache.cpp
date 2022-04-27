@@ -111,7 +111,7 @@ namespace
         }
         return true;
     }
-    }  // namespace
+}  // namespace
 
 SdfLayerRefPtr& 
 UsdKatanaCache::_FindOrCreateSessionLayer(

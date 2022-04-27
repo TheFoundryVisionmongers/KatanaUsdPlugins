@@ -34,7 +34,7 @@
 #include "vtKatana/traits.h"
 
 #if defined(ARCH_OS_WINDOWS)
-#include "api.h"
+#include "vtKatana/api.h"
 #endif
 
 PXR_NAMESPACE_OPEN_SCOPE

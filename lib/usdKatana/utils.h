@@ -34,7 +34,7 @@
 #include "usdKatana/attrMap.h"
 #include "usdKatana/usdInPrivateData.h"
 
-#include "api.h"
+#include "usdKatana/api.h"
 
 #include "pxr/usd/usd/relationship.h"
 

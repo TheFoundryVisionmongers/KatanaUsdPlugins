@@ -27,10 +27,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/usd/usdLux/light.h"
-#include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
 #include "pxr/pxr.h"
-#include "pxr/usd/usdRi/pxrAovLight.h"
 #include "usdInShipped/declareCoreOps.h"
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readLight.h"
@@ -46,7 +43,6 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_LightOp, privateData, opArgs, interface)
 {
     UsdKatanaUsdInArgsRefPtr usdInArgs = privateData.GetUsdInArgs();
     UsdKatanaAttrMap attrs;
-
     UsdLuxBoundableLightBase light(privateData.GetUsdPrim());
 
     UsdKatanaReadLight(light, privateData, attrs);

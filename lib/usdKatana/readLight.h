@@ -35,16 +35,18 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 
-#include "api.h"
+#include "usdKatana/api.h"
 
 class UsdKatanaAttrMap;
 class UsdKatanaUsdInPrivateData;
 class UsdLuxBoundableLightBase;
 
 /// \brief read \p Light into \p attrs.
-USDKATANA_API void UsdKatanaReadLight(const UsdLuxBoundableLightBase& light,
-                                      const UsdKatanaUsdInPrivateData& data,
-                                      UsdKatanaAttrMap& attrs);
+USDKATANA_API void
+UsdKatanaReadLight(
+        const UsdLuxBoundableLightBase& light,
+        const UsdKatanaUsdInPrivateData& data,
+        UsdKatanaAttrMap& attrs);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
