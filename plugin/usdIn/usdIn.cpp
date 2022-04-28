@@ -745,7 +745,7 @@ public:
             const TfTokenVector& lookTokens = UsdKatanaUtils::GetLookTokens();
             // when checking for a looks group, swap in the master if the prim is an instance
             UsdPrim resolvedPrim = (prim.IsInstance() && !privateData->GetMasterPath().IsEmpty())
-                                       ? prim.GetMaster()
+                                       ? prim.GetPrototype()
                                        : prim;
             for (const TfToken& lookToken : lookTokens)
             {
