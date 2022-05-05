@@ -11,6 +11,9 @@ set(PXR_PY_PACKAGE_NAME "pxr"
     "Name for the root python bindings package"
 )
 
+# Language standard is C++14.
+set(CMAKE_CXX_STANDARD 14)
+
 # Ensure we can get the root of this project at all times.
 set(KATANA_USD_PLUGINS_SRC_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 include(Support)
