@@ -31,6 +31,7 @@
 #define USDKATANA_READLIGHT_H
 
 #include "pxr/pxr.h"
+#include "pxr/usd/usd/prim.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -41,12 +42,10 @@ class UsdKatanaAttrMap;
 class UsdKatanaUsdInPrivateData;
 class UsdLuxBoundableLightBase;
 
-/// \brief read \p Light into \p attrs.
-USDKATANA_API void
-UsdKatanaReadLight(
-        const UsdLuxBoundableLightBase& light,
-        const UsdKatanaUsdInPrivateData& data,
-        UsdKatanaAttrMap& attrs);
+/// \brief read \p lightPrim into \p attrs.
+USDKATANA_API void UsdKatanaReadLight(const UsdPrim& prim,
+                                      const UsdKatanaUsdInPrivateData& data,
+                                      UsdKatanaAttrMap& attrs);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

@@ -32,15 +32,17 @@
 
 #include "pxr/pxr.h"
 #include "usdKatana/attrMap.h"
+#include "usdKatana/katanaLightAPI.h"
 #include "usdKatana/usdInPrivateData.h"
 
 #include "usdKatana/api.h"
 
 #include "pxr/usd/usd/relationship.h"
 
+#include "pxr/base/vt/value.h"
 #include "pxr/usd/sdf/path.h"
 #include "pxr/usd/sdf/types.h"
-#include "pxr/base/vt/value.h"
+#include "pxr/usd/sdr/shaderNode.h"
 #include "pxr/usd/usdGeom/pointBased.h"
 
 #include <FnAttribute/FnGroupBuilder.h>
@@ -48,6 +50,7 @@
 #include <FnGeolib/op/FnGeolibOp.h>
 
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 namespace FnKat = Foundry::Katana;
@@ -181,6 +184,22 @@ struct UsdKatanaUtils
     /// Currently, we're only using this for determining when to log an error
     /// when accessing model data.
     USDKATANA_API static bool IsModelAssemblyOrComponent(const UsdPrim& prim);
+
+    /// Writes the data from a prim to attrs based on the inputs to the shader in the sdr registry
+    /// with the name shaderName.
+    USDKATANA_API static void ShaderToAttrsBySdr(const UsdPrim& prim,
+                                                 const std::string& shaderName,
+                                                 const UsdTimeCode& currentTimeCode,
+                                                 FnAttribute::GroupBuilder& attrs);
+
+    /// Extracts all the shaderId attributes from a prim. This includes any auto-applied schema
+    /// attributes.
+    USDKATANA_API static std::unordered_set<std::string> GetShaderIds(
+        const UsdPrim& prim,
+        const UsdTimeCode& currentTimeCode);
+
+    USDKATANA_API static SdrShaderNodeConstPtr GetShaderNodeFromShaderId(
+        const std::string& shaderName);
 
     /// \}
 

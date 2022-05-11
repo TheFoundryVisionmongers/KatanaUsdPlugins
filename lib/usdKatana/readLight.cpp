@@ -57,6 +57,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -74,10 +75,12 @@ static void _SetLightSizeFromRadius(UsdKatanaAttrMap& geomBuilder,
     geomBuilder.set("light.size", FnKat::FloatAttribute(2.0f * radius));
 }
 
-static const std::unordered_map<std::string, std::string> s_rendererToContextName{{"prman", "ri"}};
+static const std::unordered_map<std::string, std::string> s_rendererToContextName{{"prman", "ri"},
+                                                                                  {"nsi", "dl"}};
+static const std::unordered_map<std::string, std::string> s_contextNameToRenderer{{"ri", "prman"},
+                                                                                  {"dl", "nsi"}};
 
-void __handleUsdLuxLightTypes(const UsdLuxBoundableLightBase& light,
-                              const UsdPrim& lightPrim,
+void __handleUsdLuxLightTypes(const UsdPrim& prim,
                               const UsdTimeCode& currentTimeCode,
                               const UsdKatanaUsdInPrivateData& data,
                               FnKat::GroupBuilder& materialBuilder,
@@ -86,6 +89,7 @@ void __handleUsdLuxLightTypes(const UsdLuxBoundableLightBase& light,
     UsdKatanaAttrMap lightBuilder;
     lightBuilder.SetUSDTimeCode(currentTimeCode);
     // UsdLuxLight
+    UsdLuxLightAPI light(prim);
     lightBuilder.Set("intensity", light.GetIntensityAttr())
         .Set("exposure", light.GetExposureAttr())
         .Set("diffuse", light.GetDiffuseAttr())
@@ -96,7 +100,7 @@ void __handleUsdLuxLightTypes(const UsdLuxBoundableLightBase& light,
         .Set("temperature", light.GetColorTemperatureAttr())
         .Set("color", light.GetColorAttr());
 
-    UsdLuxShapingAPI shapingAPI(lightPrim);
+    UsdLuxShapingAPI shapingAPI(prim);
     lightBuilder.Set("shapingFocus", shapingAPI.GetShapingFocusAttr())
         .Set("shapingFocusTint", shapingAPI.GetShapingFocusTintAttr())
         .Set("shapingConeAngle", shapingAPI.GetShapingConeAngleAttr())
@@ -105,7 +109,7 @@ void __handleUsdLuxLightTypes(const UsdLuxBoundableLightBase& light,
         .Set("shapingIesAngleScale", shapingAPI.GetShapingIesAngleScaleAttr())
         .Set("shapingIesNormalize", shapingAPI.GetShapingIesNormalizeAttr());
 
-    UsdLuxShadowAPI shadowAPI(lightPrim);
+    UsdLuxShadowAPI shadowAPI(prim);
     lightBuilder.Set("shadowEnable", shadowAPI.GetShadowEnableAttr())
         .Set("shadowColor", shadowAPI.GetShadowColorAttr())
         .Set("shadowDistance", shadowAPI.GetShadowDistanceAttr())
@@ -114,31 +118,31 @@ void __handleUsdLuxLightTypes(const UsdLuxBoundableLightBase& light,
 
     FnAttribute::StringAttribute lightShaderAttr;
 
-    if (UsdLuxCylinderLight l = UsdLuxCylinderLight(lightPrim))
+    if (UsdLuxCylinderLight l = UsdLuxCylinderLight(prim))
     {
         _SetLightSizeFromRadius(geomBuilder, l.GetRadiusAttr(), currentTimeCode);
         lightShaderAttr = FnAttribute::StringAttribute("UsdLuxCylinderLight");
         geomBuilder.Set("light.width", l.GetLengthAttr());
         lightBuilder.Set("length", l.GetLengthAttr()).Set("radius", l.GetRadiusAttr());
     }
-    else if (UsdLuxDiskLight l = UsdLuxDiskLight(lightPrim))
+    else if (UsdLuxDiskLight l = UsdLuxDiskLight(prim))
     {
         _SetLightSizeFromRadius(geomBuilder, l.GetRadiusAttr(), currentTimeCode);
         lightShaderAttr = FnAttribute::StringAttribute("UsdLuxDiskLight");
         lightBuilder.Set("radius", l.GetRadiusAttr());
     }
-    else if (UsdLuxDistantLight l = UsdLuxDistantLight(lightPrim))
+    else if (UsdLuxDistantLight l = UsdLuxDistantLight(prim))
     {
         lightShaderAttr = FnAttribute::StringAttribute("UsdLuxDistantLight");
         lightBuilder.Set("angle", l.GetAngleAttr()).Set("angleExtent", l.GetAngleAttr());
     }
-    else if (UsdLuxDomeLight l = UsdLuxDomeLight(lightPrim))
+    else if (UsdLuxDomeLight l = UsdLuxDomeLight(prim))
     {
         lightShaderAttr = FnAttribute::StringAttribute("UsdLuxDomeLight");
         lightBuilder.Set("textureFile", l.GetTextureFileAttr())
             .Set("textureFormat", l.GetTextureFormatAttr());
     }
-    else if (UsdLuxGeometryLight l = UsdLuxGeometryLight(lightPrim))
+    else if (UsdLuxGeometryLight l = UsdLuxGeometryLight(prim))
     {
         SdfPathVector geo;
         lightShaderAttr = FnAttribute::StringAttribute("UsdLuxGeometryLight");
@@ -149,13 +153,13 @@ void __handleUsdLuxLightTypes(const UsdLuxBoundableLightBase& light,
                 FnLogWarn(
                     "Multiple geometry targets detected for "
                     "USD geometry light "
-                    << lightPrim.GetPath() << "; using first only");
+                    << prim.GetPath() << "; using first only");
             }
             std::string kat_loc = UsdKatanaUtils::ConvertUsdPathToKatLocation(geo[0], data);
             geomBuilder.set("areaLightGeometrySource", FnKat::StringAttribute(kat_loc));
         }
     }
-    else if (UsdLuxRectLight l = UsdLuxRectLight(lightPrim))
+    else if (UsdLuxRectLight l = UsdLuxRectLight(prim))
     {
         geomBuilder.Set("light.width", l.GetWidthAttr()).Set("light.height", l.GetHeightAttr());
         lightShaderAttr = FnAttribute::StringAttribute("UsdLuxRectLight");
@@ -164,7 +168,7 @@ void __handleUsdLuxLightTypes(const UsdLuxBoundableLightBase& light,
             .Set("width", l.GetWidthAttr())
             .Set("height", l.GetHeightAttr());
     }
-    else if (UsdLuxSphereLight l = UsdLuxSphereLight(lightPrim))
+    else if (UsdLuxSphereLight l = UsdLuxSphereLight(prim))
     {
         _SetLightSizeFromRadius(geomBuilder, l.GetRadiusAttr(), currentTimeCode);
         lightShaderAttr = FnAttribute::StringAttribute("UsdLuxSphereLight");
@@ -178,123 +182,26 @@ void __handleUsdLuxLightTypes(const UsdLuxBoundableLightBase& light,
     }
 }
 
-void __handleSdrRegistryLights(const UsdPrim& lightPrim,
+void __handleSdrRegistryLights(const UsdPrim& prim,
                                const UsdTimeCode& currentTimeCode,
                                FnKat::GroupBuilder& materialBuilder,
                                UsdKatanaAttrMap& geomBuilder)
 {
-    UsdKatanaKatanaLightAPI lightAPI(lightPrim);
-    geomBuilder.Set("centerOfInterest", lightAPI.GetCenterOfInterestAttr());
-    VtValue lightShaderIdsVal;
-    lightAPI.GetIdAttr().Get(&lightShaderIdsVal, currentTimeCode);
-    VtArray<std::string> lightShaderIds;
-    if (!lightShaderIdsVal.IsEmpty() && lightShaderIdsVal.IsHolding<VtArray<std::string>>())
+    UsdKatanaKatanaLightAPI katanaLightAPI(prim);
+    geomBuilder.Set("centerOfInterest", katanaLightAPI.GetCenterOfInterestAttr());
+
+    std::unordered_set<std::string> lightShaderIds =
+        UsdKatanaUtils::GetShaderIds(prim, currentTimeCode);
+    for (const std::string& shaderId : lightShaderIds)
     {
-        lightShaderIds = lightShaderIdsVal.UncheckedGet<VtArray<std::string>>();
-    }
-
-    SdrRegistry& sdrRegistry = SdrRegistry::GetInstance();
-
-    for (const auto& id : lightShaderIds)
-    {
-        std::vector<std::string> idSplit = TfStringSplit(id, ":");
-        if (idSplit.size() != 2)
-        {
-            continue;
-        }
-
-        const std::string& lightShaderPrefix = idSplit[0];
-        const std::string& lightShaderId = idSplit[1];
-        SdrShaderNodeConstPtr sdrNode;
-
-        // The Sdr Registers the base UsdLux light types without the UsdLux prefix.
-        if (TfStringStartsWith(lightShaderId, "UsdLux"))
-        {
-            // UsdLux Lights are dealt with separately. Can be updated to use Only Sdr
-            // Registry behaviour in 21.11 after a bugfix to include Shaping and ShadingAPI
-            // was introduced.
-            continue;
-        }
-        else
-        {
-            sdrNode = sdrRegistry.GetShaderNodeByIdentifier(TfToken(lightShaderId));
-            if (!sdrNode)
-            {
-                sdrNode = sdrRegistry.GetShaderNodeByName(
-                    TfToken(lightShaderId), {}, NdrVersionFilterAllVersions);
-            }
-        }
-        if (!sdrNode)
-        {
-            continue;
-        }
-
-        UsdKatanaAttrMap lightBuilder;
-        lightBuilder.SetUSDTimeCode(currentTimeCode);
-        const std::string shaderContext = sdrNode->GetContext().GetString();
-
-        for (const auto& inputNameToken : sdrNode->GetInputNames())
-        {
-            const std::string& inputName = inputNameToken.GetString();
-            const auto& rendererNameMappingIt = s_rendererToContextName.find(lightShaderPrefix);
-            std::string usdAttributeName;
-            if (rendererNameMappingIt != s_rendererToContextName.end())
-            {
-                if (shaderContext.empty())
-                {
-                    usdAttributeName = rendererNameMappingIt->second + ":" + inputName;
-                }
-                else
-                {
-                    usdAttributeName =
-                        rendererNameMappingIt->second + ":" + shaderContext + ":" + inputName;
-                }
-            }
-            else
-            {
-                if (shaderContext.empty())
-                {
-                    usdAttributeName = rendererNameMappingIt->second + ":" + inputName;
-                }
-                else
-                {
-                    usdAttributeName = lightShaderPrefix + ":" + shaderContext + ":" + inputName;
-                }
-            }
-            // Try first without the inputs prefix(Pre USD 21.02,
-            // light attributes did not have inputs: prefix)
-            if (!lightPrim.HasAttribute(TfToken(usdAttributeName)))
-            {
-                // Check with inputs prefix (which was only added in 21.02 USD)
-                usdAttributeName = "inputs:" + usdAttributeName;
-                if (!lightPrim.HasAttribute(TfToken(usdAttributeName)))
-                {
-                    continue;
-                }
-            }
-            // Use implementation name instead of input name for Katana attributes
-            // for cases like color vs lightColor
-            const SdrShaderProperty* input = sdrNode->GetShaderInput(inputNameToken);
-            if (!input)
-            {
-                continue;
-            }
-
-            lightBuilder.Set(input->GetImplementationName(),
-                             lightPrim.GetAttribute(TfToken(usdAttributeName)));
-        }
-
-        materialBuilder.set(lightShaderPrefix + "LightShader",
-                            FnKat::StringAttribute(lightShaderId));
-        materialBuilder.set(lightShaderPrefix + "LightParams", lightBuilder.build());
+        UsdKatanaUtils::ShaderToAttrsBySdr(prim, shaderId, currentTimeCode, materialBuilder);
     }
 }
 
-void UsdKatanaReadLight(const UsdLuxBoundableLightBase& light,
+void UsdKatanaReadLight(const UsdPrim& prim,
                         const UsdKatanaUsdInPrivateData& data,
                         UsdKatanaAttrMap& attrs)
 {
-    const UsdPrim lightPrim = light.GetPrim();
     const UsdTimeCode currentTimeCode = data.GetCurrentTime();
     attrs.SetUSDTimeCode(currentTimeCode);
     UsdKatanaAttrMap geomBuilder;
@@ -304,9 +211,9 @@ void UsdKatanaReadLight(const UsdLuxBoundableLightBase& light,
     // lighting tools workflow
     geomBuilder.set("centerOfInterest", FnAttribute::DoubleAttribute(20.0f));
 
-    __handleSdrRegistryLights(lightPrim, currentTimeCode, materialBuilder, geomBuilder);
+    __handleSdrRegistryLights(prim, currentTimeCode, materialBuilder, geomBuilder);
     // Run the UsdLux logic after trying the Sdr Logic
-    __handleUsdLuxLightTypes(light, lightPrim, currentTimeCode, data, materialBuilder, geomBuilder);
+    __handleUsdLuxLightTypes(prim, currentTimeCode, data, materialBuilder, geomBuilder);
 
     attrs.set("material", materialBuilder.build());
     attrs.set("geometry", geomBuilder.build());
@@ -317,7 +224,7 @@ void UsdKatanaReadLight(const UsdLuxBoundableLightBase& light,
     gafferBuilder.set("packageClass", FnAttribute::StringAttribute("LightPackage"));
     attrs.set("info.gaffer", gafferBuilder.build());
 
-    UsdKatanaReadXformable(light, data, attrs);
+    UsdKatanaReadXformable(UsdGeomXformable(prim), data, attrs);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -35,27 +35,29 @@
 #include "usdKatana/utils.h"
 
 #include "pxr/base/tf/stringUtils.h"
-
-#include "pxr/usd/usdLux/lightAPI.h"
-#include "pxr/usd/usdLux/boundableLightBase.h"
-#include "pxr/usd/usdLux/lightFilter.h"
-#include "pxr/usd/usdLux/domeLight.h"
-#include "pxr/usd/usdLux/distantLight.h"
-#include "pxr/usd/usdLux/geometryLight.h"
-#include "pxr/usd/usdLux/sphereLight.h"
-#include "pxr/usd/usdLux/diskLight.h"
-#include "pxr/usd/usdLux/rectLight.h"
-#include "pxr/usd/usdLux/shapingAPI.h"
-#include "pxr/usd/usdLux/shadowAPI.h"
-#include "pxr/usd/usdRi/splineAPI.h"
-#include "pxr/usd/usd/tokens.h"
+#include "pxr/usd/sdr/registry.h"
 #include "pxr/usd/usd/schemaRegistry.h"
+#include "pxr/usd/usd/tokens.h"
+#include "pxr/usd/usdLux/boundableLightBase.h"
+#include "pxr/usd/usdLux/diskLight.h"
+#include "pxr/usd/usdLux/distantLight.h"
+#include "pxr/usd/usdLux/domeLight.h"
+#include "pxr/usd/usdLux/geometryLight.h"
+#include "pxr/usd/usdLux/lightAPI.h"
+#include "pxr/usd/usdLux/lightFilter.h"
+#include "pxr/usd/usdLux/rectLight.h"
+#include "pxr/usd/usdLux/shadowAPI.h"
+#include "pxr/usd/usdLux/shapingAPI.h"
+#include "pxr/usd/usdLux/sphereLight.h"
+#include "pxr/usd/usdRi/splineAPI.h"
 
 #include <FnGeolibServices/FnAttributeFunctionUtil.h>
 #include <FnLogging/FnLogging.h>
 #include <pystring/pystring.h>
 
 #include <stack>
+#include <string>
+#include <unordered_set>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -105,14 +107,12 @@ struct _UsdBuilder {
     }
 };
 
-void UsdKatanaReadLightFilter(const UsdLuxLightFilter& lightFilter,
+void UsdKatanaReadLightFilter(const UsdPrim& filterPrim,
                               const UsdKatanaUsdInPrivateData& data,
                               UsdKatanaAttrMap& attrs)
 {
-    const UsdPrim filterPrim = lightFilter.GetPrim();
     const SdfPath primPath = filterPrim.GetPath();
     const double currentTime = data.GetCurrentTime();
-    const bool prmanOutputTarget = data.hasOutputTarget("prman");
 
     GroupBuilder materialBuilder;
     GroupBuilder filterBuilder;
@@ -120,6 +120,7 @@ void UsdKatanaReadLightFilter(const UsdLuxLightFilter& lightFilter,
 
     // Gather prman statements
     FnKat::GroupBuilder primStatements;
+    const bool prmanOutputTarget = data.hasOutputTarget("prman");
     UsdKatanaReadPrimPrmanStatements(filterPrim, currentTime, primStatements, prmanOutputTarget);
     if (prmanOutputTarget)
     {
@@ -127,10 +128,23 @@ void UsdKatanaReadLightFilter(const UsdLuxLightFilter& lightFilter,
         materialBuilder.set("prmanLightfilterParams", filterBuilder.build());
     }
     attrs.set("usd", primStatements.build());
-    
+
+    std::unordered_set<std::string> shaderIds =
+        UsdKatanaUtils::GetShaderIds(filterPrim, data.GetCurrentTime());
+    for (const std::string& shaderId : shaderIds)
+    {
+        UsdKatanaUtils::ShaderToAttrsBySdr(
+            filterPrim, shaderId, data.GetCurrentTime(), materialBuilder);
+    }
+
     attrs.set("material", materialBuilder.build());
-    UsdKatanaReadXformable(lightFilter, data, attrs);
+    UsdKatanaReadXformable(UsdGeomXformable(filterPrim), data, attrs);
     attrs.set("type", FnKat::StringAttribute("light filter"));
+
+    // This attribute makes the light filter adoptable by the GafferThree node.
+    FnKat::GroupBuilder gafferBuilder;
+    gafferBuilder.set("packageClass", FnAttribute::StringAttribute("LightFilterPackage"));
+    attrs.set("info.gaffer", gafferBuilder.build());
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

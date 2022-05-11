@@ -42,7 +42,7 @@ class UsdKatanaUsdInPrivateData;
 class UsdLuxLightFilter;
 
 /// \brief read \p lightFilter into \p attrs.
-USDKATANA_API void UsdKatanaReadLightFilter(const UsdLuxLightFilter& lightFilter,
+USDKATANA_API void UsdKatanaReadLightFilter(const UsdPrim& lightFilter,
                                             const UsdKatanaUsdInPrivateData& data,
                                             UsdKatanaAttrMap& attrs);
 

@@ -946,16 +946,33 @@ public:
                         continue;
                     }
                 }
-
-                interface.createChild(
-                    childName, "",
-                    FnKat::GroupBuilder()
-                        .update(opArgs)
-                        .set("staticScene", opArgs.getChildByName("staticScene.c." + childName))
-                        .build(),
-                    FnKat::GeolibCookInterface::ResetRootFalse,
-                    new UsdKatanaUsdInPrivateData(child, usdInArgs, privateData),
-                    UsdKatanaUsdInPrivateData::Delete);
+                // If the child is a light filter, skip adding it here. It will be added through a
+                // relationship from a light prim should it be needed.
+                bool skipForFilter = false;
+                std::unordered_set<std::string> shaderIds =
+                    UsdKatanaUtils::GetShaderIds(child, privateData->GetCurrentTime());
+                for (const std::string& shaderId : shaderIds)
+                {
+                    auto node = UsdKatanaUtils::GetShaderNodeFromShaderId(shaderId);
+                    if (node && node->GetContext() == TfToken("lightFilter"))
+                    {
+                        skipForFilter = true;
+                        break;
+                    }
+                }
+                if (!skipForFilter)
+                {
+                    interface.createChild(
+                        childName,
+                        "",
+                        FnKat::GroupBuilder()
+                            .update(opArgs)
+                            .set("staticScene", opArgs.getChildByName("staticScene.c." + childName))
+                            .build(),
+                        FnKat::GeolibCookInterface::ResetRootFalse,
+                        new UsdKatanaUsdInPrivateData(child, usdInArgs, privateData),
+                        UsdKatanaUsdInPrivateData::Delete);
+                }
             }
         }
 

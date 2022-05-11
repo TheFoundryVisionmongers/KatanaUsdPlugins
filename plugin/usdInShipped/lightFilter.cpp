@@ -41,7 +41,7 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_LightFilterOp, privateData, opArgs, inte
 {
     UsdKatanaAttrMap attrs;
 
-    UsdKatanaReadLightFilter(UsdLuxLightFilter(privateData.GetUsdPrim()), privateData, attrs);
+    UsdKatanaReadLightFilter(privateData.GetUsdPrim(), privateData, attrs);
 
     attrs.toInterface(interface);
 }

@@ -29,40 +29,42 @@
 //
 #include "pxr/pxr.h"
 
-#include "pxr/base/gf/vec3h.h"
-#include "pxr/base/gf/vec3f.h"
-#include "pxr/base/gf/vec3d.h"
-#include "pxr/base/gf/matrix4d.h"
 #include "pxr/base/arch/demangle.h"
+#include "pxr/base/gf/matrix4d.h"
+#include "pxr/base/gf/vec3d.h"
+#include "pxr/base/gf/vec3f.h"
+#include "pxr/base/gf/vec3h.h"
 #include "pxr/base/tf/getenv.h"
-#include "pxr/base/work/loops.h"
-#include "pxr/usd/kind/registry.h"
 #include "pxr/base/vt/array.h"
 #include "pxr/base/vt/value.h"
+#include "pxr/base/work/loops.h"
+#include "pxr/usd/ar/resolver.h"
+#include "pxr/usd/ar/resolverScopedCache.h"
+#include "pxr/usd/kind/registry.h"
 #include "pxr/usd/pcp/mapExpression.h"
-#include "pxr/usd/usd/relationship.h"
+#include "pxr/usd/sdr/registry.h"
+#include "pxr/usd/sdr/shaderProperty.h"
 #include "pxr/usd/usd/attribute.h"
 #include "pxr/usd/usd/collectionAPI.h"
 #include "pxr/usd/usd/modelAPI.h"
 #include "pxr/usd/usd/prim.h"
+#include "pxr/usd/usd/relationship.h"
 #include "pxr/usd/usdGeom/boundable.h"
 #include "pxr/usd/usdGeom/camera.h"
 #include "pxr/usd/usdGeom/scope.h"
-#include "pxr/usd/usdRi/statementsAPI.h"
-#include "pxr/usd/usdUI/sceneGraphPrimAPI.h"
 #include "pxr/usd/usdLux/lightAPI.h"
 #include "pxr/usd/usdLux/lightFilter.h"
 #include "pxr/usd/usdLux/listAPI.h"
-#include "pxr/usd/usdShade/shader.h"
+#include "pxr/usd/usdRi/statementsAPI.h"
 #include "pxr/usd/usdShade/material.h"
+#include "pxr/usd/usdShade/shader.h"
 #include "pxr/usd/usdSkel/bindingAPI.h"
 #include "pxr/usd/usdSkel/blendShapeQuery.h"
 #include "pxr/usd/usdSkel/root.h"
 #include "pxr/usd/usdSkel/skeletonQuery.h"
 #include "pxr/usd/usdSkel/skinningQuery.h"
+#include "pxr/usd/usdUI/sceneGraphPrimAPI.h"
 #include "pxr/usd/usdUtils/pipeline.h"
-#include "pxr/usd/ar/resolver.h"
-#include "pxr/usd/ar/resolverScopedCache.h"
 
 #include "vtKatana/array.h"
 #include "vtKatana/value.h"
@@ -82,7 +84,7 @@ FnLogSetup("UsdKatanaUtils");
 #include <cmath>
 #include <map>
 #include <sstream>
-#include <string>
+#include <unordered_map>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -1497,6 +1499,203 @@ bool UsdKatanaUtils::IsModelAssemblyOrComponent(const UsdPrim& prim)
     }
 
     return false;
+}
+
+static const std::unordered_map<std::string, std::string> s_rendererToContextName{{"prman", "ri"},
+                                                                                  {"nsi", "dl"}};
+static const std::unordered_map<std::string, std::string> s_contextNameToRenderer{{"ri", "prman"},
+                                                                                  {"dl", "nsi"}};
+
+void UsdKatanaUtils::ShaderToAttrsBySdr(const UsdPrim& prim,
+                                        const std::string& shaderName,
+                                        const UsdTimeCode& currentTimeCode,
+                                        FnAttribute::GroupBuilder& attrs)
+{
+    std::vector<std::string> idSplit = TfStringSplit(shaderName, ":");
+    if (idSplit.size() != 2)
+    {
+        return;
+    }
+
+    std::string shaderPrefix = idSplit[0];
+    const std::string& shaderId = idSplit[1];
+
+    SdrShaderNodeConstPtr sdrNode = GetShaderNodeFromShaderId(shaderName);
+
+    if (!sdrNode)
+    {
+        FnLogWarn("No Sdr shader found for " << shaderId);
+        return;
+    }
+
+    UsdKatanaAttrMap shaderBuilder;
+    shaderBuilder.SetUSDTimeCode(currentTimeCode);
+    const std::string& shaderContext = sdrNode->GetContext().GetString();
+
+    for (const auto& inputNameToken : sdrNode->GetInputNames())
+    {
+        // This block is for building up a vector of potential attribute names
+        // (potentialUsdAttributeNames) inside the usd prim being read. Katana supports having
+        // multiple light shaders with differing values for the same attribute on the same
+        // location. In USD, the  `inputs:color` attribute would set the color for any applied
+        // renderer light schemas but we allow these attributes to be namespaced, so
+        // `inputs:ri:light:color` would set the color just for a prman light inside Katana
+        // at the light location, while leaving the basic USD Lux light color to be set by
+        // `inputs:color`.
+        std::vector<std::string> potentialUsdAttributeNames;
+        const std::string& inputName = inputNameToken.GetString();
+        potentialUsdAttributeNames.reserve(4);
+
+        const auto& rendererNameMappingIt = s_rendererToContextName.find(shaderPrefix);
+        shaderPrefix = rendererNameMappingIt != s_rendererToContextName.end()
+                           ? rendererNameMappingIt->second
+                           : shaderPrefix;
+
+        // Build a common renderer-specific namespace prefix for the attribute.
+        std::string entryPrefix = shaderPrefix + ":";
+        if (!shaderContext.empty())
+        {
+            entryPrefix += shaderContext + ":";
+        }
+
+        // Here, for a prman light shader we would expect `entryPrefix` to be `ri:light:`.
+        // If this prefix is not already applied as a potential attribute name, add it first
+        // as this is the attribute we want to prioritise for reading the imported value.
+        if (inputName.rfind(entryPrefix, 0) != 0)
+        {
+            potentialUsdAttributeNames.insert(potentialUsdAttributeNames.begin(),
+                                              entryPrefix + inputName);
+        }
+        // If this prefix is not already applied as a potential attribute name, including,
+        // the "inputs:" prefix, add it.
+        if (inputName.rfind("inputs:" + entryPrefix, 0) != 0)
+        {
+            // We do not want to add the whole namespace prefix along with the "inputs:"
+            // prefix if it is already a part of the inputName already.
+            if (inputName.rfind(entryPrefix, 0) != 0)
+            {
+                potentialUsdAttributeNames.emplace_back("inputs:" + entryPrefix + inputName);
+            }
+            else
+            {
+                potentialUsdAttributeNames.emplace_back("inputs:" + inputName);
+            }
+        }
+        // The last attributes we would want to import from are the basic non-namespaced
+        // versions.
+        potentialUsdAttributeNames.emplace_back("inputs:" + inputName);
+        potentialUsdAttributeNames.emplace_back(inputName);
+
+        std::string usdAttributeName;
+        for (const std::string& potentialUsdAttributeName : potentialUsdAttributeNames)
+        {
+            if (prim.HasAttribute(TfToken(potentialUsdAttributeName)))
+            {
+                usdAttributeName = potentialUsdAttributeName;
+                break;
+            }
+        }
+
+        if (!usdAttributeName.empty())
+        {
+            // Use implementation name instead of input name for Katana attributes
+            // for cases like color vs lightColor
+            const SdrShaderProperty* input = sdrNode->GetShaderInput(inputNameToken);
+            if (!input)
+            {
+                continue;
+            }
+
+            shaderBuilder.Set(input->GetImplementationName(),
+                              prim.GetAttribute(TfToken(usdAttributeName)));
+        }
+    }
+
+    auto rendererItr = s_contextNameToRenderer.find(shaderPrefix);
+    shaderPrefix =
+        rendererItr != s_contextNameToRenderer.end() ? rendererItr->second : shaderPrefix;
+    const std::string shaderContextCased = TfStringCapitalize(shaderContext);
+    attrs.set(shaderPrefix + shaderContextCased + "Shader", FnKat::StringAttribute(shaderId));
+    attrs.set(shaderPrefix + shaderContextCased + "Params", shaderBuilder.build());
+}
+
+std::unordered_set<std::string> UsdKatanaUtils::GetShaderIds(const UsdPrim& prim,
+                                                             const UsdTimeCode& currentTimeCode)
+{
+    UsdKatanaKatanaLightAPI katanaLightAPI(prim);
+    std::unordered_set<std::string> shaderIds;
+
+    // Gather light shader ids from the LightAPI shaderId attribute.
+    for (auto& attr : prim.GetAttributes())
+    {
+        if (TfStringEndsWith(attr.GetName(), "light:shaderId") ||
+            TfStringEndsWith(attr.GetName(), "lightFilter:shaderId"))
+        {
+            VtValue shaderIdVal;
+            attr.Get(&shaderIdVal);
+            if (shaderIdVal.IsHolding<TfToken>())
+            {
+                std::vector<std::string> attrNameSplit = TfStringSplit(attr.GetName(), ":");
+                // If the size is greater than 2, it's a namespaced shader id,
+                // e.g. ri:light:shaderId.
+                if (attrNameSplit.size() > 2)
+                {
+                    std::string shaderId = attrNameSplit[0];
+                    shaderId.append(":" + shaderIdVal.UncheckedGet<TfToken>().GetString());
+                    shaderIds.insert(shaderId);
+                }
+                else
+                {
+                    std::string shaderId = shaderIdVal.UncheckedGet<TfToken>().GetString();
+                    if (shaderId.empty())
+                    {
+                        continue;
+                    }
+                    shaderId.insert(0, "usd:");
+                    shaderIds.insert(shaderId);
+                }
+            }
+        }
+    }
+
+    // Gather light shader ids from the KatanaLightAPI shaderId attribute.
+    VtValue lightShaderIdsVal;
+    katanaLightAPI.GetIdAttr().Get(&lightShaderIdsVal, currentTimeCode);
+    if (!lightShaderIdsVal.IsEmpty() && lightShaderIdsVal.IsHolding<VtArray<std::string>>())
+    {
+        for (const std::string& shaderId : lightShaderIdsVal.UncheckedGet<VtArray<std::string>>())
+        {
+            shaderIds.insert(shaderId);
+        }
+    }
+
+    return shaderIds;
+}
+
+SdrShaderNodeConstPtr UsdKatanaUtils::GetShaderNodeFromShaderId(const std::string& shaderName)
+{
+    SdrRegistry& sdrRegistry = SdrRegistry::GetInstance();
+    std::vector<std::string> idSplit = TfStringSplit(shaderName, ":");
+    if (idSplit.size() != 2)
+    {
+        return nullptr;
+    }
+
+    const std::string& shaderId = idSplit[1];
+
+    SdrShaderNodeConstPtr sdrNode = sdrRegistry.GetShaderNodeByIdentifier(TfToken(shaderId));
+    if (!sdrNode)
+    {
+        sdrNode =
+            sdrRegistry.GetShaderNodeByName(TfToken(shaderId), {}, NdrVersionFilterAllVersions);
+    }
+    if (!sdrNode)
+    {
+        FnLogWarn("No Sdr shader found for " << shaderId);
+        return nullptr;
+    }
+
+    return sdrNode;
 }
 
 bool UsdKatanaUtils::IsAttributeVarying(const UsdAttribute& attr, double currentTime)

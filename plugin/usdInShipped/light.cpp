@@ -27,15 +27,17 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
+
 #include "pxr/pxr.h"
+#include "pxr/usd/usdLux/boundableLightBase.h"
+#include "pxr/usd/usdLux/lightAPI.h"
+
 #include "usdInShipped/declareCoreOps.h"
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readLight.h"
 #include "usdKatana/usdInPluginRegistry.h"
 #include "usdKatana/utils.h"
-#include "pxr/usd/usdLux/lightAPI.h"
-#include "pxr/usd/usdLux/boundableLightBase.h"
-#include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -43,15 +45,18 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_LightOp, privateData, opArgs, interface)
 {
     UsdKatanaUsdInArgsRefPtr usdInArgs = privateData.GetUsdInArgs();
     UsdKatanaAttrMap attrs;
-    UsdLuxBoundableLightBase light(privateData.GetUsdPrim());
 
-    UsdKatanaReadLight(light, privateData, attrs);
+    UsdPrim prim(privateData.GetUsdPrim());
+
+    UsdKatanaReadLight(prim, privateData, attrs);
 
     attrs.toInterface(interface);
 
 
     // Tell UsdIn to skip all children; we'll create them ourselves.
     interface.setAttr("__UsdIn.skipAllChildren", FnKat::IntAttribute(1));
+
+    UsdLuxLightAPI light(prim);
 
     // Light filters.
     SdfPathVector filterPaths;
@@ -81,18 +86,17 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_LightOp, privateData, opArgs, interface)
             interface.execOp("StaticSceneCreate", sscb.build());
         } else {
             // Expand light filters directly beneath this light.
-            for (const SdfPath &filterPath: filterPaths) {
-                if (UsdPrim filterPrim =
-                    usdInArgs->GetStage()->GetPrimAtPath(filterPath)) {
+            for (const SdfPath& filterPath : filterPaths)
+            {
+                if (UsdPrim filterPrim = usdInArgs->GetStage()->GetPrimAtPath(filterPath))
+                {
+                    const std::string filterKatPath =
+                        UsdKatanaUtils::ConvertUsdPathToKatLocation(filterPath, privateData);
                     interface.createChild(
                         filterPath.GetName(),
-                        // Use the top-level UsdIn op to get proper
-                        // op dispatch, including site-specific plugins.
-                        // (We can't use empty string to re-run this
-                        // same op because we are already in the
-                        // light-specific op, and we need to run a
-                        // light-filter op instead.)
-                        "UsdIn", opArgs, FnKat::GeolibCookInterface::ResetRootFalse,
+                        "UsdInCore_LightFilterOp",
+                        opArgs,
+                        FnKat::GeolibCookInterface::ResetRootFalse,
                         new UsdKatanaUsdInPrivateData(filterPrim, usdInArgs, &privateData),
                         UsdKatanaUsdInPrivateData::Delete);
                 }
@@ -106,18 +110,18 @@ static void lightListFnc(UsdKatanaUtilsLightListAccess& lightList)
 {
     UsdPrim prim = lightList.GetPrim();
     if (prim && prim.HasAPI<UsdLuxLightAPI>() || prim.GetTypeName() == "Light") {
-        UsdLuxBoundableLightBase light(prim);
-        /*
-        UsdLuxLight light(prim);
+        UsdLuxLightAPI light(prim);
         lightList.Set("path", lightList.GetLocation());
         lightList.SetLinks(light.GetLightLinkCollectionAPI(), "light");
         lightList.Set("enable", true);
         lightList.SetLinks(light.GetShadowLinkCollectionAPI(), "shadow");
-        */
     }
-    //if (prim && prim.IsA<UsdRiPxrAovLight>()) {
-    //    lightList.Set("hasAOV", true);
-    //}
+
+    TfType pxrAovLight = TfType::FindByName("UsdRiPxrAovLight");
+    if (prim && !pxrAovLight.IsUnknown() && prim.IsA(pxrAovLight))
+    {
+        lightList.Set("hasAOV", true);
+    }
 }
 
 }
