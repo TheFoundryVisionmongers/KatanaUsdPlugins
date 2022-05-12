@@ -1,5 +1,18 @@
 # Change List
 
+
+# 21.05_fn5_py2
+
+## Bug fixes
+- ID 501927 - Fixed a variety of build issues when building KatanaUsdPlugins externally
+    - KatanaUsdPlugins built externally would not build against Katana 5.0 due to not finding the correct Boost Python package.
+    - KatanaUsdPlugins built externally installed the UsdExport modules to the wrong location.
+    - KatanaUsdPlugins default PXR_LIB_PREFIX was set incorrectly when using Katanas USD at build time.
+    - KatanaUsdPlugins did not specify the `CMAKE_CXX_STANDARD`.
+    - KatanaUsdPlugins did not always find pyconfig.h correctly.
+    - KatanaUsdPlugins could not find the Linux TBB library when using Katana's TBB libraries.
+    - KatanaUsdPlugins did not define Katana's `PXR_PY_PACKAGE_NAME` correctly by default when using Katana's USD Libraries.
+
 # 21.05_fn4_py2
 
 ## Bug fixes
@@ -7,7 +20,7 @@
 
 - ID 453348 - When importing a USD file that had previously been exported from Katana via the UsdMaterialBake node, any Katana child materials were not bound correctly on import.  For example, the materialAssign attribute on a bound location was updated from NetworkMaterial1_material1 to NetworkMaterial1/material1 (to match what it was before it was exported), but the location of the material in the scene graph was still NetworkMaterial1_material1. This meant the location was unbound and produced incorrect rendering results.
 
- - ID 505055 - Ops in KatanaUsdPlugins clashed with RenderMan named ops. Pxr has been removed as a prefix to the Ops registered by KatanaUsdPlugins. The folders of KatanaUsdPlugins source code have been renamed to remove Pxr prefixes where applicable. 
+ - ID 505055 - Ops in KatanaUsdPlugins clashed with RenderMan named ops. Pxr has been removed as a prefix to the Ops registered by KatanaUsdPlugins. The folders of KatanaUsdPlugins source code have been renamed to remove Pxr prefixes where applicable.
 
 # 21.05_fn3_py2
 
@@ -38,7 +51,7 @@ MISC - Libraries created with the pxr_library function compile with C++14
 # 21.05_fn1_py2
 
 ## Bug fixes
-- ID 485105 - UsdMaterialBake node would write out childMaterial's shaderInput with a double up of the connection type  (for example`float inputs:inputs:roughness = 0.4` rather than `float inputs:roughness = 0.4`.) 
+- ID 485105 - UsdMaterialBake node would write out childMaterial's shaderInput with a double up of the connection type  (for example`float inputs:inputs:roughness = 0.4` rather than `float inputs:roughness = 0.4`.)
 - ID 487750 - Some UsdLux light attributes were not imported with the matching name as Katana attributes.
 - ID 485192 - When using a UsdIn node to import a USD file containing a 3-dimensional texture coordinate primvar named **\<primname>**, the attributes under **geometry.arbitrary.\<primname>** were not loaded completely.
 - ID 483676 - When baking a material network via a **UsdMaterialBake** node, expansion states would not be written correctly.
@@ -46,7 +59,7 @@ MISC - Libraries created with the pxr_library function compile with C++14
 ## Feature Enhancements
 - ID 489436 - UsdExport will now export light and shadow linking information.
 Resolved light linking paths will be written to USD, so long as the location linked to, and the light are under the same rootLocation specified on **UsdMaterialBake**
-- ID 484656 - Lights using the LightAPI schema with `katana:id` attributes will be imported as the provided shader type, with all the renderer name-spaced attributes being loaded into that renderers light parameters.  If multiple shaders are mentioned in the `katana:id` attribute, multiple shaders will be imported, and this is why the name-spaced attributes are important.  You may not have multiple shaders for the same renderer.  We utilise the `SdrRegistry` to discover the light shader and to read in the relevant attributes, and understand the context required; this means it is required that the light shader is registered to the `SdrRegistry` for the USD library KatanaUsdPlugins is utilising. 
+- ID 484656 - Lights using the LightAPI schema with `katana:id` attributes will be imported as the provided shader type, with all the renderer name-spaced attributes being loaded into that renderers light parameters.  If multiple shaders are mentioned in the `katana:id` attribute, multiple shaders will be imported, and this is why the name-spaced attributes are important.  You may not have multiple shaders for the same renderer.  We utilise the `SdrRegistry` to discover the light shader and to read in the relevant attributes, and understand the context required; this means it is required that the light shader is registered to the `SdrRegistry` for the USD library KatanaUsdPlugins is utilising.
 
   UsdLux Light information will be imported as before using the UsdLuxAPI.
 
