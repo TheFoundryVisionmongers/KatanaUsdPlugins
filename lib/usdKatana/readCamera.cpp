@@ -44,14 +44,11 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+FnLogSetup("UsdKatanaReadCamera");
 
-FnLogSetup("PxrUsdKatanaReadCamera");
-
-void
-PxrUsdKatanaReadCamera(
-        const UsdGeomCamera& camera,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadCamera(const UsdGeomCamera& camera,
+                         const UsdKatanaUsdInPrivateData& data,
+                         UsdKatanaAttrMap& attrs)
 {
     const double currentTime = data.GetCurrentTime();
     const bool prmanOutputTarget = data.hasOutputTarget("prman");
@@ -60,7 +57,7 @@ PxrUsdKatanaReadCamera(
     // Set all general attributes for a xformable type.
     //
 
-    PxrUsdKatanaReadXformable(camera, data, attrs);
+    UsdKatanaReadXformable(camera, data, attrs);
 
     // want both "type" and "bound" to stomp
     attrs.set("type", FnKat::StringAttribute("camera"));
@@ -135,9 +132,7 @@ PxrUsdKatanaReadCamera(
 
         UsdAttribute focalLengthAttr = camera.GetFocalLengthAttr();
 
-        bool isVarying = 
-            PxrUsdKatanaUtils::IsAttributeVarying(
-                focalLengthAttr, currentTime);
+        bool isVarying = UsdKatanaUtils::IsAttributeVarying(focalLengthAttr, currentTime);
 
         const std::vector<double>& motionSampleTimes =
             data.GetMotionSampleTimes(camera.GetFocalLengthAttr());
@@ -153,8 +148,9 @@ PxrUsdKatanaReadCamera(
             double fov = camera.GetCamera(time).GetFieldOfView(
                 GfCamera::FOVHorizontal);
 
-            fovBuilder.push_back(fov, isMotionBackward ?
-                PxrUsdKatanaUtils::ReverseTimeSample(relSampleTime) : relSampleTime);
+            fovBuilder.push_back(fov, isMotionBackward
+                                          ? UsdKatanaUtils::ReverseTimeSample(relSampleTime)
+                                          : relSampleTime);
 
             if (!isVarying)
             {

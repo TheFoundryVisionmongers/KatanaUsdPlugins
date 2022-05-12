@@ -28,8 +28,8 @@
 // language governing permissions and limitations under the Apache License.
 //
 
-#ifndef PXRUSDKATANA_READXFORMABLE_H
-#define PXRUSDKATANA_READXFORMABLE_H
+#ifndef USDKATANA_READXFORMABLE_H
+#define USDKATANA_READXFORMABLE_H
 
 #include "pxr/pxr.h"
 
@@ -38,26 +38,21 @@ PXR_NAMESPACE_OPEN_SCOPE
 #include "api.h"
 #include <FnAttribute/FnAttribute.h>
 
-class PxrUsdKatanaAttrMap;
-class PxrUsdKatanaUsdInPrivateData;
+class UsdKatanaAttrMap;
+class UsdKatanaUsdInPrivateData;
 class UsdGeomXformable;
 
 /// \brief read \p xform into \p attrs.
-USDKATANA_API void
-PxrUsdKatanaReadXformable(
-        const UsdGeomXformable& xform,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs);
+USDKATANA_API void UsdKatanaReadXformable(const UsdGeomXformable& xform,
+                                          const UsdKatanaUsdInPrivateData& data,
+                                          UsdKatanaAttrMap& attrs);
 
 /// \brief read \p xform into \p attr.  Returns \c true iff there were any
 /// transformation ops.
-bool
-PxrUsdKatanaReadXformable(
-        const UsdGeomXformable& xform,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        FnAttribute::GroupAttribute& attr);
+bool UsdKatanaReadXformable(const UsdGeomXformable& xform,
+                            const UsdKatanaUsdInPrivateData& data,
+                            FnAttribute::GroupAttribute& attr);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_READXFORMABLE_H
-
+#endif  // USDKATANA_READXFORMABLE_H

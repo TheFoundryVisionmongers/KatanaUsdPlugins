@@ -60,10 +60,10 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-FnLogSetup("PxrUsdKatanaReadLight");
+FnLogSetup("UsdKatanaReadLight");
 
 // Convert USD radius to light.size (which acts like diameter)
-static void _SetLightSizeFromRadius(PxrUsdKatanaAttrMap& geomBuilder,
+static void _SetLightSizeFromRadius(UsdKatanaAttrMap& geomBuilder,
                                     UsdAttribute radiusAttr,
                                     UsdTimeCode time)
 {
@@ -78,11 +78,11 @@ static const std::unordered_map<std::string, std::string> s_rendererToContextNam
 void __handleUsdLuxLightTypes(const UsdLuxLight& light,
                               const UsdPrim& lightPrim,
                               const UsdTimeCode& currentTimeCode,
-                              const PxrUsdKatanaUsdInPrivateData& data,
+                              const UsdKatanaUsdInPrivateData& data,
                               FnKat::GroupBuilder& materialBuilder,
-                              PxrUsdKatanaAttrMap& geomBuilder)
+                              UsdKatanaAttrMap& geomBuilder)
 {
-    PxrUsdKatanaAttrMap lightBuilder;
+    UsdKatanaAttrMap lightBuilder;
     lightBuilder.SetUSDTimeCode(currentTimeCode);
     // UsdLuxLight
     lightBuilder.Set("intensity", light.GetIntensityAttr())
@@ -150,7 +150,7 @@ void __handleUsdLuxLightTypes(const UsdLuxLight& light,
                     "USD geometry light "
                     << lightPrim.GetPath() << "; using first only");
             }
-            std::string kat_loc = PxrUsdKatanaUtils::ConvertUsdPathToKatLocation(geo[0], data);
+            std::string kat_loc = UsdKatanaUtils::ConvertUsdPathToKatLocation(geo[0], data);
             geomBuilder.set("areaLightGeometrySource", FnKat::StringAttribute(kat_loc));
         }
     }
@@ -180,7 +180,7 @@ void __handleUsdLuxLightTypes(const UsdLuxLight& light,
 void __handleSdrRegistryLights(const UsdPrim& lightPrim,
                                const UsdTimeCode& currentTimeCode,
                                FnKat::GroupBuilder& materialBuilder,
-                               PxrUsdKatanaAttrMap& geomBuilder)
+                               UsdKatanaAttrMap& geomBuilder)
 {
     UsdKatanaLightAPI lightAPI(lightPrim);
     geomBuilder.Set("centerOfInterest", lightAPI.GetCenterOfInterestAttr());
@@ -228,7 +228,7 @@ void __handleSdrRegistryLights(const UsdPrim& lightPrim,
             continue;
         }
 
-        PxrUsdKatanaAttrMap lightBuilder;
+        UsdKatanaAttrMap lightBuilder;
         lightBuilder.SetUSDTimeCode(currentTimeCode);
         const std::string shaderContext = sdrNode->GetContext().GetString();
 
@@ -289,14 +289,14 @@ void __handleSdrRegistryLights(const UsdPrim& lightPrim,
     }
 }
 
-void PxrUsdKatanaReadLight(const UsdLuxLight& light,
-                           const PxrUsdKatanaUsdInPrivateData& data,
-                           PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadLight(const UsdLuxLight& light,
+                        const UsdKatanaUsdInPrivateData& data,
+                        UsdKatanaAttrMap& attrs)
 {
     const UsdPrim lightPrim = light.GetPrim();
     const UsdTimeCode currentTimeCode = data.GetCurrentTime();
     attrs.SetUSDTimeCode(currentTimeCode);
-    PxrUsdKatanaAttrMap geomBuilder;
+    UsdKatanaAttrMap geomBuilder;
     geomBuilder.SetUSDTimeCode(currentTimeCode);
     FnKat::GroupBuilder materialBuilder;
     // Always set a default local value for the centerOfInterset to enable the
@@ -316,7 +316,7 @@ void PxrUsdKatanaReadLight(const UsdLuxLight& light,
     gafferBuilder.set("packageClass", FnAttribute::StringAttribute("LightPackage"));
     attrs.set("info.gaffer", gafferBuilder.build());
 
-    PxrUsdKatanaReadXformable(light, data, attrs);
+    UsdKatanaReadXformable(light, data, attrs);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -27,57 +27,41 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_READGPRIM_H
-#define PXRUSDKATANA_READGPRIM_H
+#ifndef USDKATANA_READGPRIM_H
+#define USDKATANA_READGPRIM_H
 
 #include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-class PxrUsdKatanaAttrMap;
-class PxrUsdKatanaUsdInPrivateData;
+class UsdKatanaAttrMap;
+class UsdKatanaUsdInPrivateData;
 class UsdGeomGprim;
 class UsdGeomPointBased;
 
 /// \brief reads \p gprim into \p attrs.
-void
-PxrUsdKatanaReadGprim(
-        const UsdGeomGprim& gprim,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs);
+void UsdKatanaReadGprim(const UsdGeomGprim& gprim,
+                        const UsdKatanaUsdInPrivateData& data,
+                        UsdKatanaAttrMap& attrs);
 
-Foundry::Katana::Attribute
-PxrUsdKatanaGeomGetDisplayColorAttr(
-        const UsdGeomGprim& gprim,
-        const PxrUsdKatanaUsdInPrivateData& data);
+Foundry::Katana::Attribute UsdKatanaGeomGetDisplayColorAttr(const UsdGeomGprim& gprim,
+                                                            const UsdKatanaUsdInPrivateData& data);
 
-Foundry::Katana::Attribute
-PxrUsdKatanaGeomGetPAttr(
-        const UsdGeomPointBased& points,
-        const PxrUsdKatanaUsdInPrivateData& data);
+Foundry::Katana::Attribute UsdKatanaGeomGetPAttr(const UsdGeomPointBased& points,
+                                                 const UsdKatanaUsdInPrivateData& data);
 
-Foundry::Katana::Attribute
-PxrUsdKatanaGeomGetWindingOrderAttr(
-        const UsdGeomGprim& gprim,
-        const PxrUsdKatanaUsdInPrivateData& data);
+Foundry::Katana::Attribute UsdKatanaGeomGetWindingOrderAttr(const UsdGeomGprim& gprim,
+                                                            const UsdKatanaUsdInPrivateData& data);
 
-Foundry::Katana::Attribute
-PxrUsdKatanaGeomGetNormalAttr(
-    const UsdGeomPointBased& points,
-    const PxrUsdKatanaUsdInPrivateData& data);
+Foundry::Katana::Attribute UsdKatanaGeomGetNormalAttr(const UsdGeomPointBased& points,
+                                                      const UsdKatanaUsdInPrivateData& data);
 
-Foundry::Katana::Attribute
-PxrUsdKatanaGeomGetVelocityAttr(
-    const UsdGeomPointBased& points,
-    const PxrUsdKatanaUsdInPrivateData& data);
+Foundry::Katana::Attribute UsdKatanaGeomGetVelocityAttr(const UsdGeomPointBased& points,
+                                                        const UsdKatanaUsdInPrivateData& data);
 
-Foundry::Katana::Attribute
-PxrUsdKatanaGeomGetAccelerationAttr(
-    const UsdGeomPointBased& points,
-    const PxrUsdKatanaUsdInPrivateData& data);
-
+Foundry::Katana::Attribute UsdKatanaGeomGetAccelerationAttr(const UsdGeomPointBased& points,
+                                                            const UsdKatanaUsdInPrivateData& data);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_READGPRIM_H
-
+#endif  // USDKATANA_READGPRIM_H

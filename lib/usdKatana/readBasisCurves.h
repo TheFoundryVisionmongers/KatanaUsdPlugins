@@ -27,27 +27,24 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_READBASISCURVES_H
-#define PXRUSDKATANA_READBASISCURVES_H
+#ifndef USDKATANA_READBASISCURVES_H
+#define USDKATANA_READBASISCURVES_H
 
 #include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-#include "api.h"
+#include "usdKatana/api.h"
 
-class PxrUsdKatanaAttrMap;
-class PxrUsdKatanaUsdInPrivateData;
+class UsdKatanaAttrMap;
+class UsdKatanaUsdInPrivateData;
 class UsdGeomBasisCurves;
 
 /// \brief read \p basiscurves into \p attrs.
-USDKATANA_API void
-PxrUsdKatanaReadBasisCurves(
-        const UsdGeomBasisCurves& basisCurves,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs);
-
+USDKATANA_API void UsdKatanaReadBasisCurves(const UsdGeomBasisCurves& basisCurves,
+                                            const UsdKatanaUsdInPrivateData& data,
+                                            UsdKatanaAttrMap& attrs);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_READBASISCURVES_H
+#endif  // USDKATANA_READBASISCURVES_H

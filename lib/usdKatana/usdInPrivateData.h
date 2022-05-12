@@ -27,8 +27,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_USDIN_PRIVATEDATA_H
-#define PXRUSDKATANA_USDIN_PRIVATEDATA_H
+#ifndef USDKATANA_USDIN_PRIVATEDATA_H
+#define USDKATANA_USDIN_PRIVATEDATA_H
 
 #include "pxr/pxr.h"
 #include "usdKatana/usdInArgs.h"
@@ -43,11 +43,10 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-
-/// \brief Private data for each non-root invocation of \c PxrUsdIn. 
+/// \brief Private data for each non-root invocation of \c UsdIn.
 ///
-/// \sa PxrUsdKatanaUsdInArgs
-class PxrUsdKatanaUsdInPrivateData : public Foundry::Katana::GeolibPrivateData
+/// \sa UsdKatanaUsdInArgs
+class UsdKatanaUsdInPrivateData : public Foundry::Katana::GeolibPrivateData
 {
 
 public:
@@ -71,23 +70,17 @@ public:
         double katanaTime;
     };
 
-    USDKATANA_API PxrUsdKatanaUsdInPrivateData(
-            const UsdPrim& prim,
-            PxrUsdKatanaUsdInArgsRefPtr usdInArgs,
-            const PxrUsdKatanaUsdInPrivateData* parentData = NULL);
+    USDKATANA_API UsdKatanaUsdInPrivateData(const UsdPrim& prim,
+                                            UsdKatanaUsdInArgsRefPtr usdInArgs,
+                                            const UsdKatanaUsdInPrivateData* parentData = NULL);
 
-    virtual ~PxrUsdKatanaUsdInPrivateData()
-    {
-        delete _extGb;
-    }
+    virtual ~UsdKatanaUsdInPrivateData() { delete _extGb; }
 
     const UsdPrim& GetUsdPrim() const {
         return _prim;
     }
 
-    const PxrUsdKatanaUsdInArgsRefPtr GetUsdInArgs() const {
-        return _usdInArgs;
-    }
+    const UsdKatanaUsdInArgsRefPtr GetUsdInArgs() const { return _usdInArgs; }
 
     const SdfPath& GetInstancePath() const {
         return _instancePath;
@@ -123,7 +116,7 @@ public:
 
     /// \brief Return true if motion blur is backward.
     ///
-    /// PxrUsdIn supports both forward and backward motion blur. Motion
+    /// UsdIn supports both forward and backward motion blur. Motion
     /// blur is considered backward if multiple samples are requested
     /// and the first specified sample is later than the last sample.
     const bool IsMotionBackward() const;
@@ -206,14 +199,14 @@ public:
 
     /// \brief extract private data from either the interface (its natural
     ///        location) with room for future growth
-    USDKATANA_API static PxrUsdKatanaUsdInPrivateData * GetPrivateData(
-            const FnKat::GeolibCookInterface& interface);
+    USDKATANA_API static UsdKatanaUsdInPrivateData* GetPrivateData(
+        const FnKat::GeolibCookInterface& interface);
 
 private:
 
     UsdPrim _prim;
 
-    PxrUsdKatanaUsdInArgsRefPtr _usdInArgs;
+    UsdKatanaUsdInArgsRefPtr _usdInArgs;
 
     SdfPath _instancePath;
     SdfPath _masterPath;
@@ -245,4 +238,4 @@ private:
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_USDIN_PRIVATEDATA_H
+#endif  // USDKATANA_USDIN_PRIVATEDATA_H

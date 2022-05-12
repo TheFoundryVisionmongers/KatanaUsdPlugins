@@ -27,8 +27,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_BASEMATERIALHELPERS_H
-#define PXRUSDKATANA_BASEMATERIALHELPERS_H
+#ifndef USDKATANA_BASEMATERIALHELPERS_H
+#define USDKATANA_BASEMATERIALHELPERS_H
 
 #include "pxr/pxr.h"
 
@@ -55,19 +55,18 @@ class UsdRelationship;
 //     for this sort of thing.
 
 // Check if this attribute resolves from across a direct reference arc.
-bool PxrUsdKatana_IsAttrValFromDirectReference(const UsdAttribute &attr);
+bool UsdKatana_IsAttrValFromDirectReference(const UsdAttribute& attr);
 
 // Check if this attribute resolves from across a specializes arc.
-bool PxrUsdKatana_IsAttrValFromBaseMaterial(const UsdAttribute &attr);
+bool UsdKatana_IsAttrValFromBaseMaterial(const UsdAttribute& attr);
 
 // Check if this prim is defined across a specializes arc.
-bool PxrUsdKatana_IsPrimDefFromBaseMaterial(const UsdPrim &prim);
+bool UsdKatana_IsPrimDefFromBaseMaterial(const UsdPrim& prim);
 
 // Check if this relationship has targets provided across a specializes arc.
 // (Usd doesn't provide a UsdResolveInfo style API for asking where
 // relationship targets are authored, so we do it here ourselves.)
-bool PxrUsdKatana_AreRelTargetsFromBaseMaterial(const UsdRelationship &rel);
-
+bool UsdKatana_AreRelTargetsFromBaseMaterial(const UsdRelationship& rel);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

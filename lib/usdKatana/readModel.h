@@ -27,8 +27,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_READMODEL_H
-#define PXRUSDKATANA_READMODEL_H
+#ifndef USDKATANA_READMODEL_H
+#define USDKATANA_READMODEL_H
 
 #include "pxr/pxr.h"
 
@@ -36,18 +36,15 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 #include "api.h"
 
-class PxrUsdKatanaAttrMap;
-class PxrUsdKatanaUsdInPrivateData;
+class UsdKatanaAttrMap;
+class UsdKatanaUsdInPrivateData;
 class UsdPrim;
 
 /// \brief read \p model into \p attrs.
-USDKATANA_API void
-PxrUsdKatanaReadModel(
-        const UsdPrim& model,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs);
-
+USDKATANA_API void UsdKatanaReadModel(const UsdPrim& model,
+                                      const UsdKatanaUsdInPrivateData& data,
+                                      UsdKatanaAttrMap& attrs);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_READMODEL_H
+#endif  // USDKATANA_READMODEL_H

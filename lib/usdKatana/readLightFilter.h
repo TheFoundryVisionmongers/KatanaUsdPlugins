@@ -27,8 +27,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_READLIGHTFILTER_H
-#define PXRUSDKATANA_READLIGHTFILTER_H
+#ifndef USDKATANA_READLIGHTFILTER_H
+#define USDKATANA_READLIGHTFILTER_H
 
 #include "pxr/pxr.h"
 
@@ -37,18 +37,15 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 #include "api.h"
 
-class PxrUsdKatanaAttrMap;
-class PxrUsdKatanaUsdInPrivateData;
+class UsdKatanaAttrMap;
+class UsdKatanaUsdInPrivateData;
 class UsdLuxLightFilter;
 
 /// \brief read \p lightFilter into \p attrs.
-USDKATANA_API void
-PxrUsdKatanaReadLightFilter(
-        const UsdLuxLightFilter& lightFilter,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs);
+USDKATANA_API void UsdKatanaReadLightFilter(const UsdLuxLightFilter& lightFilter,
+                                            const UsdKatanaUsdInPrivateData& data,
+                                            UsdKatanaAttrMap& attrs);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // PXRUSDKATANA_READLIGHTFILTER_H
-
+#endif  // USDKATANA_READLIGHTFILTER_H

@@ -40,8 +40,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-
-FnLogSetup("PxrUsdKatanaReadNurbsPatch");
+FnLogSetup("UsdKatanaReadNurbsPatch");
 
 static FnKat::IntAttribute
 _GetUSizeAttr(
@@ -154,8 +153,8 @@ _GetPwAttr(
         }
 
         // set the points data in katana at the give motion sample time
-        std::vector<float> &ptVec = pwBuilder.get(isMotionBackward ?
-            PxrUsdKatanaUtils::ReverseTimeSample(relSampleTime) : relSampleTime);
+        std::vector<float>& ptVec = pwBuilder.get(
+            isMotionBackward ? UsdKatanaUtils::ReverseTimeSample(relSampleTime) : relSampleTime);
 
         ptVec.resize(ptArray.size() * 4);
 
@@ -308,11 +307,9 @@ _GetTrimCurvesAttr(
     return trimBuilder.build();
 }
 
-void
-PxrUsdKatanaReadNurbsPatch(
-        const UsdGeomNurbsPatch& nurbsPatch,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadNurbsPatch(const UsdGeomNurbsPatch& nurbsPatch,
+                             const UsdKatanaUsdInPrivateData& data,
+                             UsdKatanaAttrMap& attrs)
 {
     const double currentTime = data.GetCurrentTime();
     const std::vector<double>& motionSampleTimes = 
@@ -322,7 +319,7 @@ PxrUsdKatanaReadNurbsPatch(
     // Set all general attributes for a gprim type.
     //
 
-    PxrUsdKatanaReadGprim(nurbsPatch, data, attrs);
+    UsdKatanaReadGprim(nurbsPatch, data, attrs);
 
     //
     // Set more specific Katana type.
@@ -345,7 +342,7 @@ PxrUsdKatanaReadNurbsPatch(
     attrs.set("geometry.trimCurves", _GetTrimCurvesAttr(nurbsPatch, currentTime));
 
     // normals
-    FnKat::Attribute normalsAttr = PxrUsdKatanaGeomGetNormalAttr(nurbsPatch, data);
+    FnKat::Attribute normalsAttr = UsdKatanaGeomGetNormalAttr(nurbsPatch, data);
     if (normalsAttr.isValid())
     {
         // XXX RfK currently doesn't support uniform, varying, or facevarying
@@ -357,15 +354,14 @@ PxrUsdKatanaReadNurbsPatch(
     }
     
     // velocity
-    FnKat::Attribute velocityAttr = PxrUsdKatanaGeomGetVelocityAttr(nurbsPatch, data);
+    FnKat::Attribute velocityAttr = UsdKatanaGeomGetVelocityAttr(nurbsPatch, data);
     if (velocityAttr.isValid())
     {
         attrs.set("geometry.point.v", velocityAttr);
     }
 
     // acceleration
-    FnKat::Attribute accelAttr =
-        PxrUsdKatanaGeomGetAccelerationAttr(nurbsPatch, data);
+    FnKat::Attribute accelAttr = UsdKatanaGeomGetAccelerationAttr(nurbsPatch, data);
     if (accelAttr.isValid())
     {
         attrs.set("geometry.point.accel", accelAttr);
@@ -376,7 +372,7 @@ PxrUsdKatanaReadNurbsPatch(
     //
 
     attrs.set("viewer.default.drawOptions.windingOrder",
-        PxrUsdKatanaGeomGetWindingOrderAttr(nurbsPatch, data));
+              UsdKatanaGeomGetWindingOrderAttr(nurbsPatch, data));
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

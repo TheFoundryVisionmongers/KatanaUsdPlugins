@@ -45,12 +45,11 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+FnLogSetup("UsdKatanaReadBasisCurves");
 
-FnLogSetup("PxrUsdKatanaReadBasisCurves");
-
-static void
-_SetCurveAttrs(PxrUsdKatanaAttrMap& attrs,
-               const UsdGeomBasisCurves& basisCurves, double currentTime)
+static void _SetCurveAttrs(UsdKatanaAttrMap& attrs,
+                           const UsdGeomBasisCurves& basisCurves,
+                           double currentTime)
 {
     VtIntArray vtxCts;
     basisCurves.GetCurveVertexCountsAttr().Get(&vtxCts, currentTime);
@@ -95,18 +94,16 @@ _SetCurveAttrs(PxrUsdKatanaAttrMap& attrs,
         FnKat::IntAttribute(curveType == UsdGeomTokens->linear ? 1 : 3));
 }
 
-void
-PxrUsdKatanaReadBasisCurves(
-        const UsdGeomBasisCurves& basisCurves,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadBasisCurves(const UsdGeomBasisCurves& basisCurves,
+                              const UsdKatanaUsdInPrivateData& data,
+                              UsdKatanaAttrMap& attrs)
 {
     const bool prmanOutputTarget = data.hasOutputTarget("prman");
     //
     // Set all general attributes for a gprim type.
     //
 
-    PxrUsdKatanaReadGprim(basisCurves, data, attrs);
+    UsdKatanaReadGprim(basisCurves, data, attrs);
 
     //
     // Set more specific Katana type.
@@ -190,11 +187,10 @@ PxrUsdKatanaReadBasisCurves(
     _SetCurveAttrs(attrs, basisCurves, data.GetCurrentTime());
     
     // position
-    attrs.set("geometry.point.P",
-        PxrUsdKatanaGeomGetPAttr(basisCurves, data));
+    attrs.set("geometry.point.P", UsdKatanaGeomGetPAttr(basisCurves, data));
 
     // normals
-    FnKat::Attribute normalsAttr = PxrUsdKatanaGeomGetNormalAttr(basisCurves, data);
+    FnKat::Attribute normalsAttr = UsdKatanaGeomGetNormalAttr(basisCurves, data);
     if (normalsAttr.isValid())
     {
         // XXX RfK doesn't support uniform normals for curves.
@@ -209,24 +205,22 @@ PxrUsdKatanaReadBasisCurves(
     }
 
     // velocity
-    FnKat::Attribute velocityAttr =
-        PxrUsdKatanaGeomGetVelocityAttr(basisCurves, data);
+    FnKat::Attribute velocityAttr = UsdKatanaGeomGetVelocityAttr(basisCurves, data);
     if (velocityAttr.isValid())
     {
         attrs.set("geometry.point.v", velocityAttr);
     }
 
     // acceleration
-    FnKat::Attribute accelAttr =
-        PxrUsdKatanaGeomGetAccelerationAttr(basisCurves, data);
+    FnKat::Attribute accelAttr = UsdKatanaGeomGetAccelerationAttr(basisCurves, data);
     if (accelAttr.isValid())
     {
         attrs.set("geometry.point.accel", accelAttr);
     }
 
     // Add SPT_HwColor primvar
-    attrs.set("geometry.arbitrary.SPT_HwColor", 
-              PxrUsdKatanaGeomGetDisplayColorAttr(basisCurves, data));
+    attrs.set("geometry.arbitrary.SPT_HwColor",
+              UsdKatanaGeomGetDisplayColorAttr(basisCurves, data));
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

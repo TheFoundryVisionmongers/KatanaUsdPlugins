@@ -27,27 +27,23 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXRUSDKATANA_READGEOMSUBSET_H
-#define PXRUSDKATANA_READGEOMSUBSET_H
+#ifndef USDKATANA_READGEOMSUBSET_H
+#define USDKATANA_READGEOMSUBSET_H
 
 #include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+#include "usdKatana/api.h"
 
-#include "api.h"
-
-class PxrUsdKatanaAttrMap;
-class PxrUsdKatanaUsdInPrivateData;
+class UsdKatanaAttrMap;
+class UsdKatanaUsdInPrivateData;
 class UsdGeomSubset;
 
 /// \brief read \p GeomSubset into \p attrs.
-USDKATANA_API void
-PxrUsdKatanaReadGeomSubset(
-        const UsdGeomSubset& mesh,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs);
-
+USDKATANA_API void UsdKatanaReadGeomSubset(const UsdGeomSubset& mesh,
+                                           const UsdKatanaUsdInPrivateData& data,
+                                           UsdKatanaAttrMap& attrs);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

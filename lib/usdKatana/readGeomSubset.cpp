@@ -42,15 +42,13 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-FnLogSetup("PxrUsdKatanaReadGeomSubset");
+FnLogSetup("UsdKatanaReadGeomSubset");
 
-void
-PxrUsdKatanaReadGeomSubset(
-        const UsdGeomSubset& geomSubset,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadGeomSubset(const UsdGeomSubset& geomSubset,
+                             const UsdKatanaUsdInPrivateData& data,
+                             UsdKatanaAttrMap& attrs)
 {
-    PxrUsdKatanaReadPrim(geomSubset.GetPrim(), data, attrs);
+    UsdKatanaReadPrim(geomSubset.GetPrim(), data, attrs);
 
     // We only import facesets.
     TfToken elementType;

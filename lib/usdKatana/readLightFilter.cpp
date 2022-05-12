@@ -60,7 +60,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-FnLogSetup("PxrUsdKatanaReadLightFilter");
+FnLogSetup("UsdKatanaReadLightFilter");
 
 using std::string;
 using std::vector;
@@ -76,8 +76,7 @@ struct _UsdBuilder {
         VtValue val;
         if (attr.HasAuthoredValueOpinion()
             && attr.Get(&val, _time)) {
-            FnKat::Attribute kat_attr =
-                PxrUsdKatanaUtils::ConvertVtValueToKatAttr(val);
+            FnKat::Attribute kat_attr = UsdKatanaUtils::ConvertVtValueToKatAttr(val);
             _builder.set(kat_name.c_str(), kat_attr);
         }
         return *this;
@@ -135,11 +134,9 @@ struct _UsdBuilder {
     }
 };
 
-void
-PxrUsdKatanaReadLightFilter(
-        const UsdLuxLightFilter& lightFilter,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadLightFilter(const UsdLuxLightFilter& lightFilter,
+                              const UsdKatanaUsdInPrivateData& data,
+                              UsdKatanaAttrMap& attrs)
 {
     const UsdPrim filterPrim = lightFilter.GetPrim();
     const SdfPath primPath = filterPrim.GetPath();
@@ -382,8 +379,7 @@ PxrUsdKatanaReadLightFilter(
 
     // Gather prman statements
     FnKat::GroupBuilder primStatements;
-    PxrUsdKatanaReadPrimPrmanStatements(filterPrim, currentTime, 
-        primStatements, prmanOutputTarget);
+    UsdKatanaReadPrimPrmanStatements(filterPrim, currentTime, primStatements, prmanOutputTarget);
     if (prmanOutputTarget)
     {
         attrs.set("prmanStatements", primStatements.build());
@@ -392,7 +388,7 @@ PxrUsdKatanaReadLightFilter(
     attrs.set("usd", primStatements.build());
     
     attrs.set("material", materialBuilder.build());
-    PxrUsdKatanaReadXformable(lightFilter, data, attrs);
+    UsdKatanaReadXformable(lightFilter, data, attrs);
     attrs.set("type", FnKat::StringAttribute("light filter"));
 }
 

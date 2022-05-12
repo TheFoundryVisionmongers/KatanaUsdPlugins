@@ -46,6 +46,8 @@
 #include "pxr/base/tf/instantiateSingleton.h"
 
 #include <set>
+#include <utility>
+#include <vector>
 #include <boost/regex.hpp>
 
 #include <pystring/pystring.h>
@@ -75,10 +77,12 @@ namespace
         }
         
         bool isArray;
-        if (forceArrayAttr.isValid()) {
+        if (forceArrayAttr.isValid())
+        {
             isArray = forceArrayAttr.getValue();
         }
-        else {
+        else
+        {
             isArray = valueAttr.getNumberOfValues() != 1;
         }
         auto sdfAttr = SdfAttributeSpec::New(prim, attrName,
@@ -107,7 +111,7 @@ namespace
         }
         return true;
     }
-}
+    }  // namespace
 
 SdfLayerRefPtr& 
 UsdKatanaCache::_FindOrCreateSessionLayer(
@@ -429,25 +433,31 @@ UsdKatanaCache::_FindOrCreateSessionLayer(
         FnAttribute::StringAttribute dynamicSublayersAttr =
                 sessionAttr.getChildByName("subLayers");
 
-        if (dynamicSublayersAttr.getNumberOfValues() > 0){
-
-            FnAttribute::StringAttribute::array_type dynamicSublayers = dynamicSublayersAttr.getNearestSample(0);
-            if (dynamicSublayersAttr.getTupleSize() != 2 || 
-                dynamicSublayers.size() % 2 != 0){
+        if (dynamicSublayersAttr.getNumberOfValues() > 0)
+        {
+            FnAttribute::StringAttribute::array_type dynamicSublayers =
+                dynamicSublayersAttr.getNearestSample(0);
+            if (dynamicSublayersAttr.getTupleSize() != 2 || dynamicSublayers.size() % 2 != 0)
+            {
                 TF_CODING_ERROR("sublayers must contain a list of two-tuples [(rootLocation, sublayerIdentifier)]");
             }
 
             std::set<std::string> subLayersSet;
             std::vector<std::string> subLayers;
-            for (size_t i = 0; i<dynamicSublayers.size(); i+=2){
+            for (size_t i = 0; i < dynamicSublayers.size(); i += 2)
+            {
                 std::string sublayerRootLocation = dynamicSublayers[i];
-                if (sublayerRootLocation == rootLocation && strlen(dynamicSublayers[i+1]) > 0){
-                    if (subLayersSet.find(dynamicSublayers[i+1]) == subLayersSet.end()){
+                if (sublayerRootLocation == rootLocation && strlen(dynamicSublayers[i + 1]) > 0)
+                {
+                    if (subLayersSet.find(dynamicSublayers[i + 1]) == subLayersSet.end())
+                    {
                         subLayers.push_back(dynamicSublayers[i+1]);
                         subLayersSet.insert(dynamicSublayers[i+1]);
                     }
                     else
+                    {
                         TF_CODING_ERROR("Cannot add same sublayer twice.");
+                    }
                 }
             }
             sessionLayer->SetSubLayerPaths(subLayers);
@@ -455,7 +465,6 @@ UsdKatanaCache::_FindOrCreateSessionLayer(
     }
     
     return _sessionKeyCache[cacheKey];
-    
 }
 
 
@@ -551,25 +560,23 @@ _ResolvePath(const std::string& path)
 //       Additionally, UsdStagePopulationMask::All() should be sent in for an
 //       empty mask. That's only relevant internal to this file as this class
 //       is not exposed.
-class PxrUsdIn_StageOpenRequest : public UsdStageCacheRequest
+class UsdIn_StageOpenRequest : public UsdStageCacheRequest
 {
 public:
-    
-    PxrUsdIn_StageOpenRequest(UsdStage::InitialLoadSet load,
-            SdfLayerHandle const &rootLayer,
-            SdfLayerHandle const &sessionLayer,
-            ArResolverContext const &pathResolverContext,
-            const UsdStagePopulationMask & mask
-    )
-    : _rootLayer(rootLayer)
-    , _sessionLayer(sessionLayer)
-    , _pathResolverContext(pathResolverContext)
-    , _initialLoadSet(load)
-    , _mask(mask)
+    UsdIn_StageOpenRequest(UsdStage::InitialLoadSet load,
+                           SdfLayerHandle const& rootLayer,
+                           SdfLayerHandle const& sessionLayer,
+                           ArResolverContext const& pathResolverContext,
+                           const UsdStagePopulationMask& mask)
+        : _rootLayer(rootLayer),
+          _sessionLayer(sessionLayer),
+          _pathResolverContext(pathResolverContext),
+          _initialLoadSet(load),
+          _mask(mask)
     {}
-    
-    virtual ~PxrUsdIn_StageOpenRequest(){};
-    
+
+    virtual ~UsdIn_StageOpenRequest() {}
+
     virtual bool IsSatisfiedBy(UsdStageRefPtr const &stage) const
     {
         // NOTE: no need to compare the mask as the session layer key
@@ -581,20 +588,17 @@ public:
     
     virtual bool IsSatisfiedBy(UsdStageCacheRequest const &pending) const
     {
-        
-        auto req = dynamic_cast<PxrUsdIn_StageOpenRequest const *>(&pending);
+        auto req = dynamic_cast<UsdIn_StageOpenRequest const*>(&pending);
         if (!req)
         {
             return false;
         }
 
-        return _rootLayer == req->_rootLayer &&
-            _sessionLayer == req->_sessionLayer &&
-            _pathResolverContext == req->_pathResolverContext;// &&
-            // NOTE: no need to compare the mask as the session layer key
-            //       already incorporates the masks value.
-            //_mask == req->_mask;
-        
+        return _rootLayer == req->_rootLayer && _sessionLayer == req->_sessionLayer &&
+               _pathResolverContext == req->_pathResolverContext;
+        // NOTE: no need to compare the mask as the session layer key
+        // already incorporates the masks value.
+        // _mask == req->_mask;
     }
     virtual UsdStageRefPtr Manufacture()
     {
@@ -612,11 +616,10 @@ private:
     const UsdStagePopulationMask & _mask;
 };
 
-
 // While the population mask is not part of the session layer, it's delivered
 // along with the GroupAttribute which describes the session layer so that
 // it's incorporated in the same cache key. Other uses of population masks
-// may want to keep the mask mutable for a given stage, PxrUsdIn ensures that
+// may want to keep the mask mutable for a given stage, UsdIn ensures that
 // they are unique copies as it's possible (although usually discouraged) to
 // have simultaneous states active at once.
 void FillPopulationMaskFromSessionAttr(
@@ -691,14 +694,9 @@ UsdStageRefPtr UsdKatanaCache::GetStage(
         const UsdStage::InitialLoadSet load = 
             (forcePopulate ? UsdStage::LoadAll : UsdStage::LoadNone);
 
-        auto result = stageCache.RequestStage(
-                PxrUsdIn_StageOpenRequest(
-                    load,
-                    rootLayer,
-                    sessionLayer,
-                    ArGetResolver().GetCurrentContext(),
-                    mask));
-        
+        auto result = stageCache.RequestStage(UsdIn_StageOpenRequest(
+            load, rootLayer, sessionLayer, ArGetResolver().GetCurrentContext(), mask));
+
         UsdStageRefPtr stage = result.first;
         
         if (result.second)
@@ -712,7 +710,6 @@ UsdStageRefPtr UsdKatanaCache::GetStage(
                     forcePopulate?"true":"false",
                     (size_t)stage.operator->(),
                     sessionAttr.getHash().str().c_str());
-            
         }
         else
         {
@@ -731,7 +728,6 @@ UsdStageRefPtr UsdKatanaCache::GetStage(
         _SetMutedLayers(stage, ignoreLayerRegex);
 
         return stage;
-
     }
     
     static UsdStageRefPtr NULL_STAGE;
@@ -782,12 +778,9 @@ UsdKatanaCache::GetUncachedStage(std::string const& fileName,
         _SetMutedLayers(stage, ignoreLayerRegex);
 
         return stage;
-
     }
     
     return UsdStageRefPtr();
-    
-    
 }
 
 

@@ -57,8 +57,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-
-FnLogSetup("PxrUsdKatanaReadPointInstancer");
+FnLogSetup("UsdKatanaReadPointInstancer");
 
 namespace
 {
@@ -69,43 +68,33 @@ namespace
 
     // Log an error and set attrs to show an error message in the Scene Graph.
     //
-    void
-    _LogAndSetError(
-        PxrUsdKatanaAttrMap& attrs,
-        const std::string& message)
+    void _LogAndSetError(UsdKatanaAttrMap& attrs, const std::string& message)
     {
         FnLogError(message);
         attrs.set("errorMessage",
-                  FnKat::StringAttribute(
-                      "[ERROR PxrUsdKatanaReadPointInstancer]: " + message));
+                  FnKat::StringAttribute("[ERROR UsdKatanaReadPointInstancer]: " + message));
     }
 
     // Log a warning and set attrs to show a warning message in the Scene Graph.
-    void
-    _LogAndSetWarning(
-        PxrUsdKatanaAttrMap &attrs,
-        const std::string& message)
+    void _LogAndSetWarning(UsdKatanaAttrMap& attrs, const std::string& message)
     {
         FnLogWarn(message);
         attrs.set("warningMessage",
-                  FnKat::StringAttribute(
-                      "[WARNING PxrUsdKatanaReadPointInstancer]: " + message));
+                  FnKat::StringAttribute("[WARNING UsdKatanaReadPointInstancer]: " + message));
     }
 
     // XXX This is based on UsdGeomPointInstancer::ComputeExtentAtTime. Ideally,
     // we would just use UsdGeomPointInstancer, however it does not account for
     // multi-sampled transforms (see bug 147526).
     //
-    bool
-    _ComputeExtentAtTime(
-        VtVec3fArray& extent,
-        PxrUsdKatanaUsdInArgsRefPtr usdInArgs,
-        const std::vector<VtArray<GfMatrix4d>>& xforms,
-        const std::vector<double>& motionSampleTimes,
-        const VtIntArray& protoIndices,
-        const SdfPathVector& protoPaths,
-        const _PathToPrimMap& primCache,
-        const std::vector<bool>& mask)
+    bool _ComputeExtentAtTime(VtVec3fArray& extent,
+                              UsdKatanaUsdInArgsRefPtr usdInArgs,
+                              const std::vector<VtArray<GfMatrix4d>>& xforms,
+                              const std::vector<double>& motionSampleTimes,
+                              const VtIntArray& protoIndices,
+                              const SdfPathVector& protoPaths,
+                              const _PathToPrimMap& primCache,
+                              const std::vector<bool>& mask)
     {
         GfRange3d extentRange;
 
@@ -159,18 +148,16 @@ namespace
 
 } // anon namespace
 
-void
-PxrUsdKatanaReadPointInstancer(
-        const UsdGeomPointInstancer& instancer,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& instancerAttrMap,
-        PxrUsdKatanaAttrMap& sourcesAttrMap,
-        PxrUsdKatanaAttrMap& instancesAttrMap,
-        PxrUsdKatanaAttrMap& inputAttrMap)
+void UsdKatanaReadPointInstancer(const UsdGeomPointInstancer& instancer,
+                                 const UsdKatanaUsdInPrivateData& data,
+                                 UsdKatanaAttrMap& instancerAttrMap,
+                                 UsdKatanaAttrMap& sourcesAttrMap,
+                                 UsdKatanaAttrMap& instancesAttrMap,
+                                 UsdKatanaAttrMap& inputAttrMap)
 {
     const double currentTime = data.GetCurrentTime();
 
-    PxrUsdKatanaReadXformable(instancer, data, instancerAttrMap);
+    UsdKatanaReadXformable(instancer, data, instancerAttrMap);
 
     // Get primvars for setting later. Unfortunatley, the only way to get them
     // out of the attr map is to build it, which will cause its contents to be
@@ -564,7 +551,7 @@ PxrUsdKatanaReadPointInstancer(
             // preserved, for example, if the prototype is a gprim.
             //
             // XXX Since we can't make an assumption about what Katana type the
-            // PxrUsdIn ops will author, we'll have to make a best guess. For
+            // UsdIn ops will author, we'll have to make a best guess. For
             // now, consider Xform prims without an authored kind to be usable
             // as instance sources.
             //
@@ -581,7 +568,7 @@ PxrUsdKatanaReadPointInstancer(
             }
             else
             {
-                // Tell PxrUsdIn to create an empty group when it gets to the
+                // Tell UsdIn to create an empty group when it gets to the
                 // prototype's location.
                 //
                 sourcesBldr.setAttrAtLocation(relProtoPath,
@@ -645,11 +632,10 @@ PxrUsdKatanaReadPointInstancer(
     std::map<float, VtArray<GfMatrix4d>> timeToSampleMap;
     for (size_t a = 0; a < numXformSamples; ++a) {
         double relSampleTime = motionSampleTimes[a];
-        timeToSampleMap.insert(
-            {data.IsMotionBackward()
-                 ? PxrUsdKatanaUtils::ReverseTimeSample(relSampleTime)
-                 : relSampleTime,
-             xformSamples[a]});
+        timeToSampleMap.insert({data.IsMotionBackward()
+                                    ? UsdKatanaUtils::ReverseTimeSample(relSampleTime)
+                                    : relSampleTime,
+                                xformSamples[a]});
     }
     auto instanceMatrixAttr = VtKatanaMapOrCopy(timeToSampleMap);
     instancesBldr.setAttrAtLocation("instances", "geometry.instanceMatrix",
@@ -662,10 +648,9 @@ PxrUsdKatanaReadPointInstancer(
 
         // Shove samples into the builder at the frame-relative sample time. If
         // motion is backwards, make sure to reverse time samples.
-        std::vector<double> &matVec = instanceMatrixBldr.get(
-            data.IsMotionBackward()
-                ? PxrUsdKatanaUtils::ReverseTimeSample(relSampleTime)
-                : relSampleTime);
+        std::vector<double>& matVec = instanceMatrixBldr.get(
+            data.IsMotionBackward() ? UsdKatanaUtils::ReverseTimeSample(relSampleTime)
+                                    : relSampleTime);
 
         matVec.reserve(16 * numInstances);
         for (size_t i = 0; i < numInstances; ++i) {
@@ -739,7 +724,7 @@ PxrUsdKatanaReadPointInstancer(
     // Set proxy attrs.
     //
 
-    instancerAttrMap.set("proxies", PxrUsdKatanaUtils::GetViewerProxyAttr(data));
+    instancerAttrMap.set("proxies", UsdKatanaUtils::GetViewerProxyAttr(data));
 
     //
     // Transfer builder results to our attr maps.

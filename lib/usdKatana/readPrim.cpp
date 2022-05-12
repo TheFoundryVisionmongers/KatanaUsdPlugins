@@ -79,16 +79,11 @@ TF_DEFINE_ENV_SETTING(USD_KATANA_API_SCHEMAS_AS_GROUP_ATTR, false,
         "matching based on API schemas and an easier way to access the. "
         "instance name of Multiple Apply Schemas.");
 
+FnLogSetup("UsdKatanaReadPrim");
 
-FnLogSetup("PxrUsdKatanaReadPrim");
-
-
-static FnKat::Attribute
-_GetMaterialAssignAttrFromPath(
-        const SdfPath& inputTargetPath,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        const SdfPath& errorContextPath
-        )
+static FnKat::Attribute _GetMaterialAssignAttrFromPath(const SdfPath& inputTargetPath,
+                                                       const UsdKatanaUsdInPrivateData& data,
+                                                       const SdfPath& errorContextPath)
 {
     SdfPath targetPath = inputTargetPath;
     UsdPrim targetPrim = data.GetUsdInArgs()->GetStage()->GetPrimAtPath(targetPath);
@@ -127,10 +122,9 @@ _GetMaterialAssignAttrFromPath(
             // While that would be an error according to the below
             // warning, it produces the expected results.
             // This case can occur when expanding pointinstancers as
-            // the sources are made via execution of PxrUsdIn again
+            // the sources are made via execution of UsdIn again
             // at the sub-trees.
-            
-            
+
             // Warn saying target of relationship is in a master, 
             // but the associated instance path is unknown!
             // FnLogWarn("Target path " << prim.GetPath().GetString() 
@@ -143,8 +137,7 @@ _GetMaterialAssignAttrFromPath(
     // Convert the target path to the equivalent katana location.
     // XXX: Materials may have an atypical USD->Katana 
     // path mapping
-    std::string location =
-        PxrUsdKatanaUtils::ConvertUsdMaterialPathToKatLocation(targetPath, data);
+    std::string location = UsdKatanaUtils::ConvertUsdMaterialPathToKatLocation(targetPath, data);
 
     static const bool allowCustomScopes = 
         TfGetEnvSetting(USD_KATANA_ALLOW_CUSTOM_MATERIAL_SCOPES);
@@ -162,10 +155,8 @@ _GetMaterialAssignAttrFromPath(
     return FnKat::StringAttribute(location);
 }
 
-static FnKat::Attribute
-_GetMaterialAssignAttr(
-        const UsdPrim& prim,
-        const PxrUsdKatanaUsdInPrivateData& data)
+static FnKat::Attribute _GetMaterialAssignAttr(const UsdPrim& prim,
+                                               const UsdKatanaUsdInPrivateData& data)
 {
     if (!prim || prim.GetPath() == SdfPath::AbsoluteRootPath()) {
         // Special-case to pre-empt coding errors.
@@ -193,11 +184,9 @@ _GetMaterialAssignAttr(
     return FnKat::Attribute();
 }
 
-
-static FnKat::Attribute
-_GetCollectionBasedMaterialAssignments(
-        const UsdPrim& prim,
-        const PxrUsdKatanaUsdInPrivateData& data)
+static FnKat::Attribute _GetCollectionBasedMaterialAssignments(
+    const UsdPrim& prim,
+    const UsdKatanaUsdInPrivateData& data)
 {
     UsdShadeMaterialBindingAPI bindingAPI(prim);
 
@@ -277,13 +266,13 @@ _GatherRibAttributes(
             if (usdAttr) {
                 if (!usdAttr.Get(&vtValue, currentTime)) 
                     continue;
-                attrsBuilder.set(attrName, PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue,
-                    asShaderParam) );
+                attrsBuilder.set(attrName,
+                                 UsdKatanaUtils::ConvertVtValueToKatAttr(vtValue, asShaderParam));
             }
             else {
                 UsdRelationship usdRel = prim.GetRelationship(prop.GetName());
-                attrsBuilder.set(attrName, PxrUsdKatanaUtils::ConvertRelTargetsToKatAttr(usdRel,
-                    asShaderParam) );
+                attrsBuilder.set(attrName,
+                                 UsdKatanaUtils::ConvertRelTargetsToKatAttr(usdRel, asShaderParam));
             }
             hasAttrs = true;
         }
@@ -292,12 +281,10 @@ _GatherRibAttributes(
     return hasAttrs;
 }
 
-void
-PxrUsdKatanaReadPrimPrmanStatements(
-        const UsdPrim& prim,
-        double currentTime,
-        FnKat::GroupBuilder& statements,
-        const bool prmanOutputTarget)
+void UsdKatanaReadPrimPrmanStatements(const UsdPrim& prim,
+                                      double currentTime,
+                                      FnKat::GroupBuilder& statements,
+                                      const bool prmanOutputTarget)
 {
     if (prim.GetPath() == SdfPath::AbsoluteRootPath()) {
         // Special-case to pre-empt coding errors.
@@ -395,9 +382,8 @@ _BuildScopedCoordinateSystems(
         // to preserve assumptions made internally by the REYES eye
         // shaders.  Possibly we can remove this once we are no longer
         // supporting REYES shows.
-        coordSysBuilder.set(
-            PxrUsdKatanaUtils::GetModelInstanceName(prim) + "_" + coordSysName,
-            FnKat::StringAttribute(gprimName));
+        coordSysBuilder.set(UsdKatanaUtils::GetModelInstanceName(prim) + "_" + coordSysName,
+                            FnKat::StringAttribute(gprimName));
 
         foundCoordSys = true;
     }
@@ -449,14 +435,11 @@ std::string _GetKatanaCollectionName(const TfToken &collectionName)
     return pystring::replace(collectionName.GetString(), ":", "__");
 }
 
-static 
-std::string
-_GetKatanaCollectionPath(
-    const SdfPath &collPrimPath, 
-    const TfToken &collectionName,
-    const UsdPrim &prim, 
-    const TfToken &srcCollectionName,
-    const PxrUsdKatanaUsdInPrivateData& data)
+static std::string _GetKatanaCollectionPath(const SdfPath& collPrimPath,
+                                            const TfToken& collectionName,
+                                            const UsdPrim& prim,
+                                            const TfToken& srcCollectionName,
+                                            const UsdKatanaUsdInPrivateData& data)
 {
     std::string katanaCollectionName(_GetKatanaCollectionName(collectionName));
 
@@ -484,19 +467,16 @@ _GetKatanaCollectionPath(
         // does not cause any errors either and might give us 
         // a way to roundtrip the include back to USD.
 
-        const std::string katPrimPath = 
-                PxrUsdKatanaUtils::ConvertUsdPathToKatLocation(
-                    collPrimPath, data);
+        const std::string katPrimPath =
+            UsdKatanaUtils::ConvertUsdPathToKatLocation(collPrimPath, data);
         return TfStringPrintf("(%s/$%s)", katPrimPath.c_str(), 
                               katanaCollectionName.c_str());
     }
 }
 
-static bool
-_BuildCollections(
-    const UsdPrim& prim,
-    const PxrUsdKatanaUsdInPrivateData& data,
-    FnKat::GroupBuilder& collectionsBuilder)
+static bool _BuildCollections(const UsdPrim& prim,
+                              const UsdKatanaUsdInPrivateData& data,
+                              FnKat::GroupBuilder& collectionsBuilder)
 {
     std::vector<UsdCollectionAPI> collections = 
         UsdCollectionAPI::GetAllCollections(prim);
@@ -595,22 +575,18 @@ _BuildCollections(
     return collectionsBuilder.isValid();
 }
 
-
-static void
-_AddExtraAttributesOrNamespaces(
-        const UsdPrim& prim,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+static void _AddExtraAttributesOrNamespaces(const UsdPrim& prim,
+                                            const UsdKatanaUsdInPrivateData& data,
+                                            UsdKatanaAttrMap& attrs)
 {
     const std::string& rootLocation = 
         data.GetUsdInArgs()->GetRootLocationPath();
     const double currentTime = data.GetCurrentTime();
 
-    const PxrUsdKatanaUsdInArgs::StringListMap& extraAttributesOrNamespaces =
+    const UsdKatanaUsdInArgs::StringListMap& extraAttributesOrNamespaces =
         data.GetUsdInArgs()->GetExtraAttributesOrNamespaces();
 
-    PxrUsdKatanaUsdInArgs::StringListMap::const_iterator I = 
-        extraAttributesOrNamespaces.begin();
+    UsdKatanaUsdInArgs::StringListMap::const_iterator I = extraAttributesOrNamespaces.begin();
     for (; I != extraAttributesOrNamespaces.end(); ++I)
     {
         const std::string& name = (*I).first;
@@ -668,10 +644,9 @@ _AddExtraAttributesOrNamespaces(
                 {
                     continue;
                 }
-                
-                FnKat::Attribute attr = 
-                    PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue);
-                
+
+                FnKat::Attribute attr = UsdKatanaUtils::ConvertVtValueToKatAttr(vtValue);
+
                 if (!attr.isValid())
                 {
                     continue;
@@ -686,19 +661,19 @@ _AddExtraAttributesOrNamespaces(
                             I != E; ++I)
             {
                 UsdRelationship & usdRelationship = (*I);
-                
-                FnKat::StringAttribute attr = 
-                    PxrUsdKatanaUtils::ConvertRelTargetsToKatAttr(usdRelationship);
+
+                FnKat::StringAttribute attr =
+                    UsdKatanaUtils::ConvertRelTargetsToKatAttr(usdRelationship);
                 if (!attr.isValid())
                 {
                     continue;
                 }
-                
-                // Further prefix with the PxrUsdIn root scenegraph
+
+                // Further prefix with the UsdIn root scenegraph
                 // location in order to make it a valid katana path.
-                // XXX, move this into PxrUsdKatanaUtils::ConvertRelTargetsToKatAttr
+                // XXX, move this into UsdKatanaUtils::ConvertRelTargetsToKatAttr
                 // for future implementations.
-                
+
                 FnKat::StringAttribute::array_type values =
                         attr.getNearestSample(0.0f);
                 
@@ -758,9 +733,8 @@ _AddCustomProperties(
         {
             continue;
         }
-        
-        FnKat::Attribute attr =
-            PxrUsdKatanaUtils::ConvertVtValueToKatAttr(vtValue);
+
+        FnKat::Attribute attr = UsdKatanaUtils::ConvertVtValueToKatAttr(vtValue);
 
         if (!attr.isValid())
         {
@@ -776,10 +750,8 @@ _AddCustomProperties(
     return foundCustomProperties;
 }
 
-FnKat::Attribute
-PxrUsdKatanaGeomGetPrimvarGroup(
-        const UsdGeomImageable& imageable,
-        const PxrUsdKatanaUsdInPrivateData& data)
+FnKat::Attribute UsdKatanaGeomGetPrimvarGroup(const UsdGeomImageable& imageable,
+                                              const UsdKatanaUsdInPrivateData& data)
 {
     // Usd primvars -> Primvar attributes
     FnKat::GroupBuilder gdBuilder;
@@ -852,9 +824,8 @@ PxrUsdKatanaGeomGetPrimvarGroup(
 
         // Convert value to the required Katana attributes to describe it.
         FnKat::Attribute valueAttr, inputTypeAttr, elementSizeAttr;
-        PxrUsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(
-                vtValue, elementSize, typeName.GetRole(),
-                &valueAttr, &inputTypeAttr, &elementSizeAttr);
+        UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(
+            vtValue, elementSize, typeName.GetRole(), &valueAttr, &inputTypeAttr, &elementSizeAttr);
 
         // Bundle them into a group attribute
         FnKat::GroupBuilder attrBuilder;
@@ -891,11 +862,9 @@ PxrUsdKatanaGeomGetPrimvarGroup(
     return gdBuilder.build();
 }
 
-void
-PxrUsdKatanaReadPrim(
-        const UsdPrim& prim,
-        const PxrUsdKatanaUsdInPrivateData& data,
-        PxrUsdKatanaAttrMap& attrs)
+void UsdKatanaReadPrim(const UsdPrim& prim,
+                       const UsdKatanaUsdInPrivateData& data,
+                       UsdKatanaAttrMap& attrs)
 {
     const double currentTime = data.GetCurrentTime();
 
@@ -936,8 +905,8 @@ PxrUsdKatanaReadPrim(
     //
 
     FnKat::GroupBuilder statementsBuilder;
-    PxrUsdKatanaReadPrimPrmanStatements(prim, data.GetCurrentTime(), 
-        statementsBuilder, prmanOutputTarget);
+    UsdKatanaReadPrimPrmanStatements(prim, data.GetCurrentTime(), statementsBuilder,
+                                     prmanOutputTarget);
     FnKat::GroupAttribute statements = statementsBuilder.build();
     if (statements.getNumberOfChildren() > 0)
     {
@@ -989,7 +958,7 @@ PxrUsdKatanaReadPrim(
 
     if (imageable)
     {
-        FnKat::GroupAttribute primvarGroup = PxrUsdKatanaGeomGetPrimvarGroup(imageable, data);
+        FnKat::GroupAttribute primvarGroup = UsdKatanaGeomGetPrimvarGroup(imageable, data);
 
         if (primvarGroup.isValid())
         {

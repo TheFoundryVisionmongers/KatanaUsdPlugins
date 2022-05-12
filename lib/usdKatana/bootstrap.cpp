@@ -50,7 +50,7 @@ typedef FnPluginManagerHostSuite_v1 const* (*GetFnPluginManagerHostSuite)(
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-FnLogSetup("PxrUsdKatanaBootstrap");
+FnLogSetup("UsdKatanaBootstrap");
 
 static void* findSymbol(void* const handle, const char* const name)
 {
@@ -61,7 +61,7 @@ static void* findSymbol(void* const handle, const char* const name)
 #endif
 }
 
-void PxrUsdKatanaBootstrap()
+void UsdKatanaBootstrap()
 {
     static std::once_flag once;
     std::call_once(once, []()
