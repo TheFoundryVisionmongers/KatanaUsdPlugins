@@ -95,8 +95,7 @@ function(_get_python_module_name LIBRARY_FILENAME MODULE_NAME)
 endfunction() # _get_python_module_name
 
 # from USD/cmake/macros/Private.cmake
-# Install compiled python files alongside the python object,
-# e.g. lib/python/${PXR_PY_PACKAGE_NAME}/Ar/__init__.pyc
+# Install compiled python files
 function(_install_python LIBRARY_NAME)
     set(options  "")
     set(oneValueArgs "")
@@ -120,7 +119,7 @@ function(_install_python LIBRARY_NAME)
         set(filesToInstall "")
 
         set(installDest
-            "${libPythonPrefix}/${PXR_PY_PACKAGE_NAME}/${LIBRARY_INSTALLNAME}")
+            "${libPythonPrefix}/${LIBRARY_INSTALLNAME}")
         if(BUILD_KATANA_INTERNAL_USD_PLUGINS)
             set(installDest
                 "${libPythonPrefix}/${LIBRARY_INSTALLNAME}")
@@ -184,10 +183,8 @@ function(_install_python LIBRARY_NAME)
             endforeach()
         endif()
 
-        # Note that we always install under lib/python/${PXR_PY_PACKAGE_NAME},
-        # even if we are in the third_party project. This means the import will
-        # always look like 'from ${PXR_PY_PACKAGE_NAME} import X'. We need to
-        # do this per-loop iteration because the installDest may be different
+        # Note that we always install under lib/python/. We need to do this
+        # per-loop iteration because the installDest may be different
         # due to the presence of subdirs.
         install(
             FILES

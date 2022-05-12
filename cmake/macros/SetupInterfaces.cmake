@@ -76,8 +76,16 @@ function(add_python_interface)
             PARENT_SCOPE)
         set(Python_LIBRARIES
             ${KATANA_API_LOCATION}/bin/${KATANA_PYTHON_LIB})
-        set(Python_INCLUDE_DIRS
-            ${KATANA_API_LOCATION}/bin/${KATANA_PYTHON_INCLUDE_FOLDER})
+
+        set(Python_INCLUDE_DIRS ${KATANA_API_LOCATION}/bin/${KATANA_PYTHON_INCLUDE_FOLDER})
+        set(_py_dir python${KATANA_PYTHON_VERSION_MAJOR}.${KATANA_PYTHON_VERSION_MINOR})
+        if(EXISTS ${KATANA_API_LOCATION}/bin/${KATANA_PYTHON_INCLUDE_FOLDER}/${_py_dir})
+            list(APPEND Python_INCLUDE_DIRS ${KATANA_API_LOCATION}/bin/${KATANA_PYTHON_INCLUDE_FOLDER}/${_py_dir})
+        endif()
+        if(EXISTS ${KATANA_API_LOCATION}/bin/${KATANA_PYTHON_INCLUDE_FOLDER}/${_py_dir}m)
+            list(APPEND Python_INCLUDE_DIRS ${KATANA_API_LOCATION}/bin/${KATANA_PYTHON_INCLUDE_FOLDER}/${_py_dir}m)
+        endif()
+        unset(_py_dir)
         set_target_properties(Python::Python
             PROPERTIES
                 INTERFACE_INCLUDE_DIRECTORIES "${Python_INCLUDE_DIRS}"
@@ -125,8 +133,10 @@ function(add_tbb_interface)
         if(KATANA_API_LOCATION)
             if(UNIX)
                 set(tbb_lib_suffix so)
+                set(tbb_lib_prefix lib)
             elseif(WIN32)
                 set(tbb_lib_suffix lib)
+                unset(tbb_lib_prefix)
             endif() # OS Type
             set_target_properties(TBB::tbb
                 PROPERTIES
@@ -135,7 +145,7 @@ function(add_tbb_interface)
                     INTERFACE_COMPILE_DEFINITIONS
                         "__TBB_NO_IMPLICIT_LINKAGE=1"
                     INTERFACE_LINK_LIBRARIES
-                        "${KATANA_API_LOCATION}/bin/tbb.${tbb_lib_suffix}"
+                        "${KATANA_API_LOCATION}/bin/${tbb_lib_prefix}tbb.${tbb_lib_suffix}"
             )
         else()
             message(FATAL_ERROR "KATANA_API_LOCATION must be set if using the"
@@ -164,10 +174,11 @@ function(add_usd_interface)
     if(USE_KATANA_USD)
         set(USD_LIBRARY_DIR ${KATANA_API_LOCATION}/bin)
         set(USD_INCLUDE_DIR ${KATANA_API_LOCATION}/external/FnUSD/include)
-        set(PXR_LIB_PREFIX foundry)
+        set(PXR_LIB_PREFIX fn)
         if(UNIX)
-            set(PXR_LIB_PREFIX libfoundry)
+            set(PXR_LIB_PREFIX libfn)
         endif()
+        set(PXR_PY_PACKAGE_NAME fnpxr PARENT_SCOPE)
         find_package(USD REQUIRED)
     elseif(USE_FOUNDRY_FIND_USD)
         find_package(USD REQUIRED)

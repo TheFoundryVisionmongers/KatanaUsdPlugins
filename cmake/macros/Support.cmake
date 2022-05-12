@@ -263,9 +263,9 @@ function(pxr_library NAME)
             ${NAME}
         )
         if(PXR_INSTALL_SUBDIR)
-            set(pyModuleInstallDir ${PXR_INSTALL_SUBDIR}/lib/python/${PXR_PY_PACKAGE_NAME}/${pyModuleName})
+            set(pyModuleInstallDir ${PXR_INSTALL_SUBDIR}/lib/python/${pyModuleName})
         else()
-            set(pyModuleInstallDir lib/python/${PXR_PY_PACKAGE_NAME}/${pyModuleName})
+            set(pyModuleInstallDir lib/python/${pyModuleName})
         endif()
 
         install(TARGETS ${pythonWrapperModuleName} DESTINATION "${pyModuleInstallDir}")
