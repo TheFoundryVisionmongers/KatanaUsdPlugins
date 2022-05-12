@@ -1,5 +1,14 @@
 # Change List
 
+# 21.05_fn4_py2
+
+## Bug fixes
+- ID 508168 - Set **BinPackArguments** to `false` in the Clang-Format file (KatanaUsdPlugins)
+
+- ID 453348 - When importing a USD file that had previously been exported from Katana via the UsdMaterialBake node, any Katana child materials were not bound correctly on import.  For example, the materialAssign attribute on a bound location was updated from NetworkMaterial1_material1 to NetworkMaterial1/material1 (to match what it was before it was exported), but the location of the material in the scene graph was still NetworkMaterial1_material1. This meant the location was unbound and produced incorrect rendering results.
+
+ - ID 505055 - Ops in KatanaUsdPlugins clashed with RenderMan named ops. Pxr has been removed as a prefix to the Ops registered by KatanaUsdPlugins. The folders of KatanaUsdPlugins source code have been renamed to remove Pxr prefixes where applicable. 
+
 # 21.05_fn3_py2
 
 ## Bug fixes
