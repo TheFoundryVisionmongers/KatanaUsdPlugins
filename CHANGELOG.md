@@ -1,6 +1,6 @@
 # Change List
 
-# 21.05_fn4_py2
+# 21.05_fn4_py2 - 21.05_fn4_py3
 
 ## Bug fixes
 - ID 508168 - Set **BinPackArguments** to `false` in the Clang-Format file (KatanaUsdPlugins)
