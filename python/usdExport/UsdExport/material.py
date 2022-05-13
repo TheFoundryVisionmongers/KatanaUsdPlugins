@@ -530,7 +530,7 @@ def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shaderPath,
             outputShaderName = splitConnection[1]
             connectionShaderPath = materialPath.AppendChild(outputShaderName)
             outputShader = UsdShade.Shader.Get(stage, connectionShaderPath)
-            if not outputShader or not outputShader.GetSchemaType():
+            if not outputShader or not outputShader.GetSchemaKind():
                 continue
 
             # Currently we cannot be sure that the connectionName such as
