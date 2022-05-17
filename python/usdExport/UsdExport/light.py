@@ -84,7 +84,6 @@ def WriteLight(stage, lightSdfPath, materialAttrs):
         return
 
     lightPrim = stage.DefinePrim(lightSdfPath)
-    lightApi = UsdLux.LightAPI.Apply(lightPrim)
     UsdLux.ShadowAPI.Apply(lightPrim)
     UsdLux.ShapingAPI.Apply(lightPrim)
 
@@ -112,8 +111,6 @@ def WriteLight(stage, lightSdfPath, materialAttrs):
             lightPrim.SetTypeName(primTypeName)
 
         renderer = rendererPrefixMapping.get(renderer, renderer)
-        lightApi.CreateShaderIdAttrForRenderContext(renderer,
-            lightShaderName)
 
         for attrName, attr in lightShaderAttrs.childList():
             nodeInput = node.GetInput(attrName)

@@ -60,17 +60,6 @@ class KatanaLightApiUsdExportPlugin(BaseUsdExportPlugin):
         lightApi = UsdKatana.KatanaLightAPI(prim)
         lightApi.Apply(prim)
 
-        if materialAttrs:
-            lights = ParseLightsFromMaterialAttrs(materialAttrs)
-            for lightShaderName, _ in lights.items():
-                (renderer, lightShaderName) = lightShaderName
-
-                idAttr = lightApi.CreateIdAttr()
-                entries = list(idAttr.Get() if
-                    idAttr.Get() is not None else [])
-                entries.extend(["%s:%s" % (renderer, lightShaderName)])
-                idAttr.Set(entries)
-
         if geometryAttrs:
             coiAttr = geometryAttrs.getChildByName("centerOfInterest")
             if coiAttr:

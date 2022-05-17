@@ -187,9 +187,6 @@ void __handleSdrRegistryLights(const UsdPrim& prim,
                                FnKat::GroupBuilder& materialBuilder,
                                UsdKatanaAttrMap& geomBuilder)
 {
-    UsdKatanaKatanaLightAPI katanaLightAPI(prim);
-    geomBuilder.Set("centerOfInterest", katanaLightAPI.GetCenterOfInterestAttr());
-
     std::unordered_set<std::string> lightShaderIds =
         UsdKatanaUtils::GetShaderIds(prim, currentTimeCode);
     for (const std::string& shaderId : lightShaderIds)
@@ -207,9 +204,9 @@ void UsdKatanaReadLight(const UsdPrim& prim,
     UsdKatanaAttrMap geomBuilder;
     geomBuilder.SetUSDTimeCode(currentTimeCode);
     FnKat::GroupBuilder materialBuilder;
-    // Always set a default local value for the centerOfInterset to enable the
-    // lighting tools workflow
-    geomBuilder.set("centerOfInterest", FnAttribute::DoubleAttribute(20.0f));
+
+    UsdKatanaKatanaLightAPI katanaLightAPI(prim);
+    geomBuilder.Set("centerOfInterest", katanaLightAPI.GetCenterOfInterestAttr());
 
     __handleSdrRegistryLights(prim, currentTimeCode, materialBuilder, geomBuilder);
     // Run the UsdLux logic after trying the Sdr Logic
