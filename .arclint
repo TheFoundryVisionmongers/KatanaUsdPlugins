@@ -1,4 +1,5 @@
 {
+  "exclude": ["(\\.usda$)"],
   "linters": {
     "chmod": {
       "type": "chmod"
