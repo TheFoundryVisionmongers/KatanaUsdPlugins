@@ -633,37 +633,8 @@ _CreateShadingNode(
     if (shaderSchema)
     {
         validData = true;
-        SdfAssetPath fileAssetPath;
-
-        // only use the fallback OSL test if the targetName is "prman" as
-        // it will issue benign but confusing errors to the shell for
-        // display shaders
-        if (targetName == "prman")
-        {
-            shaderSchema.GetIdAttr().Get(&id, currentTime);
-            std::string oslIdString = id.GetString();
-
-            if (!pystring::endswith(oslIdString, ".oso"))
-            {
-                oslIdString = "osl:" + oslIdString;
-            }
-
-            FnKat::StringAttribute oslIdAttr = FnKat::StringAttribute(oslIdString);
-            FnAttribute::GroupAttribute shaderInfoAttr =
-                        FnGeolibServices::FnAttributeFunctionUtil::run(
-                                "PRManGetShaderParameterInfo", oslIdAttr);
-            if (shaderInfoAttr.isValid())
-                shdNodeBuilder.set("type", oslIdAttr);
-            else
-                shdNodeBuilder.set(
-                    "type", FnKat::StringAttribute(id.GetString()));
-        }
-        else
-        {
-            shaderSchema.GetIdAttr().Get(&id, currentTime);
-            shdNodeBuilder.set(
-                    "type", FnKat::StringAttribute(id.GetString()));
-        }
+        shaderSchema.GetIdAttr().Get(&id, currentTime);
+        shdNodeBuilder.set("type", FnKat::StringAttribute(id.GetString()));
     }
 
     // We gather shading parameters even if shaderSchema is invalid; we need to
