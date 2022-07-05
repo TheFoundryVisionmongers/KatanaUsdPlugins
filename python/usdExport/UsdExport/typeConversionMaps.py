@@ -70,6 +70,7 @@ RenderInfoShaderTagToSdfMap = {
     "array_int": Sdf.ValueTypeNames.IntArray,
     "matrix": Sdf.ValueTypeNames.Matrix4d,
     "normal": Sdf.ValueTypeNames.Normal3f,
+    "bxdf": Sdf.ValueTypeNames.Token,
 
     # These are SdrPropertyTypes that have no corresponding SdfValueType; USD
     # docs recommends just mapping them to Token:

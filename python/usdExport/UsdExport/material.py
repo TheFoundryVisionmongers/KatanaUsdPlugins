@@ -557,9 +557,10 @@ def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shaderPath,
                                                  isOutput=True)
             if not sourceSdfType:
                 log.warning(
-                    'Unable to find output port for connection "%s".',
+                    'Unable to map type for output on connection "%s", '
+                    'assuming "Token".',
                     connection)
-                continue
+                sourceSdfType = Sdf.ValueTypeNames.Token
 
             outputShaderConnectableApi = UsdShade.ConnectableAPI(outputShader)
             inputPort.ConnectToSource(
