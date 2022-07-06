@@ -40,9 +40,9 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-FnLogSetup("PxrVtKatanaBootstrap");
+FnLogSetup("VtKatanaBootstrap");
 
-void PxrVtKatanaBootstrap()
+void VtKatanaBootstrap()
 {
     static std::once_flag once;
     std::call_once(once, []()

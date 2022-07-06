@@ -1522,5 +1522,5 @@ void registerPlugins()
     REGISTER_PLUGIN(FlushStageFnc, "UsdIn.FlushStage", 0, 1);
 
     UsdKatanaBootstrap();
-    PxrVtKatanaBootstrap();
+    VtKatanaBootstrap();
 }
