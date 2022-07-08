@@ -86,9 +86,7 @@ public:
         return _instancePath;
     }
 
-    const SdfPath& GetMasterPath() const {
-        return _masterPath;
-    }
+    const SdfPath& GetPrototypePath() const { return _prototypePath; }
 
     const double GetCurrentTime() const {
         return _currentTime;
@@ -209,7 +207,7 @@ private:
     UsdKatanaUsdInArgsRefPtr _usdInArgs;
 
     SdfPath _instancePath;
-    SdfPath _masterPath;
+    SdfPath _prototypePath;
 
     double _currentTime;
     double _shutterOpen;

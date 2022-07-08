@@ -228,8 +228,8 @@ static UsdKatanaUsdInArgsRefPtr InitUsdInArgs(const FnKat::GroupAttribute& opArg
     if (instanceModeAttr.getValue("expanded", false) == "as sources and instances")
     {
         FnKat::GroupAttribute mappingAttr =
-            UsdKatanaUtils::BuildInstanceMasterMapping(ab.stage, SdfPath::AbsoluteRootPath());
-        additionalOpArgs = FnKat::GroupAttribute("masterMapping", mappingAttr, true);
+            UsdKatanaUtils::BuildInstancePrototypeMapping(ab.stage, SdfPath::AbsoluteRootPath());
+        additionalOpArgs = FnKat::GroupAttribute("prototypeMapping", mappingAttr, true);
     }
 
     // if the specified isolatePath is not a valid prim, clear it out
@@ -496,7 +496,7 @@ public:
             }
 
             // When in "as sources and instances" mode, scan for instances
-            // and masters at each location that contains a payload.
+            // and prototypes at each location that contains a payload.
             if (prim.HasAuthoredPayloads() &&
                 !usdInArgs->GetPrePopulate() &&
                 FnAttribute::StringAttribute(
@@ -504,21 +504,20 @@ public:
                     ).getValue("expanded", false) == 
                 "as sources and instances")
             {
-                FnKat::GroupAttribute masterMapping =
-                    UsdKatanaUtils::BuildInstanceMasterMapping(prim.GetStage(), prim.GetPath());
-                FnKat::StringAttribute masterParentPath(prim.GetPath().GetString());
-                if (masterMapping.isValid() &&
-                    masterMapping.getNumberOfChildren()) {
+                FnKat::GroupAttribute prototypeMapping =
+                    UsdKatanaUtils::BuildInstancePrototypeMapping(prim.GetStage(), prim.GetPath());
+                FnKat::StringAttribute prototypeParentPath(prim.GetPath().GetString());
+                if (prototypeMapping.isValid() && prototypeMapping.getNumberOfChildren())
+                {
                     opArgs = FnKat::GroupBuilder()
-                        .update(opArgs)
-                        .set("masterMapping", masterMapping)
-                        .set("masterParentPath", masterParentPath)
-                        .build();
-                } else {
-                    opArgs = FnKat::GroupBuilder()
-                        .update(opArgs)
-                        .del("masterMapping")
-                        .build();
+                                 .update(opArgs)
+                                 .set("prototypeMapping", prototypeMapping)
+                                 .set("prototypeParentPath", prototypeParentPath)
+                                 .build();
+                }
+                else
+                {
+                    opArgs = FnKat::GroupBuilder().update(opArgs).del("prototypeMapping").build();
                 }
             }
 
@@ -671,7 +670,7 @@ public:
             interface.setAttr("tabs.scenegraph.stopExpand", 
                     FnKat::IntAttribute(1));
 
-            // XXX masters are simple placeholders and will not get read as
+            // XXX prototypes are simple placeholders and will not get read as
             // models, so we'll need to explicitly process their Looks in a
             // manner similar to what the UsdInCore_ModelOp does.
             UsdPrim lookPrim =
@@ -692,27 +691,25 @@ public:
 
         if (prim.IsInstance())
         {
-            UsdPrim master = prim.GetPrototype();
-            interface.setAttr("info.usd.masterPrimPath",
-                    FnAttribute::StringAttribute(
-                        master.GetPrimPath().GetString()));
-            
-            FnAttribute::StringAttribute masterPathAttr = 
-                    opArgs.getChildByName("masterMapping." +
-                            FnKat::DelimiterEncode(
-                                master.GetPrimPath().GetString()));
-            if (masterPathAttr.isValid())
-            {
-                std::string masterPath = masterPathAttr.getValue("", false);
+            UsdPrim prototype = prim.GetPrototype();
+            interface.setAttr("info.usd.prototypePrimPath",
+                              FnAttribute::StringAttribute(prototype.GetPrimPath().GetString()));
 
-                std::string masterParentPath = FnAttribute::StringAttribute(
-                    opArgs.getChildByName("masterParentPath"))
-                    .getValue("", false);
-                if (masterParentPath == "/") {
-                    masterParentPath = std::string();
+            FnAttribute::StringAttribute prototypePathAttr = opArgs.getChildByName(
+                "prototypeMapping." + FnKat::DelimiterEncode(prototype.GetPrimPath().GetString()));
+            if (prototypePathAttr.isValid())
+            {
+                std::string prototypePath = prototypePathAttr.getValue("", false);
+
+                std::string prototypeParentPath =
+                    FnAttribute::StringAttribute(opArgs.getChildByName("prototypeParentPath"))
+                        .getValue("", false);
+                if (prototypeParentPath == "/")
+                {
+                    prototypeParentPath = std::string();
                 }
 
-                if (!masterPath.empty())
+                if (!prototypePath.empty())
                 {
                     interface.setAttr(
                             "type", FnKat::StringAttribute("instance"));
@@ -720,16 +717,16 @@ public:
                     // will be different from the "original" root location
                     // specified on the UsdIn node, since the
                     // BuildIntermediate op reinvokes UsdIn with modified
-                    // UsdInArgs when building out masters.
+                    // UsdInArgs when building out prototypes.
                     // We can get at the original root location by querying the
                     // raw op args rather than the UsdInArgs.
                     std::string rootLocationPath = FnAttribute::StringAttribute(
                         opArgs.getChildByName("location")).getValue(
                             interface.getRootLocationPath(), false);
-                    interface.setAttr("geometry.instanceSource",
-                            FnAttribute::StringAttribute(
-                                rootLocationPath + masterParentPath +
-                                "/Masters/" + masterPath));
+                    interface.setAttr(
+                        "geometry.instanceSource",
+                        FnAttribute::StringAttribute(rootLocationPath + prototypeParentPath +
+                                                     "/Prototypes/" + prototypePath));
 
                     // XXX, ConstraintGroups are still made for models
                     //      that became instances. Need to suppress creation
@@ -743,8 +740,8 @@ public:
         if (!prim.IsPseudoRoot())
         {
             const TfTokenVector& lookTokens = UsdKatanaUtils::GetLookTokens();
-            // when checking for a looks group, swap in the master if the prim is an instance
-            UsdPrim resolvedPrim = (prim.IsInstance() && !privateData->GetMasterPath().IsEmpty())
+            // when checking for a looks group, swap in the prototype if the prim is an instance
+            UsdPrim resolvedPrim = (prim.IsInstance() && !privateData->GetPrototypePath().IsEmpty())
                                        ? prim.GetPrototype()
                                        : prim;
             for (const TfToken& lookToken : lookTokens)
@@ -804,17 +801,16 @@ public:
                             variantSet.GetVariantSelection()));
             
         }
-            
-        // Emit "Masters".
+
+        // Emit "Prototypes".
         // When prepopulating, these will be discovered and emitted under
         // the root.  Otherwise, they will be discovered incrementally
         // as each payload is loaded, and we emit them under the payload's
         // location.
         if (interface.atRoot() ||
             (prim.HasAuthoredPayloads() && !usdInArgs->GetPrePopulate())) {
-            FnKat::GroupAttribute masterMapping =
-                    opArgs.getChildByName("masterMapping");
-            if (masterMapping.isValid() && masterMapping.getNumberOfChildren())
+            FnKat::GroupAttribute prototypeMapping = opArgs.getChildByName("prototypeMapping");
+            if (prototypeMapping.isValid() && prototypeMapping.getNumberOfChildren())
             {
                 FnGeolibServices::StaticSceneCreateOpArgsBuilder sscb(false);
                 
@@ -825,32 +821,31 @@ public:
                 };
                 
                 std::map<std::string, usdPrimInfo> primInfoPerLocation;
-                
-                for (size_t i = 0, e = masterMapping.getNumberOfChildren();
-                        i != e; ++i)
+
+                for (size_t i = 0, e = prototypeMapping.getNumberOfChildren(); i != e; ++i)
                 {
-                    std::string masterName = FnKat::DelimiterDecode(
-                            masterMapping.getChildName(i));
-                    
-                    std::string katanaPath =  FnKat::StringAttribute(
-                            masterMapping.getChildByIndex(i)
-                                    ).getValue("", false);
-                    
+                    std::string prototypeName =
+                        FnKat::DelimiterDecode(prototypeMapping.getChildName(i));
+
+                    std::string katanaPath =
+                        FnKat::StringAttribute(prototypeMapping.getChildByIndex(i))
+                            .getValue("", false);
+
                     if (katanaPath.empty())
                     {
                         continue;
                     }
-                    
-                    katanaPath = "Masters/" + katanaPath;
-                    
+
+                    katanaPath = "Prototypes/" + katanaPath;
+
                     std::string leafName =
                             FnGeolibUtil::Path::GetLeafName(katanaPath);
                     std::string locationParent =
                             FnGeolibUtil::Path::GetLocationParent(katanaPath);
                     
                     auto & entry = primInfoPerLocation[locationParent];
-                    
-                    entry.usdPrimPathValues.push_back(masterName);
+
+                    entry.usdPrimPathValues.push_back(prototypeName);
                     entry.usdPrimNameValues.push_back(leafName);
                 }
                 
@@ -904,21 +899,22 @@ public:
                 }
             }
 
-            // If the prim is an instance (has a valid master path)
-            // we replace the current prim with the master prim before 
+            // If the prim is an instance (has a valid prototype path)
+            // we replace the current prim with the prototype prim before
             // iterating on the children.
             //
-            if (prim.IsInstance() && !privateData->GetMasterPath().IsEmpty())
+            if (prim.IsInstance() && !privateData->GetPrototypePath().IsEmpty())
             {
-                const UsdPrim& masterPrim = prim.GetPrototype();
-                if (!masterPrim)
+                const UsdPrim& prototypePrim = prim.GetPrototype();
+                if (!prototypePrim)
                 {
-                    ERROR("USD Prim is advertised as an instance "
-                        "but master prim cannot be found.");
+                    ERROR(
+                        "USD Prim is advertised as an instance "
+                        "but prototype prim cannot be found.");
                 }
                 else
                 {
-                    prim = masterPrim;
+                    prim = prototypePrim;
                 }
             }
 

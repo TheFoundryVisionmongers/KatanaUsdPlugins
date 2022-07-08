@@ -87,37 +87,41 @@ static FnKat::Attribute _GetMaterialAssignAttrFromPath(const SdfPath& inputTarge
 {
     SdfPath targetPath = inputTargetPath;
     UsdPrim targetPrim = data.GetUsdInArgs()->GetStage()->GetPrimAtPath(targetPath);
-    // If the target is inside a master, then it needs to be re-targeted 
+    // If the target is inside a prototype, then it needs to be re-targeted
     // to the instance.
-    // 
-    // XXX remove this special awareness once GetMasterWithContext is
+    //
+    // XXX remove this special awareness once GetPrototypeWithContext is
     //     is available as the provided prim will automatically
     //     retarget (or provide enough context to retarget without
     //     tracking manually).
     if (targetPrim && targetPrim.IsInPrototype()) {
-        if (!data.GetInstancePath().IsEmpty() &&
-            !data.GetMasterPath().IsEmpty()) {
-
-            // Check if the source and the target of the relationship 
-            // belong to the same master.
-            // If they do, we have the context necessary to do the 
+        if (!data.GetInstancePath().IsEmpty() && !data.GetPrototypePath().IsEmpty())
+        {
+            // Check if the source and the target of the relationship
+            // belong to the same prototype.
+            // If they do, we have the context necessary to do the
             // re-mapping.
-            if (data.GetMasterPath().GetCommonPrefix(targetPath).
-                    GetPathElementCount() > 0) {
+            if (data.GetPrototypePath().GetCommonPrefix(targetPath).GetPathElementCount() > 0)
+            {
                 targetPath = data.GetInstancePath().AppendPath(
                     targetPath.ReplacePrefix(targetPath.GetPrefixes()[0],
                         SdfPath::ReflexiveRelativePath()));
-            } else {
-                // Warn saying the target of relationship isn't within 
-                // the same master as the source.
-                FnLogWarn("Target path " << errorContextPath.GetString() 
-                    << " isn't within the master " << data.GetMasterPath());
+            }
+            else
+            {
+                // Warn saying the target of relationship isn't within
+                // the same prototype as the source.
+                FnLogWarn("Target path " << errorContextPath.GetString()
+                                         << " isn't within the prototype "
+                                         << data.GetPrototypePath());
                 return FnKat::Attribute();
             }
-        } else {
+        }
+        else
+        {
             // XXX
-            // When loading beneath a master via an isolatePath
-            // opArg, we can encounter targets which are within masters
+            // When loading beneath a prototype via an isolatePath
+            // opArg, we can encounter targets which are within prototypes
             // but not within the context of a material.
             // While that would be an error according to the below
             // warning, it produces the expected results.
@@ -125,10 +129,10 @@ static FnKat::Attribute _GetMaterialAssignAttrFromPath(const SdfPath& inputTarge
             // the sources are made via execution of UsdIn again
             // at the sub-trees.
 
-            // Warn saying target of relationship is in a master, 
+            // Warn saying target of relationship is in a prototype,
             // but the associated instance path is unknown!
-            // FnLogWarn("Target path " << prim.GetPath().GetString() 
-            //         << " is within a master, but the associated "
+            // FnLogWarn("Target path " << prim.GetPath().GetString()
+            //         << " is within a prototype, but the associated "
             //         "instancePath is unknown.");
             // return FnKat::Attribute();
         }

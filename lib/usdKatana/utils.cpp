@@ -1171,18 +1171,18 @@ std::string UsdKatanaUtils::ConvertUsdPathToKatLocation(const SdfPath& path,
         return std::string();
     }
 
-    // If the current prim is in a master for the sake of processing
-    // an instance, replace the master path by the instance path before
+    // If the current prim is in a prototype for the sake of processing
+    // an instance, replace the prototype path by the instance path before
     // converting to a katana location.
-    SdfPath nonMasterPath = path;
+    SdfPath nonPrototypePath = path;
     if (data.GetUsdPrim().IsInPrototype() && !data.GetInstancePath().IsEmpty())
     {
-        nonMasterPath = nonMasterPath.ReplacePrefix(
-            data.GetMasterPath(), data.GetInstancePath());
+        nonPrototypePath =
+            nonPrototypePath.ReplacePrefix(data.GetPrototypePath(), data.GetInstancePath());
     }
 
-    return ConvertUsdPathToKatLocation(nonMasterPath, data.GetUsdInArgs(),
-                                       allowOutsideIsolation);
+    return ConvertUsdPathToKatLocation(
+        nonPrototypePath, data.GetUsdInArgs(), allowOutsideIsolation);
 }
 
 std::string UsdKatanaUtils::_GetDisplayName(const UsdPrim& prim)
@@ -1256,22 +1256,25 @@ std::string UsdKatanaUtils::_GetDisplayGroup(const UsdPrim& prim, const SdfPath&
 
         if (parentPrim.IsInPrototype())
         {
-            // If the prim is inside a master, then attempt to translate the
+            // If the prim is inside a prototype, then attempt to translate the
             // parentPath to the corresponding uninstanced path, assuming that
-            // the given forwarded path and parentPath belong to the same master
+            // the given forwarded path and parentPath belong to the same prototype
             const SdfPath primPath = prim.GetPath();
             std::pair<SdfPath, SdfPath> prefixPair =
                 primPath.RemoveCommonSuffix(path);
-            const SdfPath& masterPath = prefixPair.first;
+            const SdfPath& prototypePath = prefixPair.first;
             const SdfPath& instancePath = prefixPair.second;
 
             // XXX: Assuming that the base look (parent) path belongs to the
-            // same master! If it belongs to a different master, we don't have
+            // same prototype! If it belongs to a different prototype, we don't have
             //  the context needed to resolve it.
-            if (parentPath.HasPrefix(masterPath)) {
-                parentPath = instancePath.AppendPath(parentPath.ReplacePrefix(
-                    masterPath, SdfPath::ReflexiveRelativePath()));
-            } else {
+            if (parentPath.HasPrefix(prototypePath))
+            {
+                parentPath = instancePath.AppendPath(
+                    parentPath.ReplacePrefix(prototypePath, SdfPath::ReflexiveRelativePath()));
+            }
+            else
+            {
                 FnLogWarn("Error converting UsdMaterial path <" <<
                     path.GetString() <<
                     "> to katana location: could not map parent path <" <<
@@ -1860,24 +1863,25 @@ namespace
     typedef std::set<std::string> StringSet;
     typedef std::map<std::string, StringSet> StringSetMap;
 
-    void _walkForMasters(const UsdPrim& prim, StringMap & masterToKey,
-            StringSetMap & keyToMasters)
+    void _walkForPrototypes(const UsdPrim& prim,
+                            StringMap& prototypeToKey,
+                            StringSetMap& keyToPrototypes)
     {
         if (prim.IsInstance())
         {
-            const UsdPrim master = prim.GetPrototype();
+            const UsdPrim prototype = prim.GetPrototype();
 
-            if (master.IsValid())
+            if (prototype.IsValid())
             {
-                std::string masterPath = master.GetPath().GetString();
+                std::string prototypePath = prototype.GetPath().GetString();
 
-                if (masterToKey.find(masterPath) == masterToKey.end())
+                if (prototypeToKey.find(prototypePath) == prototypeToKey.end())
                 {
                     std::string assetName;
                     UsdModelAPI(prim).GetAssetName(&assetName);
                     if (assetName.empty())
                     {
-                        assetName = "master";
+                        assetName = "prototype";
                     }
 
                     std::ostringstream buffer;
@@ -1897,12 +1901,12 @@ namespace
                     }
 
                     std::string key = buffer.str();
-                    masterToKey[masterPath] = key;
-                    keyToMasters[key].insert(masterPath);
-                    //TODO, Warn when there are multiple masters with the
+                    prototypeToKey[prototypePath] = key;
+                    keyToPrototypes[key].insert(prototypePath);
+                    // TODO, Warn when there are multiple prototypes with the
                     //      same key.
 
-                    _walkForMasters(master, masterToKey, keyToMasters);
+                    _walkForPrototypes(prototype, prototypeToKey, keyToPrototypes);
                 }
             }
         }
@@ -1912,35 +1916,34 @@ namespace
                 UsdPrimIsDefined && UsdPrimIsActive && !UsdPrimIsAbstract))
         {
             const UsdPrim& child = *childIter;
-            _walkForMasters(child, masterToKey, keyToMasters);
+            _walkForPrototypes(child, prototypeToKey, keyToPrototypes);
         }
     }
 }
 
-FnKat::GroupAttribute UsdKatanaUtils::BuildInstanceMasterMapping(const UsdStageRefPtr& stage,
-                                                                 const SdfPath& rootPath)
+FnKat::GroupAttribute UsdKatanaUtils::BuildInstancePrototypeMapping(const UsdStageRefPtr& stage,
+                                                                    const SdfPath& rootPath)
 {
-    StringMap masterToKey;
-    StringSetMap keyToMasters;
-    _walkForMasters(stage->GetPrimAtPath(rootPath), masterToKey, keyToMasters);
+    StringMap prototypeToKey;
+    StringSetMap keyToPrototypes;
+    _walkForPrototypes(stage->GetPrimAtPath(rootPath), prototypeToKey, keyToPrototypes);
 
     FnKat::GroupBuilder gb;
-    TF_FOR_ALL(I, keyToMasters)
+    TF_FOR_ALL(I, keyToPrototypes)
     {
         const std::string & key = (*I).first;
-        const StringSet & masters = (*I).second;
+        const StringSet& prototypes = (*I).second;
 
         size_t i = 0;
 
-        TF_FOR_ALL(J, masters)
+        TF_FOR_ALL(J, prototypes)
         {
-            const std::string & master = (*J);
+            const std::string& prototype = (*J);
 
             std::ostringstream buffer;
 
             buffer << key << "/m" << i;
-            gb.set(FnKat::DelimiterEncode(master),
-                    FnKat::StringAttribute(buffer.str()));
+            gb.set(FnKat::DelimiterEncode(prototype), FnKat::StringAttribute(buffer.str()));
 
             ++i;
         }

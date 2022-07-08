@@ -213,12 +213,13 @@ struct UsdKatanaUtils
             bool isMotionBackward,
             bool* hasInfiniteBounds);
     /// \}
-    
+
     /// Build and return, as a group attribute for convenience, a map
-    /// from instances to masters.  Only traverses paths at and below
+    /// from instances to prototypes.  Only traverses paths at and below
     /// the given rootPath.
-    USDKATANA_API static FnKat::GroupAttribute BuildInstanceMasterMapping(
-            const UsdStageRefPtr& stage, const SdfPath &rootPath);
+    USDKATANA_API static FnKat::GroupAttribute BuildInstancePrototypeMapping(
+        const UsdStageRefPtr& stage,
+        const SdfPath& rootPath);
 
     USDKATANA_API static FnKat::Attribute ApplySkinningToPoints(
         const UsdGeomPointBased& points,

@@ -105,10 +105,10 @@ nb.setHintsForParameter('instanceMode', {
     'options' : ['expanded', 'as sources and instances'],
     'help' : """
       When using <i>expanded</i> USD instances will be unrolled as though
-      the children of their masters were naturally present.
+      the children of their prototypes were naturally present.
       </p>
-      When using <i>as sources and instances</i>, masters will be created
-      under a sibling of World named /Masters. Instanced USD prims will
+      When using <i>as sources and instances</i>, prototypes will be created
+      under a sibling of World named /Prototypes. Instanced USD prims will
       be of type "instance" and have no children.
     """,
     'conditionalVisOps' : _offForArchiveCondVis,

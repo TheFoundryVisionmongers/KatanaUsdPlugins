@@ -92,10 +92,10 @@ UsdKatanaUsdInPrivateData::UsdKatanaUsdInPrivateData(const UsdPrim& prim,
     
     _outputTargets = _usdInArgs->GetOutputTargets();
 
-    // XXX: manually track instance and master path for possible
+    // XXX: manually track instance and prototype path for possible
     //      relationship re-retargeting. This approach does not yet
     //      support nested instances -- which is expected to be handled
-    //      via the forthcoming GetMasterWithContext.
+    //      via the forthcoming GetPrototypeWithContext.
     //
     if (prim.IsInstance())
     {
@@ -114,24 +114,24 @@ UsdKatanaUsdInPrivateData::UsdKatanaUsdInPrivateData(const UsdPrim& prim,
             _instancePath = prim.GetPath();
         }
 
-        const UsdPrim& masterPrim = prim.GetPrototype();
-        if (masterPrim)
+        const UsdPrim& prototypePrim = prim.GetPrototype();
+        if (prototypePrim)
         {
-            _masterPath = masterPrim.GetPath();
+            _prototypePath = prototypePrim.GetPath();
         }
     }
     else if (parentData)
     {
-        // Pass along instance and master paths to children.
+        // Pass along instance and prototype paths to children.
         //
         if (!parentData->GetInstancePath().IsEmpty())
         {
             _instancePath = parentData->GetInstancePath();
         }
 
-        if (!parentData->GetMasterPath().IsEmpty())
+        if (!parentData->GetPrototypePath().IsEmpty())
         {
-            _masterPath = parentData->GetMasterPath();
+            _prototypePath = parentData->GetPrototypePath();
         }
     }
 
