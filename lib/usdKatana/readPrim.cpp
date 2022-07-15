@@ -797,16 +797,21 @@ FnKat::Attribute UsdKatanaGeomGetPrimvarGroup(const UsdGeomImageable& imageable,
         // Convert interpolation -> scope
         FnKat::StringAttribute scopeAttr;
         const bool isCurve = imageable.GetPrim().IsA<UsdGeomCurves>();
-        if (isCurve && interpolation == UsdGeomTokens->vertex) {
-            // it's a curve, so "vertex" == "vertex"
+        if (isCurve && interpolation == UsdGeomTokens->varying)
+        {
+            // it's a curve, so "varying" == "vertex"
             scopeAttr = FnKat::StringAttribute("vertex");
-        } else if (interpolation == UsdGeomTokens->faceVarying) {
+        }
+        else if (interpolation == UsdGeomTokens->faceVarying)
+        {
             scopeAttr = FnKat::StringAttribute("vertex");
             if (primvar->GetAttr().Get(&vtValue, data.GetCurrentTime()) &&
                 primvar->GetIndices(&indices, data.GetCurrentTime())) {
                 isFaceVarying = true;
             }
-        } else {
+        }
+        else
+        {
             scopeAttr = FnKat::StringAttribute(
                     (interpolation == UsdGeomTokens->faceVarying) ? "vertex" :
                     (interpolation == UsdGeomTokens->varying)     ? "point" :
