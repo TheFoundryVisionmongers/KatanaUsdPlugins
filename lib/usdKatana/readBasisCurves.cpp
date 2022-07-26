@@ -69,13 +69,14 @@ static void _SetCurveAttrs(UsdKatanaAttrMap& attrs,
 
     VtFloatArray widths;
     basisCurves.GetWidthsAttr().Get(&widths, currentTime);
+    TfToken interpolation = basisCurves.GetWidthsInterpolation();
     size_t numWidths = widths.size();
-    if (numWidths == 1)
+    if (numWidths == 1 && interpolation == UsdGeomTokens->constant)
     {
         attrs.set("geometry.constantWidth",
             FnKat::FloatAttribute(widths[0]));
     }
-    else if (numWidths > 1)
+    else if (numWidths > 1 && interpolation == UsdGeomTokens->vertex)
     {
 #if KATANA_VERSION_MAJOR >= 3
         auto widthsAttr = VtKatanaMapOrCopy(widths);
@@ -86,6 +87,21 @@ static void _SetCurveAttrs(UsdKatanaAttrMap& attrs,
             std::vector<float>(widths.begin(), widths.end()));
         attrs.set("geometry.point.width", widthsBuilder.build());
 #endif // KATANA_VERSION_MAJOR >= 3
+    }
+    else if (numWidths >= 1)
+    {
+        // Align on what AlembicIn does in that case
+        FnKat::StringAttribute scopeAttr =
+            FnKat::StringAttribute((interpolation == UsdGeomTokens->faceVarying) ? "vertex"
+                                   : (interpolation == UsdGeomTokens->varying)   ? "vertex"
+                                   : (interpolation == UsdGeomTokens->vertex)    ? "point"
+                                   : (interpolation == UsdGeomTokens->uniform)   ? "face"
+                                                                                 : "primitive");
+        attrs.set("geometry.arbitrary.width.scope", scopeAttr);
+        attrs.set("geometry.arbitrary.width.inputType", FnKat::StringAttribute("float"));
+
+        auto widthsAttr = VtKatanaMapOrCopy(widths);
+        attrs.set("geometry.arbitrary.width.value", widthsAttr);
     }
 
     TfToken curveType;
