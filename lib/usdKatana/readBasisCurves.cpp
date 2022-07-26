@@ -112,6 +112,10 @@ static void _SetCurveAttrs(UsdKatanaAttrMap& attrs,
     TfToken wrapType;
     basisCurves.GetWrapAttr().Get(&wrapType, currentTime);
     attrs.set("geometry.closed", FnKat::IntAttribute(wrapType == UsdGeomTokens->periodic ? 1 : 0));
+
+    TfToken basisType;
+    basisCurves.GetBasisAttr().Get(&basisType, currentTime);
+    attrs.set("geometry.vstep", FnKat::IntAttribute(basisType == UsdGeomTokens->bezier ? 3 : 1));
 }
 
 void UsdKatanaReadBasisCurves(const UsdGeomBasisCurves& basisCurves,
