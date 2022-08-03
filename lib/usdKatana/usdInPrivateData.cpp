@@ -157,13 +157,12 @@ UsdKatanaUsdInPrivateData::UsdKatanaUsdInPrivateData(const UsdPrim& prim,
     if (!parentData and !isolatePath.empty() and
         pystring::startswith(primPath, isolatePath+"/"))
     {
-        std::vector<std::string> parentLocs;
-        Foundry::Katana::Util::Path::GetLocationStack(parentLocs, primPath);
+        auto parentLocs = Foundry::Katana::Util::Path::GetLocationStackStringView(primPath);
         std::reverse(std::begin(parentLocs), std::end(parentLocs));
-        for (size_t i = 0; i < parentLocs.size(); ++i)
+        pathsToCheck.reserve(parentLocs.size());
+        for (const auto& parentLoc : parentLocs)
         {
-            pathsToCheck.push_back(FnKat::DelimiterEncode(
-                    sessionPath + parentLocs[i]));
+            pathsToCheck.push_back(FnKat::DelimiterEncode(sessionPath + std::string{parentLoc}));
         }
     }
     else
