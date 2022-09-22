@@ -543,23 +543,41 @@ public:
             {
                 std::string opName;
                 const TfToken typeName = prim.GetTypeName();
-                if (UsdKatanaUsdInPluginRegistry::FindUsdType(typeName, &opName))
+                if (!UsdKatanaUsdInPluginRegistry::FindUsdType(typeName, &opName))
                 {
-                    if (!opName.empty())
+                    // If there is no type registered, we search through the
+                    // applied schemas to see if one of those has an op
+                    // registered against them. We only expect one of these
+                    // schemas to be registered against an import Op.
+                    const auto& appliedSchemas = prim.GetAppliedSchemas();
+                    bool foundRegisteredSchema = false;
+                    for (auto& appliedSchemaName : appliedSchemas)
                     {
-                        if (privateData)
+                        if (UsdKatanaUsdInPluginRegistry::FindSchema(appliedSchemaName, &opName))
                         {
-                            if ((typeName.GetString() != "SkelRoot") ||
-                                privateData->GetEvaluateUsdSkelBindings())
+                            if (foundRegisteredSchema)
                             {
-                                // roughly equivalent to execOp except that we
-                                // can locally override privateData
-                                UsdKatanaUsdInPluginRegistry::ExecuteOpDirectExecFnc(
-                                    opName, *privateData, opArgs, interface);
-
-                                opArgs =
-                                    privateData->updateExtensionOpArgs(opArgs);
+                                FnLogWarn("Multiple schemas applied on prim at location "
+                                          << prim.GetPath()
+                                          << " which are registered against different input ops.");
                             }
+                            foundRegisteredSchema = true;
+                        }
+                    }
+                }
+                if (!opName.empty())
+                {
+                    if (privateData)
+                    {
+                        if ((typeName.GetString() != "SkelRoot") ||
+                            privateData->GetEvaluateUsdSkelBindings())
+                        {
+                            // roughly equivalent to execOp except that we
+                            // can locally override privateData
+                            UsdKatanaUsdInPluginRegistry::ExecuteOpDirectExecFnc(
+                                opName, *privateData, opArgs, interface);
+
+                            opArgs = privateData->updateExtensionOpArgs(opArgs);
                         }
                     }
                 }

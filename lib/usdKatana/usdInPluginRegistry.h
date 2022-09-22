@@ -61,6 +61,24 @@ public:
         }
     }
 
+    /// \breif Register \p opName to handle prims with the applied schema \T.
+    template <typename T>
+    static void RegisterUsdSchema(const std::string& opName)
+    {
+        TfToken schemaName = UsdSchemaRegistry::GetSchemaTypeName<T>();
+        if (!schemaName.IsEmpty())
+        {
+            _RegisterSchema(schemaName, opName);
+        }
+        else
+        {
+            TF_CODING_ERROR(
+                "Could not find a registered schema for the type being "
+                "registered against Op '%s'.",
+                opName);
+        }
+    }
+
     /// \brief Register \p site-specific opName to handle the usd type \T.
     template <typename T>
     static void RegisterUsdTypeForSite(
@@ -116,6 +134,14 @@ public:
     USDKATANA_API static bool FindUsdTypeForSite(
             const TfToken& usdTypeName,
             std::string* opName);
+
+    /// \brief Finds a reader if oe exists for \p schemaName.
+    ///
+    /// \p schemaName should be a schema type name, for example,
+    /// \code
+    /// UsdSchemaRegistry::GetSchemaTypeName<UsdLuxLightAPI>()
+    /// \endcode
+    USDKATANA_API static bool FindSchema(const TfToken& schemaName, std::string* opName);
 
     /// \brief Finds a reader if one exists for \p kind.  This will walk up the
     /// kind hierarchy and find the nearest applicable one.
@@ -196,6 +222,7 @@ private:
     USDKATANA_API static void _RegisterUsdType(
             const std::string& tfTypeName, 
             const std::string& opName);
+    USDKATANA_API static void _RegisterSchema(const TfToken& schemaName, const std::string& opName);
 
     static void _RegisterUsdTypeForSite(
             const std::string& tfTypeName, 

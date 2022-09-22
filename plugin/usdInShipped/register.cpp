@@ -119,14 +119,7 @@ void registerPlugins()
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdShadeMaterial>("UsdInCore_LookOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdSkelRoot>("UsdInCore_XformOp");
 
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxBoundableLightBase>("UsdInCore_LightOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxCylinderLight>("UsdInCore_LightOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDomeLight>("UsdInCore_LightOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxGeometryLight>("UsdInCore_LightOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDistantLight>("UsdInCore_LightOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxSphereLight>("UsdInCore_LightOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxDiskLight>("UsdInCore_LightOp");
-    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdLuxRectLight>("UsdInCore_LightOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdSchema<UsdLuxLightAPI>("UsdInCore_LightOp");
 
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomCamera>("UsdInCore_CameraOp");
 

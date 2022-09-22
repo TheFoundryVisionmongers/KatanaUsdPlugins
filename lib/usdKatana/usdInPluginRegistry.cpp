@@ -49,12 +49,21 @@ PXR_NAMESPACE_OPEN_SCOPE
 typedef std::map<std::string, std::string> _UsdTypeRegistry;
 static _UsdTypeRegistry _usdTypeReg;
 static _UsdTypeRegistry _usdTypeSiteReg;
+typedef std::map<TfToken, std::string> _UsdSchemaRegistry;
+static _UsdSchemaRegistry _usdSchemaReg;
 
 /* static */
 void UsdKatanaUsdInPluginRegistry::_RegisterUsdType(const std::string& tfTypeName,
                                                     const std::string& opName)
 {
     _usdTypeReg[tfTypeName] = opName;
+}
+
+/* static */
+void UsdKatanaUsdInPluginRegistry::_RegisterSchema(const TfToken& schemaName,
+                                                   const std::string& opName)
+{
+    _usdSchemaReg[schemaName] = opName;
 }
 
 /* static */
@@ -78,7 +87,6 @@ _DoFindUsdType(
     return TfMapLookup(registry, typeNameStr, opName);
 }
 
-
 /* static */
 bool UsdKatanaUsdInPluginRegistry::FindUsdType(const TfToken& usdTypeName, std::string* opName)
 {
@@ -90,6 +98,12 @@ bool UsdKatanaUsdInPluginRegistry::FindUsdTypeForSite(const TfToken& usdTypeName
                                                       std::string* opName)
 {
     return _DoFindUsdType(usdTypeName, opName, _usdTypeSiteReg);
+}
+
+/* static */
+bool UsdKatanaUsdInPluginRegistry::FindSchema(const TfToken& schemaName, std::string* opName)
+{
+    return TfMapLookup(_usdSchemaReg, schemaName, opName);
 }
 
 typedef std::map<TfToken, std::string> _KindRegistry;
