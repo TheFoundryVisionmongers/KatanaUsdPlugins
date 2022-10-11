@@ -1086,6 +1086,7 @@ bool UsdInOp::_hasSiteKinds = false;
 //-----------------------------------------------------------------------------
 
 /*
+ * DEPRECATED
  * This op bootstraps the primary UsdIn op in order to have
  * GeolibPrivateData available at the root op location in UsdIn. Since the
  * GeolibCookInterface API does not currently have the ability to pass
@@ -1106,6 +1107,9 @@ public:
 
     static void cook(FnKat::GeolibCookInterface &interface)
     {
+        ERROR("UsdInBootstrapOp is deprecated please use ExecuteOpDirectExecFnc instead.");
+        return;
+
         interface.stopChildTraversal();
 
         boost::shared_lock<boost::upgrade_mutex> 
@@ -1158,6 +1162,7 @@ public:
 };
 
 /*
+ * DEPRECATED
  * This op bootstraps the primary UsdIn op in order to have
  * GeolibPrivateData available at the root op location in UsdIn. Since the
  * GeolibCookInterface API does not currently have the ability to pass
@@ -1178,6 +1183,11 @@ public:
 
     static void cook(FnKat::GeolibCookInterface &interface)
     {
+        ERROR(
+            "UsdInMaterialGroupBootstrapOp is deprecated please use ExecuteOpDirectExecFnc "
+            "instead.");
+        return;
+
         interface.stopChildTraversal();
 
         boost::shared_lock<boost::upgrade_mutex> 
