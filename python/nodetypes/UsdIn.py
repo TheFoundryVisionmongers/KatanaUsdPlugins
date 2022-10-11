@@ -441,12 +441,8 @@ nb.setHintsForParameter('additionalLocations', {
 
 nb.setGenericAssignRoots('args', '__variantUI')
 
-def buildOpChain(self, interface):
-    interface.setExplicitInputRequestsEnabled(True)
-    
-    graphState = interface.getGraphState()
-    
-    frameTime = interface.getFrameTime()
+def getInputPortAndGraphState(self, outputPort, graphState):
+    frameTime = graphState.getTime()
     
     location = self.getParameter("location").getValue(frameTime)
     
@@ -478,7 +474,7 @@ def buildOpChain(self, interface):
         
         
         existingValue = (
-                interface.getGraphState().getDynamicEntry("var:pxrUsdInSession"))
+            graphState.getDynamicEntry("var:pxrUsdInSession"))
         
         if isinstance(existingValue, FnAttribute.GroupAttribute):
             gb.deepUpdate(existingValue)
@@ -486,11 +482,11 @@ def buildOpChain(self, interface):
         graphState = (graphState.edit()
                 .setDynamicEntry("var:pxrUsdInSession", gb.build())
                 .build())
-        
-    
-    interface.addInputRequest("in", graphState)
 
-nb.setBuildOpChainFnc(buildOpChain)
+    return Nodes3DAPI.Node3D.getInputPortAndGraphState(
+        self, outputPort, graphState)
+
+nb.setGetInputPortAndGraphStateFnc(getInputPortAndGraphState)
 
 def getScenegraphLocation(self, frameTime):
     location = self.getParameter('location').getValue(frameTime)
@@ -580,11 +576,8 @@ nb.setHintsForParameter('locations', {
     'help' : 'Hierarchy root location paths for which to use default motion sample times.'
 })
 
-def buildOpChain(self, interface):
-    interface.setExplicitInputRequestsEnabled(True)
-    
-    graphState = interface.getGraphState()
-    frameTime = interface.getFrameTime()
+def getInputPortAndGraphState(self, outputPort, graphState):
+    frameTime = graphState.getTime()
     locations = self.getParameter("locations")
 
     if locations:
@@ -596,7 +589,7 @@ def buildOpChain(self, interface):
                     FnAttribute.IntAttribute(1))
 
         existingValue = (
-                interface.getGraphState().getDynamicEntry("var:pxrUsdInSession"))
+            graphState.getDynamicEntry("var:pxrUsdInSession"))
         
         if isinstance(existingValue, FnAttribute.GroupAttribute):
             gb.deepUpdate(existingValue)
@@ -604,10 +597,11 @@ def buildOpChain(self, interface):
         graphState = (graphState.edit()
                 .setDynamicEntry("var:pxrUsdInSession", gb.build())
                 .build())
-        
-    interface.addInputRequest("in", graphState)
 
-nb.setBuildOpChainFnc(buildOpChain)
+    return Nodes3DAPI.Node3D.getInputPortAndGraphState(
+        self, outputPort, graphState)
+
+nb.setGetInputPortAndGraphStateFnc(getInputPortAndGraphState)
 
 nb.build()
 
@@ -635,11 +629,8 @@ nb.setHintsForParameter('overrides', {
     'open': True,
 })
 
-def buildOpChain(self, interface):
-    interface.setExplicitInputRequestsEnabled(True)
-
-    graphState = interface.getGraphState()
-    frameTime = interface.getFrameTime()
+def getInputPortAndGraphState(self, outputPort, graphState):
+    frameTime = graphState.getTime()
 
     locations = self.getParameter('locations')
     overrides = self.getParameter('overrides')
@@ -681,7 +672,7 @@ def buildOpChain(self, interface):
                     gb2.set('overrides.' + encodedLoc, overridesAttr)
 
             existingValue = (
-                interface.getGraphState().getDynamicEntry('var:pxrUsdInSession'))
+                graphState.getDynamicEntry('var:pxrUsdInSession'))
             if isinstance(existingValue, FnAttribute.GroupAttribute):
                 gb2.deepUpdate(existingValue)
 
@@ -689,9 +680,10 @@ def buildOpChain(self, interface):
                     .setDynamicEntry('var:pxrUsdInSession', gb2.build())
                     .build())
 
-    interface.addInputRequest('in', graphState)
+    return Nodes3DAPI.Node3D.getInputPortAndGraphState(
+        self, outputPort, graphState)
 
-nb.setBuildOpChainFnc(buildOpChain)
+nb.setGetInputPortAndGraphStateFnc(getInputPortAndGraphState)
 
 nb.build()
 
@@ -715,12 +707,9 @@ nb.setHintsForParameter('active', {
     'widget' : 'boolean',
 })
 
-def buildOpChain(self, interface):
-    interface.setExplicitInputRequestsEnabled(True)
-    
-    graphState = interface.getGraphState()
-    frameTime = interface.getFrameTime()
-    locations = self.getParameter("locations")
+def getInputPortAndGraphState(self, outputPort, graphState):
+    frameTime = graphState.getTime()
+    locations = self.getParameter('locations')
 
     if locations:
         state = FnAttribute.IntAttribute(
@@ -733,7 +722,7 @@ def buildOpChain(self, interface):
                     str(loc.getValue(frameTime))), state)
 
         existingValue = (
-                interface.getGraphState().getDynamicEntry("var:pxrUsdInSession"))
+            graphState.getDynamicEntry("var:pxrUsdInSession"))
         
         if isinstance(existingValue, FnAttribute.GroupAttribute):
             gb.deepUpdate(existingValue)
@@ -741,10 +730,11 @@ def buildOpChain(self, interface):
         graphState = (graphState.edit()
                 .setDynamicEntry("var:pxrUsdInSession", gb.build())
                 .build())
-        
-    interface.addInputRequest("in", graphState)
 
-nb.setBuildOpChainFnc(buildOpChain)
+    return Nodes3DAPI.Node3D.getInputPortAndGraphState(
+        self, outputPort, graphState)
+
+nb.setGetInputPortAndGraphStateFnc(getInputPortAndGraphState)
 
 nb.build()
 
@@ -827,11 +817,8 @@ __numberAttrTypes = {
     'listOp': FnAttribute.IntAttribute,
 }
 
-def buildOpChain(self, interface):
-    interface.setExplicitInputRequestsEnabled(True)
-    
-    graphState = interface.getGraphState()
-    frameTime = interface.getFrameTime()
+def getInputPortAndGraphState(self, outputPort, graphState):
+    frameTime = graphState.getTime()
     locationsParam = self.getParameter("locations")
     
     attrName = self.getParameter('attrName').getValue(
@@ -843,17 +830,16 @@ def buildOpChain(self, interface):
     if attrName and locations:
         typeValue = self.getParameter('type').getValue(frameTime)
         if typeValue == 'string':
-            valueAttr = interface.buildAttrFromParam(
-                    self.getParameter('stringValue'))
+            valueAttr = NodegraphAPI.BuildAttrFromStringParameter(
+                self.getParameter('stringValue'), graphState, False)
         else:
-            valueAttr =  interface.buildAttrFromParam(
-                    self.getParameter('numberValue'),
-                    numberType=__numberAttrTypes.get(typeValue,
-                                FnAttribute.FloatAttribute))
-        
-        
-        
-        
+            valueAttr = NodegraphAPI.BuildAttrFromNumberParameter(
+                self.getParameter('numberValue'),
+                graphState,
+                False,
+                __numberAttrTypes.get(typeValue,
+                    FnAttribute.FloatAttribute))
+
         if typeValue == 'listOp':
             entryGb = FnAttribute.GroupBuilder()
             entryGb.set('type', 'SdfInt64ListOp')
@@ -895,7 +881,7 @@ def buildOpChain(self, interface):
                         entryGroup)
 
         existingValue = (
-                interface.getGraphState().getDynamicEntry("var:pxrUsdInSession"))
+            graphState.getDynamicEntry("var:pxrUsdInSession"))
         
         if isinstance(existingValue, FnAttribute.GroupAttribute):
             gb.deepUpdate(existingValue)
@@ -904,9 +890,10 @@ def buildOpChain(self, interface):
                 .setDynamicEntry("var:pxrUsdInSession", gb.build())
                 .build())
         
-    interface.addInputRequest("in", graphState)
+    return Nodes3DAPI.Node3D.getInputPortAndGraphState(
+        self, outputPort, graphState)
 
-nb.setBuildOpChainFnc(buildOpChain)
+nb.setGetInputPortAndGraphStateFnc(getInputPortAndGraphState)
 
 nb.build()
 
@@ -934,12 +921,9 @@ nb.setHintsForParameter('mode', {
     'options' : ['append', 'replace'],
 })
 
+def getInputPortAndGraphState(self, outputPort, graphState):
+    frameTime = graphState.getTime()
 
-def buildOpChain(self, interface):
-    interface.setExplicitInputRequestsEnabled(True)
-    
-    graphState = interface.getGraphState()
-    frameTime = interface.getFrameTime()
     locationsParam = self.getParameter("locations")
     
     locations = [y for y in
@@ -947,8 +931,8 @@ def buildOpChain(self, interface):
     
     if locations:
         existingValue = (
-                graphState.getDynamicEntry("var:pxrUsdInSession")
-                        or FnAttribute.GroupAttribute())
+            graphState.getDynamicEntry("var:pxrUsdInSession")
+                    or FnAttribute.GroupAttribute())
         
         # later nodes set to 'replace' win out
         maskIsFinal = existingValue.getChildByName('maskIsFinal')
@@ -973,10 +957,11 @@ def buildOpChain(self, interface):
             graphState = (graphState.edit()
                 .setDynamicEntry("var:pxrUsdInSession", gb.build())
                 .build())
-    
-    interface.addInputRequest("in", graphState)
 
-nb.setBuildOpChainFnc(buildOpChain)
+    return Nodes3DAPI.Node3D.getInputPortAndGraphState(
+        self, outputPort, graphState)
+
+nb.setGetInputPortAndGraphStateFnc(getInputPortAndGraphState)
 
 nb.build()
 
