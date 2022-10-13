@@ -696,10 +696,12 @@ public:
                     UsdKatanaTokens->katanaLooksScopeName));
             if (lookPrim)
             {
-                interface.setAttr(UsdKatanaTokens->katanaLooksChildNameExclusionAttrName,
-                        FnKat::IntAttribute(1));
-                interface.createChild(TfToken(UsdKatanaTokens->katanaLooksScopeName),
-                                      "UsdInCore_LooksGroupOp", FnKat::GroupAttribute(),
+                interface.setAttr(
+                    UsdKatanaTokens->katanaLooksChildNameExclusionAttrName.GetString(),
+                    FnKat::IntAttribute(1));
+                interface.createChild(UsdKatanaTokens->katanaLooksScopeName.GetString(),
+                                      "UsdInCore_LooksGroupOp",
+                                      FnKat::GroupAttribute(),
                                       FnKat::GeolibCookInterface::ResetRootTrue,
                                       new UsdKatanaUsdInPrivateData(
                                           lookPrim, privateData->GetUsdInArgs(), privateData),
@@ -791,7 +793,9 @@ public:
                         UsdKatanaTokens->katanaLooksChildNameExclusionAttrName.GetString() +
                             lookToken.GetString(),
                         FnKat::IntAttribute(1));
-                    interface.createChild(lookToken, "UsdInCore_LooksGroupOp", childOpArgs,
+                    interface.createChild(lookToken.GetString(),
+                                          "UsdInCore_LooksGroupOp",
+                                          childOpArgs,
                                           FnKat::GeolibCookInterface::ResetRootTrue,
                                           new UsdKatanaUsdInPrivateData(
                                               lookPrim, privateData->GetUsdInArgs(), privateData),
