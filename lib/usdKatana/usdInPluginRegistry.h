@@ -75,7 +75,7 @@ public:
             TF_CODING_ERROR(
                 "Could not find a registered schema for the type being "
                 "registered against Op '%s'.",
-                opName);
+                opName.c_str());
         }
     }
 
