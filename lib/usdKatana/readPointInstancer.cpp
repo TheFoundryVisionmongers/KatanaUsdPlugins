@@ -515,9 +515,11 @@ void UsdKatanaReadPointInstancer(const UsdGeomPointInstancer& instancer,
 
             if (relBuildPathUpOne.empty())
             {
-                sourcesBldr.setAttrAtLocation(relBuildPath,
-                        "usdPrimPath", FnKat::StringAttribute(
-                                usdPrimPathsTracker[relBuildPathUpOne]));
+                // Where relBuildPathUpOne is empty, we want to essentially treat this location as
+                // its own `prototypes` location. Therefore we only need to set the prim path to
+                // itself as it will only ever contain itself.
+                sourcesBldr.setAttrAtLocation(
+                    relBuildPath, "usdPrimPath", FnKat::StringAttribute(buildPath));
             }
             else
             {
