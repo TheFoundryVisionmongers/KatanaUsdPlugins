@@ -1,6 +1,17 @@
 # Change List
 
 
+# 21.05_fn6_py2
+
+- ID-514557 - Substituted `GetLocationStack()` with the more performant `GetLocationStackStringView()`. Requires 4.5v4 or 5.0v4 onwards.
+- ID 514589 - Bezier curves should create a vstep attribute when bringing them in UsdIn
+- ID 514440 - Add support of widths with different interpolation scope for curves imported with UsdIn
+- ID 513613 - Add support of wrap type for basis curves
+- ID 505169 - Align USD interpolation scope with Prman formula used in GeoLib3
+- ID 508782 - Rename PxrVt to Vt to remove Pxr prefix
+- ID 506788 - Added bxdf to SdfType conversion mapping & use Token by default
+- ID 509475 - Removing legacy logic to deal with osl prman shaders
+
 # 21.05_fn5_py2
 
 ## Bug fixes
