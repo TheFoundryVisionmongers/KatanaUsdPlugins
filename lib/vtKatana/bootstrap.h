@@ -38,7 +38,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 /// \brief bootstrap Geolib.
 VTKATANA_API
-void PxrVtKatanaBootstrap();
+void VtKatanaBootstrap();
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

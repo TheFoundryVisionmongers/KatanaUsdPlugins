@@ -52,5 +52,5 @@ void registerPlugins()
         "UsdInPrmanLuxLight_LocationDecorator");
 
     UsdKatanaBootstrap();
-    PxrVtKatanaBootstrap();
+    VtKatanaBootstrap();
 }

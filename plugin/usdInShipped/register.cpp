@@ -165,5 +165,5 @@ void registerPlugins()
     REGISTER_PLUGIN(LibraryMaterialNamesAttrFnc, "UsdInLibraryMaterialNames", 0, 1);
 
     UsdKatanaBootstrap();
-    PxrVtKatanaBootstrap();
+    VtKatanaBootstrap();
 }
