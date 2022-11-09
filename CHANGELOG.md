@@ -1,6 +1,27 @@
 # Change List
 
 
+# 22.05_fn1
+
+- Added support for USD 22.05
+
+- ID-521528 - Avoid passing non-trivial object (`std::string`) to variadic function.
+- ID-513887 - Compensate for lack of generic StringType constructor previously in FnPlatform::StringView, but not std::string_view
+- ID-507772 - Deprecate UsdInBootstrapOp and UsdInMaterialGroupBootstrapOp ops
+- ID-507658 - Import USD lights based on applied schema
+- ID-508015 - Rename all occurences of master to prototype
+- ID-499624 - Upgrade KatanaUsdPlugins to C++17 and refactor to use CMAKE_CXX_STANDARD
+- ID-501808 - Ensure schemas and attributes are not explicitly defined where they are auto-applied by other schemas
+- ID-507661 - Replaced call to deprecated GetSchemaType function
+- ID-501808 - Update UsdLux import to work with changes made in USD upgrades
+- ID-453348 - Fix USD rename of GetMaster GetPrototype
+- ID-505055 - Renaming all occurences of PxrUsd to Usd
+- ID-505055 - Rename folder and file names to remove Pxr prefix
+- ID-501809 - Update UsdLux export to work with changes made in USD upgrades
+- ID-501809 - Rename LightAPI to KatanaLightAPI and rebuild accompanying schemas against USD 22.05
+- ID-506892 - Updating Distant Light intensity to default from UsdLux
+- ID-506350 - Ensuring toupper and to lower is available via cctype include
+
 # 21.05_fn6_py2 - 21.05_fn6_py3
 
 - ID-514557 - Substituted `GetLocationStack()` with the more performant `GetLocationStackStringView()`. Requires 4.5v4 or 5.0v4 onwards.
