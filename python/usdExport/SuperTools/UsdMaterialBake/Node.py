@@ -26,7 +26,7 @@ import time
 from Katana import NodegraphAPI, Utils
 import LookFileBakeAPI
 from LookFileBakeAPI import LookFileBaker
-from Nodes3DAPI import LookFileBaking
+from Nodes3DAPI import Get3DSourceFromNodeInput, LookFileBaking
 
 log = logging.getLogger("UsdMaterialBake.Node")
 
@@ -179,14 +179,8 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
                             'is not a NodegraphAPI.GraphState instance: %s'
                             % repr(graphState))
 
-        sourcePort, sourceGraphState = self.getInputSource(portName,
-                                                           graphState)
-
-        sourceNode = None
-        if sourcePort is not None:
-            sourceNode = sourcePort.getNode()
-        if not isinstance(sourceNode, Node3D):
-            sourceNode = None
+        (sourceNode, sourcePort,
+         sourceGraphState) = Get3DSourceFromNodeInput(self, portName, graphState)
 
         if sourceNode is None:
             raise RuntimeError('The required input "%s" was not connected on '
