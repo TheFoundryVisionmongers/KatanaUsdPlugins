@@ -12,6 +12,7 @@ pxr_plugin(${PXR_PACKAGE}
         usdKatana
         usdShade
         usdLux
+        usdVol
         ${vtKatana_LIBRARY}
         Boost::system
 
@@ -33,6 +34,8 @@ pxr_plugin(${PXR_PACKAGE}
         material.cpp
         materialsGroup.cpp
         mesh.cpp
+        volume.cpp
+        openVDBAsset.cpp
         model.cpp
         nurbsPatch.cpp
         pointInstancer.cpp

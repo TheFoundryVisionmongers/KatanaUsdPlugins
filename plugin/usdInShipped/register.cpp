@@ -46,8 +46,6 @@
 #include "pxr/usd/usdGeom/scope.h"
 #include "pxr/usd/usdGeom/subset.h"
 #include "pxr/usd/usdGeom/xform.h"
-#include "pxr/usd/usdShade/material.h"
-#include "pxr/usd/usdSkel/root.h"
 #include "pxr/usd/usdLux/boundableLightBase.h"
 #include "pxr/usd/usdLux/cylinderLight.h"
 #include "pxr/usd/usdLux/diskLight.h"
@@ -57,6 +55,10 @@
 #include "pxr/usd/usdLux/lightFilter.h"
 #include "pxr/usd/usdLux/rectLight.h"
 #include "pxr/usd/usdLux/sphereLight.h"
+#include "pxr/usd/usdShade/material.h"
+#include "pxr/usd/usdSkel/root.h"
+#include "pxr/usd/usdVol/openVDBAsset.h"
+#include "pxr/usd/usdVol/volume.h"
 
 #include "usdInShipped/attrfnc_materialReference.h"
 
@@ -70,6 +72,8 @@ void registerUsdInResolveMaterialBindingsOp();
 DEFINE_GEOLIBOP_PLUGIN(UsdInCore_XformOp)
 DEFINE_GEOLIBOP_PLUGIN(UsdInCore_ScopeOp)
 DEFINE_GEOLIBOP_PLUGIN(UsdInCore_MeshOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_VolumeOp)
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_OpenVDBAssetOp)
 DEFINE_GEOLIBOP_PLUGIN(UsdInCore_GeomSubsetOp)
 DEFINE_GEOLIBOP_PLUGIN(UsdInCore_NurbsPatchOp)
 DEFINE_GEOLIBOP_PLUGIN(UsdInCore_PointInstancerOp)
@@ -93,6 +97,8 @@ void registerPlugins()
     USD_OP_REGISTER_PLUGIN(UsdInCore_XformOp, "UsdInCore_XformOp", 0, 1);
     USD_OP_REGISTER_PLUGIN(UsdInCore_ScopeOp, "UsdInCore_ScopeOp", 0, 1);
     USD_OP_REGISTER_PLUGIN(UsdInCore_MeshOp, "UsdInCore_MeshOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_VolumeOp, "UsdInCore_VolumeOp", 0, 1);
+    USD_OP_REGISTER_PLUGIN(UsdInCore_OpenVDBAssetOp, "UsdInCore_OpenVDBAssetOp", 0, 1);
     USD_OP_REGISTER_PLUGIN(UsdInCore_GeomSubsetOp, "UsdInCore_GeomSubsetOp", 0, 1);
     USD_OP_REGISTER_PLUGIN(UsdInCore_NurbsPatchOp, "UsdInCore_NurbsPatchOp", 0, 1);
     USD_OP_REGISTER_PLUGIN(UsdInCore_PointInstancerOp, "UsdInCore_PointInstancerOp", 0, 1);
@@ -111,6 +117,8 @@ void registerPlugins()
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomXform>("UsdInCore_XformOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomScope>("UsdInCore_ScopeOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomMesh>("UsdInCore_MeshOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdVolVolume>("UsdInCore_VolumeOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdVolOpenVDBAsset>("UsdInCore_OpenVDBAssetOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomSubset>("UsdInCore_GeomSubsetOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomNurbsPatch>("UsdInCore_NurbsPatchOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomPointInstancer>("UsdInCore_PointInstancerOp");

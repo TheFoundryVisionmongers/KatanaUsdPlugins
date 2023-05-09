@@ -12,6 +12,7 @@ pxr_shared_library(${PXR_PACKAGE}
         usdHydra
         usdSkel
         usdGeom
+        usdVol
         usdImaging
         usdRi
         usdUI
@@ -53,6 +54,8 @@ pxr_shared_library(${PXR_PACKAGE}
         readPointInstancer
         readPoints
         readPrim
+        readVolume
+        readOpenVDBAsset
         readXformable
 
         bootstrap
