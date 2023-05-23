@@ -760,7 +760,7 @@ FnKat::Attribute UsdKatanaGeomGetPrimvarGroup(const UsdGeomImageable& imageable,
     // Usd primvars -> Primvar attributes
     FnKat::GroupBuilder gdBuilder;
 
-    std::vector<UsdGeomPrimvar> primvarAttrs = imageable.GetPrimvars();
+    std::vector<UsdGeomPrimvar> primvarAttrs = UsdGeomPrimvarsAPI(imageable).GetPrimvars();
     TF_FOR_ALL(primvar, primvarAttrs) {
         // Katana backends (such as RFK) are not prepared to handle
         // groups of primvars under geometry.arbitrary, which leaves us

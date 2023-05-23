@@ -37,7 +37,6 @@
 #include "pxr/usd/usdLux/shadowAPI.h"
 #include "pxr/usd/usdLux/shapingAPI.h"
 #include "pxr/usd/usdLux/sphereLight.h"
-#include "pxr/usd/usdRi/textureAPI.h"
 
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readPrim.h"
@@ -137,9 +136,8 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInPrmanLuxLight_LocationDecorator, privateData,
         if (UsdLuxRectLight l = UsdLuxRectLight(lightPrim))
         {
             lightShader = FnKat::StringAttribute("PxrRectLight");
-            UsdRiTextureAPI textureAPI(lightPrim);
-            lightBuilder.Set("colorMapGamma", textureAPI.GetRiTextureGammaAttr())
-                .Set("colorMapSaturation", textureAPI.GetRiTextureSaturationAttr())
+            lightBuilder.Set("colorMapGamma", lightPrim.GetAttribute(TfToken("ri:texture:gamma")))
+                .Set("colorMapSaturation", lightPrim.GetAttribute(TfToken("ri:texture:saturation")))
                 .Set("lightColorMap", l.GetTextureFileAttr())
                 .Set("width", l.GetWidthAttr())
                 .Set("height", l.GetHeightAttr());
@@ -161,10 +159,10 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInPrmanLuxLight_LocationDecorator, privateData,
         if (UsdLuxDomeLight l = UsdLuxDomeLight(lightPrim))
         {
             lightShader = FnKat::StringAttribute("PxrDomeLight");
-            UsdRiTextureAPI textureAPI(lightPrim);
             lightBuilder.Set("lightColorMap", l.GetTextureFileAttr())
-                .Set("colorMapGamma", textureAPI.GetRiTextureGammaAttr())
-                .Set("colorMapSaturation", textureAPI.GetRiTextureSaturationAttr());
+                .Set("colorMapGamma", lightPrim.GetAttribute(TfToken("ri:texture:gamma")))
+                .Set("colorMapSaturation",
+                     lightPrim.GetAttribute(TfToken("ri:texture:saturation")));
         }
 
         FnKat::GroupBuilder primStatements;
