@@ -1860,9 +1860,10 @@ FnKat::DoubleAttribute UsdKatanaUtils::ConvertBoundsToAttribute(
 namespace
 {
     typedef std::map<std::string, std::string> StringMap;
-    // A container that respects insertion order is needed;  since the set is
-    // not expected to grow large, std::vector is used.
-    // I.e a prim with a prototype could point to /__Prototype_1
+    // A container that respects insertion order is needed; since the set is
+    // not expected to grow large, std::vector is used. USD appears to not be
+    // deterministic when generating the /__Prototype prims given the same
+    // stage. I.e a prim with a prototype could point to /__Prototype_1
     // or /__Prototype_2 when reloading. This would cause issues as the order
     // of the set is used to create the instance sources, and if that can
     // change ordering because the comparison of /__Prototype_x changes, it
@@ -1872,7 +1873,7 @@ namespace
 
     void _walkForPrototypes(const UsdPrim& prim,
                             StringMap& prototypeToKey,
-                            StringSetMap& keyToPrototypes)
+                            StringVecMap& keyToPrototypes)
     {
         if (prim.IsInstance())
         {
@@ -1909,7 +1910,12 @@ namespace
 
                     std::string key = buffer.str();
                     prototypeToKey[prototypePath] = key;
-                    keyToPrototypes[key].insert(prototypePath);
+                    if (std::find(keyToPrototypes[key].begin(),
+                                  keyToPrototypes[key].end(),
+                                  prototypePath) == keyToPrototypes[key].end())
+                    {
+                        keyToPrototypes[key].push_back(prototypePath);
+                    }
                     // TODO, Warn when there are multiple prototypes with the
                     //      same key.
 
@@ -1932,14 +1938,14 @@ FnKat::GroupAttribute UsdKatanaUtils::BuildInstancePrototypeMapping(const UsdSta
                                                                     const SdfPath& rootPath)
 {
     StringMap prototypeToKey;
-    StringSetMap keyToPrototypes;
+    StringVecMap keyToPrototypes;
     _walkForPrototypes(stage->GetPrimAtPath(rootPath), prototypeToKey, keyToPrototypes);
 
     FnKat::GroupBuilder gb;
     TF_FOR_ALL(I, keyToPrototypes)
     {
         const std::string & key = (*I).first;
-        const StringSet& prototypes = (*I).second;
+        const StringVec& prototypes = (*I).second;
 
         size_t i = 0;
 
