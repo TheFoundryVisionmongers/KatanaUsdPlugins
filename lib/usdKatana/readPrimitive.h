@@ -27,30 +27,26 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXR_USDINSHIPPED_DECLARECOREOPS_H
-#define PXR_USDINSHIPPED_DECLARECOREOPS_H
+#ifndef USDKATANA_READPRIMITIVE_H
+#define USDKATANA_READPRIMITIVE_H
 
-#include "usdKatana/usdInPluginRegistry.h"
+#include <string>
 
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_XformOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_ScopeOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_MeshOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_VolumeOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_OpenVDBAssetOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_GeomSubsetOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_NurbsPatchOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_PointInstancerOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_PointsOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_BasisCurvesOp)
-USDKATANA_USDIN_PLUGIN_DECLARE_WITH_FLUSH(UsdInCore_LookOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_LightOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_LightFilterOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_PrimitiveOp)
+#include "pxr/pxr.h"
 
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_ModelOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_CameraOp)
+PXR_NAMESPACE_OPEN_SCOPE
 
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_ConstraintsOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_LooksGroupOp)
+#include "usdKatana/api.h"
 
-#endif // PXR_USDINSHIPPED_DECLARECOREOPS_H
+class UsdKatanaAttrMap;
+class UsdKatanaUsdInPrivateData;
+
+/// \brief read \p UsdGeom Primitive into \p attrs.
+USDKATANA_API void UsdKatanaReadPrimitive(const UsdPrim& prim,
+                                          const UsdKatanaUsdInPrivateData& data,
+                                          UsdKatanaAttrMap& attrs,
+                                          std::string& attrsFilePath);
+
+PXR_NAMESPACE_CLOSE_SCOPE
+
+#endif  // USDKATANA_READPRIMITIVE_H

@@ -39,11 +39,16 @@
 #include "pxr/usd/kind/registry.h"
 #include "pxr/usd/usdGeom/basisCurves.h"
 #include "pxr/usd/usdGeom/camera.h"
+#include "pxr/usd/usdGeom/capsule.h"
+#include "pxr/usd/usdGeom/cone.h"
+#include "pxr/usd/usdGeom/cube.h"
+#include "pxr/usd/usdGeom/cylinder.h"
 #include "pxr/usd/usdGeom/mesh.h"
 #include "pxr/usd/usdGeom/nurbsPatch.h"
 #include "pxr/usd/usdGeom/pointInstancer.h"
 #include "pxr/usd/usdGeom/points.h"
 #include "pxr/usd/usdGeom/scope.h"
+#include "pxr/usd/usdGeom/sphere.h"
 #include "pxr/usd/usdGeom/subset.h"
 #include "pxr/usd/usdGeom/xform.h"
 #include "pxr/usd/usdLux/boundableLightBase.h"
@@ -82,6 +87,8 @@ DEFINE_GEOLIBOP_PLUGIN(UsdInCore_BasisCurvesOp)
 DEFINE_GEOLIBOP_PLUGIN(UsdInCore_LookOp)
 DEFINE_GEOLIBOP_PLUGIN(UsdInCore_LightOp)
 DEFINE_GEOLIBOP_PLUGIN(UsdInCore_LightFilterOp)
+// UsdGeom Primitives
+DEFINE_GEOLIBOP_PLUGIN(UsdInCore_PrimitiveOp)
 
 DEFINE_GEOLIBOP_PLUGIN(UsdInCore_ModelOp)
 DEFINE_GEOLIBOP_PLUGIN(UsdInCore_CameraOp)
@@ -107,6 +114,8 @@ void registerPlugins()
     USD_OP_REGISTER_PLUGIN(UsdInCore_LookOp, "UsdInCore_LookOp", 0, 1);
     USD_OP_REGISTER_PLUGIN(UsdInCore_LightOp, "UsdInCore_LightOp", 0, 1);
     USD_OP_REGISTER_PLUGIN(UsdInCore_LightFilterOp, "UsdInCore_LightFilterOp", 0, 1);
+    // UsdGeom Primitives
+    USD_OP_REGISTER_PLUGIN(UsdInCore_PrimitiveOp, "UsdInCore_PrimitiveOp", 0, 1);
 
     USD_OP_REGISTER_PLUGIN(UsdInCore_ModelOp, "UsdInCore_ModelOp", 0, 1);
     USD_OP_REGISTER_PLUGIN(UsdInCore_CameraOp, "UsdInCore_CameraOp", 0, 1);
@@ -126,6 +135,12 @@ void registerPlugins()
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomBasisCurves>("UsdInCore_BasisCurvesOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdShadeMaterial>("UsdInCore_LookOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdSkelRoot>("UsdInCore_XformOp");
+    // UsdGeom Primitives
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomCapsule>("UsdInCore_PrimitiveOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomCone>("UsdInCore_PrimitiveOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomCube>("UsdInCore_PrimitiveOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomSphere>("UsdInCore_PrimitiveOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomCylinder>("UsdInCore_PrimitiveOp");
 
     UsdKatanaUsdInPluginRegistry::RegisterUsdSchema<UsdLuxLightAPI>("UsdInCore_LightOp");
 

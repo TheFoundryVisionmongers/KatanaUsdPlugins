@@ -27,30 +27,31 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef PXR_USDINSHIPPED_DECLARECOREOPS_H
-#define PXR_USDINSHIPPED_DECLARECOREOPS_H
 
-#include "usdKatana/usdInPluginRegistry.h"
+#include "usdInShipped/declareCoreOps.h"
 
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_XformOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_ScopeOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_MeshOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_VolumeOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_OpenVDBAssetOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_GeomSubsetOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_NurbsPatchOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_PointInstancerOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_PointsOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_BasisCurvesOp)
-USDKATANA_USDIN_PLUGIN_DECLARE_WITH_FLUSH(UsdInCore_LookOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_LightOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_LightFilterOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_PrimitiveOp)
+#include "pxr/pxr.h"
+#include "usdKatana/attrMap.h"
+#include "usdKatana/readGprim.h"
+#include "usdKatana/readPrimitive.h"
 
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_ModelOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_CameraOp)
+PXR_NAMESPACE_USING_DIRECTIVE
 
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_ConstraintsOp)
-USDKATANA_USDIN_PLUGIN_DECLARE(UsdInCore_LooksGroupOp)
+USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_PrimitiveOp, privateData, opArgs, interface)
+{
+    UsdKatanaAttrMap attrs;
+    const UsdPrim& prim = privateData.GetUsdPrim();
 
-#endif // PXR_USDINSHIPPED_DECLARECOREOPS_H
+    std::string path;
+    UsdKatanaReadPrimitive(prim, privateData, attrs, path);
+    if (!path.empty())
+    {
+        attrs.set("type", FnKat::StringAttribute("polymesh"));
+
+        interface.execOp(
+            "ApplyAttrFile",
+            FnKat::GroupBuilder().set("fileName", FnAttribute::StringAttribute(path)).build());
+
+        attrs.toInterface(interface);
+    }
+}

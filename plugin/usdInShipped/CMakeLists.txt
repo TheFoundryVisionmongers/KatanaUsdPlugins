@@ -27,6 +27,7 @@ pxr_plugin(${PXR_PACKAGE}
 
         basisCurves.cpp
         camera.cpp
+        primitive.cpp
         constraints.cpp
         geomSubset.cpp
         light.cpp
