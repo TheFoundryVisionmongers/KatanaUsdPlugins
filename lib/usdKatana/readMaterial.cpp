@@ -272,7 +272,7 @@ _ProcessShaderConnections(
     // We do not try to extract presentation metadata from parameters -
     // only material interface attributes should bother recording such.
 
-    // We can have multiple incoming connection, we get a whole set of paths
+    // We can have multiple incoming connections, we get a whole set of paths
     SdfPathVector sourcePaths;
     if (UsdShadeConnectableAPI::GetRawConnectedSourcePaths(
             connection, &sourcePaths))
@@ -627,14 +627,19 @@ _CreateShadingNode(
 
     FnKat::GroupBuilder shdNodeBuilder;
     bool validData = false;
-    TfToken id;
+    std::string id;
 
     UsdShadeShader shaderSchema = UsdShadeShader(shadingNode);
     if (shaderSchema)
     {
         validData = true;
-        shaderSchema.GetIdAttr().Get(&id, currentTime);
-        shdNodeBuilder.set("type", FnKat::StringAttribute(id.GetString()));
+        TfToken tokenId;
+        shaderSchema.GetIdAttr().Get(&tokenId, currentTime);
+        const std::string& idString = tokenId.GetString();
+        // Check for namespaced Id's like arnold:standard_surface
+        auto idx = idString.rfind(":");
+        id = idx != std::string::npos ? idString.substr(idx + 1) : idString;
+        shdNodeBuilder.set("type", FnKat::StringAttribute(id));
     }
 
     // We gather shading parameters even if shaderSchema is invalid; we need to
@@ -673,7 +678,7 @@ _CreateShadingNode(
     std::string target = targetName;
     if (validData)
     {
-        const std::string result = _GetRenderTarget(id.GetString());
+        const std::string result = _GetRenderTarget(id);
         if (!result.empty())
         {
             target = result;
@@ -695,7 +700,7 @@ _CreateShadingNode(
     {
         FnKat::GroupBuilder gb;
         gb.set("name", shdNodeAttr.getChildByName("name"));
-        gb.set("shaderType", shdNodeAttr.getChildByName("type"));
+        gb.set("shaderType", FnKat::StringAttribute(id));
         gb.set("target", shdNodeAttr.getChildByName("target"));
 
         FnKat::GroupAttribute nodeSpecificAttrs = gb.build();
