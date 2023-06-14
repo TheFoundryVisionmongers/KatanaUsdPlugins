@@ -45,6 +45,7 @@
 #include "pxr/usd/usdGeom/cylinder.h"
 #include "pxr/usd/usdGeom/mesh.h"
 #include "pxr/usd/usdGeom/nurbsPatch.h"
+#include "pxr/usd/usdGeom/plane.h"
 #include "pxr/usd/usdGeom/pointInstancer.h"
 #include "pxr/usd/usdGeom/points.h"
 #include "pxr/usd/usdGeom/scope.h"
@@ -141,6 +142,7 @@ void registerPlugins()
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomCube>("UsdInCore_PrimitiveOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomSphere>("UsdInCore_PrimitiveOp");
     UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomCylinder>("UsdInCore_PrimitiveOp");
+    UsdKatanaUsdInPluginRegistry::RegisterUsdType<UsdGeomPlane>("UsdInCore_PrimitiveOp");
 
     UsdKatanaUsdInPluginRegistry::RegisterUsdSchema<UsdLuxLightAPI>("UsdInCore_LightOp");
 

@@ -37,6 +37,7 @@
 #include <pxr/usd/usdGeom/cone.h>
 #include <pxr/usd/usdGeom/cube.h>
 #include <pxr/usd/usdGeom/cylinder.h>
+#include <pxr/usd/usdGeom/plane.h>
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/xform.h>
 
@@ -140,6 +141,28 @@ void ReadCylinder(const UsdPrim& prim, UsdKatanaAttrMap& attrs, const double cur
     attrs.set("xform.primitiveImport.rotateX", FnAttribute::DoubleAttribute(rotationX, 4, 4));
 }
 
+void ReadPlane(const UsdPrim& prim, UsdKatanaAttrMap& attrs, const double currentTime)
+{
+    const UsdGeomPlane plane(prim);
+
+    double length = 1.0;
+    double width = 1.0;
+    std::string axis = "Z";
+    if (VtValue lengthValue; plane.GetLengthAttr().Get(&lengthValue, currentTime))
+        length = lengthValue.Get<double>();
+    if (VtValue widthValue; plane.GetWidthAttr().Get(&widthValue, currentTime))
+        width = widthValue.Get<double>();
+    if (VtValue axisValue; plane.GetAxisAttr().Get(&axisValue, currentTime))
+        axis = axisValue.Get<TfToken>().GetString();
+
+    const double rotationX[] = {axis == "X" || axis == "Z" ? 90.0 : 0.0, 1.0, 0.0, 0.0};
+    const double rotationZ[] = {axis == "X" ? -90.0 : 0.0, 0.0, 0.0, 1.0};
+    const double scale[] = {width, 1.0, length};
+    attrs.set("xform.primitiveImport.rotateX", FnAttribute::DoubleAttribute(rotationX, 4, 4));
+    attrs.set("xform.primitiveImport.rotateZ", FnAttribute::DoubleAttribute(rotationZ, 4, 4));
+    attrs.set("xform.primitiveImport.scale", FnAttribute::DoubleAttribute(scale, 3, 3));
+}
+
 typedef std::pair<std::string, std::function<void(const UsdPrim&, UsdKatanaAttrMap&, const double)>>
     PrimitiveSourceReaderPair;
 static std::unordered_map<TfToken, PrimitiveSourceReaderPair, TfToken::HashFunctor>
@@ -148,6 +171,7 @@ static std::unordered_map<TfToken, PrimitiveSourceReaderPair, TfToken::HashFunct
         {TfToken("Cube"), {"cube", ReadCube}},
         {TfToken("Cone"), {"poly_cone", ReadCone}},
         {TfToken("Cylinder"), {"poly_cylinder", ReadCylinder}},
+        {TfToken("Plane"), {"poly_plane", ReadPlane}},
         {TfToken("Sphere"), {"poly_sphere", ReadSphere}},
     });
 
