@@ -123,7 +123,7 @@ void ReadCone(const UsdPrim& prim, UsdKatanaAttrMap& attrs, const double current
     if (VtValue axisValue; cone.GetAxisAttr().Get(&axisValue, currentTime))
         axis = axisValue.Get<TfToken>().GetString();
 
-    const double scale[] = {radius, radius, height / 2.0};
+    const double scale[] = {radius, height / 2.0, radius};
     const double rotationX[] = {axis == "Y" ? 0.0 : 90.0, 1.0, 0.0, 0.0};
     const double rotationY[] = {axis == "X" ? 90.0 : 0.0, 0.0, 1.0, 0.0};
     const double translate[] = {0.0, -1.0, 0.0};
@@ -147,12 +147,12 @@ void ReadCylinder(const UsdPrim& prim, UsdKatanaAttrMap& attrs, const double cur
     if (VtValue axisValue; cylinder.GetAxisAttr().Get(&axisValue, currentTime))
         axis = axisValue.Get<TfToken>().GetString();
 
-    const double scale[] = {radius, radius, height / 2.0};
+    const double scale[] = {radius, height / 2.0, radius};
     const double rotationX[] = {axis == "Y" ? 0.0 : 90.0, 1.0, 0.0, 0.0};
     const double rotationY[] = {axis == "X" ? 90.0 : 0.0, 0.0, 1.0, 0.0};
-    attrs.set("xform.primitiveImport.scale", FnAttribute::DoubleAttribute(scale, 3, 3));
     attrs.set("xform.primitiveImport.rotateY", FnAttribute::DoubleAttribute(rotationY, 4, 4));
     attrs.set("xform.primitiveImport.rotateX", FnAttribute::DoubleAttribute(rotationX, 4, 4));
+    attrs.set("xform.primitiveImport.scale", FnAttribute::DoubleAttribute(scale, 3, 3));
 }
 
 void ReadPlane(const UsdPrim& prim, UsdKatanaAttrMap& attrs, const double currentTime)
