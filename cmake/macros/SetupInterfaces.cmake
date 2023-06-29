@@ -49,10 +49,12 @@ function(add_boost_interface)
         endif()
         add_compile_definitions(Boost_NAMESPACE=${Boost_NAMESPACE})
     endif()
-    find_package(Boost 1.70.0
+    find_package(Boost
         COMPONENTS
+            atomic # Required by thread
             filesystem
             ${Boost_PYTHON_COMPONENT}
+            chrono # Required by thread
             thread
             system
             regex
