@@ -1658,11 +1658,17 @@ FnKat::DoubleAttribute UsdKatanaUtils::ConvertBoundsToAttribute(
 namespace
 {
     typedef std::map<std::string, std::string> StringMap;
-    typedef std::set<std::string> StringSet;
-    typedef std::map<std::string, StringSet> StringSetMap;
+    // A container that respects insertion order is needed;  since the set is
+    // not expected to grow large, std::vector is used.
+    // I.e a prim with a prototype could point to /__Prototype_1
+    // or /__Prototype_2 when reloading. This would cause issues as the order
+    // of the set is used to create the instance sources, and if that can
+    // change ordering because the comparison of /__Prototype_x changes, it
+    // changes the resultant hierarchy.
+    typedef std::vector<std::string> StringVec;
+    typedef std::map<std::string, StringVec> StringVecMap;
 
-    void _walkForMasters(const UsdPrim& prim, StringMap & masterToKey,
-            StringSetMap & keyToMasters)
+    void _walkForMasters(const UsdPrim& prim, StringMap& masterToKey, StringVecMap& keyToMasters)
     {
         if (prim.IsInstance())
         {
@@ -1699,8 +1705,12 @@ namespace
 
                     std::string key = buffer.str();
                     masterToKey[masterPath] = key;
-                    keyToMasters[key].insert(masterPath);
-                    //TODO, Warn when there are multiple masters with the
+                    if (std::find(keyToMasters[key].begin(), keyToMasters[key].end(), masterPath) ==
+                        keyToMasters[key].end())
+                    {
+                        keyToMasters[key].push_back(masterPath);
+                    }
+                    // TODO, Warn when there are multiple prototypes with the
                     //      same key.
 
                     _walkForMasters(master, masterToKey, keyToMasters);
@@ -1722,14 +1732,14 @@ FnKat::GroupAttribute UsdKatanaUtils::BuildInstanceMasterMapping(const UsdStageR
                                                                  const SdfPath& rootPath)
 {
     StringMap masterToKey;
-    StringSetMap keyToMasters;
+    StringVecMap keyToMasters;
     _walkForMasters(stage->GetPrimAtPath(rootPath), masterToKey, keyToMasters);
 
     FnKat::GroupBuilder gb;
     TF_FOR_ALL(I, keyToMasters)
     {
         const std::string & key = (*I).first;
-        const StringSet & masters = (*I).second;
+        const StringVec& masters = (*I).second;
 
         size_t i = 0;
 

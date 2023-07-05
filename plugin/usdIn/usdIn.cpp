@@ -1463,13 +1463,23 @@ public:
         }
 
         // Extract light paths.
+        // If isolatePath is used, we check that any of the light paths found
+        // are children of it before adding them to the lists. This is
+        // because we generate the light list using the cache so those paths
+        // may not actually exist.
+        const std::string& isolatePathString = usdInArgs->GetIsolatePath();
+        const SdfPath isolatePath =
+            isolatePathString.empty() ? SdfPath::AbsoluteRootPath() : SdfPath(isolatePathString);
         SdfPathVector lightPaths = UsdKatanaUtils::FindLightPaths(stage);
         stage->LoadAndUnload(SdfPathSet(lightPaths.begin(), lightPaths.end()), SdfPathSet());
         UsdKatanaUtilsLightListEditor lightListEditor(interface, usdInArgs);
         for (const SdfPath& lightPath : lightPaths)
         {
-            lightListEditor.SetPath(lightPath);
-            UsdKatanaUsdInPluginRegistry::ExecuteLightListFncs(lightListEditor);
+            if (lightPath.HasPrefix(isolatePath))
+            {
+                lightListEditor.SetPath(lightPath);
+                UsdKatanaUsdInPluginRegistry::ExecuteLightListFncs(lightListEditor);
+            }
         }
 
         lightListEditor.Build();
