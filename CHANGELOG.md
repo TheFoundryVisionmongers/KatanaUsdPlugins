@@ -1,5 +1,17 @@
 # Change List
 
+# 23.05_fn1
+
+## Feature Enhancements
+- ID-541017 - USD Prims with a type from the UsdGeom primitives are imported as their equivalent Katana primitive type.
+- ID-542059 - Added support for USD 23.05
+- ID-518741 - Support added for import UsdVol Prims.
+
+## Bug fixes
+- ID-546679 - Building KatanaUsdPlugins externally would fail at runtime due to a missing boost_thread library dependency.
+- ID-536423 - Updated custom use of getInputSource to Get3dSourceFromNodeInput.
+- ID-521104 - The usage of the NodeTypeBuilder function setExplicitInputRequestsEnabled() is no longer supported. As stated in the Katana Developer Guide, modifications to the graph state made using this function are not visible to all parts of Katana. Nodes that make changes to graph state should register a function with setGetInputPortAndGraphStateFn(). The functionality provided alongside graph state modification through explicit input requests with the addInputRequest() function has been replaced through a new function: addRequiredInput(), enabled where setExplicitInputRequirementsEnabled() is passed true.  addRequiredInput() allows for specification of required and optional inputs.
+
 # 21.05_fn7_py2 - 21.05_fn7_py3 - 22.05_fn2
 
 ## Bug fixes
