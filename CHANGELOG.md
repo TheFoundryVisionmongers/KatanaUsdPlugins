@@ -1,6 +1,6 @@
 # Change List
 
-# 21.05_fn7_py2 - 21.05_fn7_py3
+# 21.05_fn7_py2 - 21.05_fn7_py3 - 22.05_fn2
 
 ## Bug fixes
 - ID-536039 - USD Shader Prims with namespaced `shaderId` attribute values were not converted to the correct shader ID for Katana Attributes.
