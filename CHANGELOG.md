@@ -1,5 +1,11 @@
 # Change List
 
+# 21.05_fn7_py2 - 21.05_fn7_py3
+
+## Bug fixes
+- ID-536039 - USD Shader Prims with namespaced `shaderId` attribute values were not converted to the correct shader ID for Katana Attributes.
+- ID-539855 - Loading the same USD Layer with UsdIn could result in instance prototype location paths changing in their order randomly.
+- ID-534163 - When importing a USD file using the UsdIn node with the isolatePath parameter, if the file contained a light list cache with any lights which weren't descendents of the path specified in isolatePath, then an error would be shown in the scenegraph.
 
 # 22.05_fn1
 
