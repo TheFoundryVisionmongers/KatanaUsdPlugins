@@ -1860,8 +1860,15 @@ FnKat::DoubleAttribute UsdKatanaUtils::ConvertBoundsToAttribute(
 namespace
 {
     typedef std::map<std::string, std::string> StringMap;
-    typedef std::set<std::string> StringSet;
-    typedef std::map<std::string, StringSet> StringSetMap;
+    // A container that respects insertion order is needed;  since the set is
+    // not expected to grow large, std::vector is used.
+    // I.e a prim with a prototype could point to /__Prototype_1
+    // or /__Prototype_2 when reloading. This would cause issues as the order
+    // of the set is used to create the instance sources, and if that can
+    // change ordering because the comparison of /__Prototype_x changes, it
+    // changes the resultant hierarchy.
+    typedef std::vector<std::string> StringVec;
+    typedef std::map<std::string, StringVec> StringVecMap;
 
     void _walkForPrototypes(const UsdPrim& prim,
                             StringMap& prototypeToKey,

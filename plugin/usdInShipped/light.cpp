@@ -109,7 +109,7 @@ namespace {
 static void lightListFnc(UsdKatanaUtilsLightListAccess& lightList)
 {
     UsdPrim prim = lightList.GetPrim();
-    if (prim && prim.HasAPI<UsdLuxLightAPI>() || prim.GetTypeName() == "Light") {
+    if (prim && (prim.HasAPI<UsdLuxLightAPI>() || prim.GetTypeName() == "Light")) {
         UsdLuxLightAPI light(prim);
         lightList.Set("path", lightList.GetLocation());
         lightList.SetLinks(light.GetLightLinkCollectionAPI(), "light");
