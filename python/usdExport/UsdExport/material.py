@@ -786,12 +786,12 @@ def GetShaderAttrSdfType(shaderType, shaderAttr, isOutput=False):
 
 def WriteMaterialAssign(material, overridePrim):
     """
-    Uses the UsdShade.MaterialBindingAPI to bind the material to the
-    overridePrim.
+    Apply the C{UsdShade.MaterialBindingAPI} to the overridePrim and bind the material.
 
     @type material: C{UsdShade.Material}
     @type overridePrim: C{Usd.OverridePrim}
     @param material: The material to bind.
     @param overridePrim: The Prim to bind to.
     """
-    UsdShade.MaterialBindingAPI(overridePrim.GetPrim()).Bind(material)
+    materialBindingApi = UsdShade.MaterialBindingAPI.Apply(overridePrim.GetPrim())
+    materialBindingApi.Bind(material)
