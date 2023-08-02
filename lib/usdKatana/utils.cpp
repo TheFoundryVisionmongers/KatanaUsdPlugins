@@ -158,7 +158,8 @@ void ApplyBlendShapeAnimation(const UsdSkelSkinningQuery& skinningQuery,
 void ApplyJointAnimation(const UsdSkelSkinningQuery& skinningQuery,
                          const UsdSkelSkeletonQuery& skelQuery,
                          const double time,
-                         VtVec3fArray& points)
+                         VtVec3fArray& points,
+                         const UsdKatanaUsdInPrivateData& data)
 {
     // Get the skinning transform from the skeleton.
     VtMatrix4dArray skinningXforms;
@@ -169,7 +170,13 @@ void ApplyJointAnimation(const UsdSkelSkinningQuery& skinningQuery,
     // Apply transforms to get the points in mesh prim space
     // instead of skeleton space.
     UsdGeomXformCache xformCache(time);
-    const UsdPrim& skelPrim = skelQuery.GetPrim();
+    UsdPrim skelPrim = skelQuery.GetPrim();
+    if (skelPrim.IsInPrototype())
+    {
+        const SdfPath instancePath =
+            skelPrim.GetPath().ReplacePrefix(data.GetPrototypePath(), data.GetInstancePath());
+        skelPrim = skelPrim.GetStage()->GetPrimAtPath(instancePath);
+    }
     const GfMatrix4d skelLocalToWorld =
         xformCache.GetLocalToWorldTransform(skelPrim);
     const GfMatrix4d primWorldToLocal =
@@ -1995,13 +2002,19 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
 
     const bool isMotionBackward = data.IsMotionBackward();
 
-    UsdSkelCache skelCache;
-    const UsdPrim prim{points.GetPrim()};
-    UsdSkelRoot skelRoot = UsdSkelRoot::Find(prim);
+    UsdPrim prim{points.GetPrim()};
+    if (prim.IsInPrototype())
+    {
+        const SdfPath instancePath =
+            points.GetPath().ReplacePrefix(data.GetPrototypePath(), data.GetInstancePath());
+        prim = prim.GetStage()->GetPrimAtPath(instancePath);
+    }
+    const UsdSkelRoot skelRoot = UsdSkelRoot::Find(prim);
     if (!skelRoot)
     {
         return skinnedPointsAttr;
     }
+    UsdSkelCache skelCache;
     skelCache.Populate(skelRoot, UsdTraverseInstanceProxies());
 
     // Get skinning query
@@ -2038,7 +2051,7 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
         jointXformMotionSamples.push_back(currentTime);
     }
 
-    // The boolean values below are for the mesh prim with SkelBindingAPI schema 
+    // The boolean values below are for the mesh prim with SkelBindingAPI schema
     // applied which won't have joints indices property when switched to an invalid variant.
     // Adding a check for blendshape targets too. We would want to
     // apply animation only to prims with valid blendshapes and joints!
@@ -2068,8 +2081,7 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
             if (std::find(blendShapeMotionSamples.cbegin(), blendShapeMotionSamples.cend(), time) !=
                 blendShapeMotionSamples.cend())
             {
-                PXR_INTERNAL_NS::ApplyBlendShapeAnimation(
-                    skinningQuery, skelQuery, time, skinnedPoints);
+                ApplyBlendShapeAnimation(skinningQuery, skelQuery, time, skinnedPoints);
             }
         }
         if (hasJointIndicesAttr)
@@ -2077,8 +2089,7 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
             if (std::find(jointXformMotionSamples.cbegin(), jointXformMotionSamples.cend(), time) !=
                 jointXformMotionSamples.cend())
             {
-                PXR_INTERNAL_NS::ApplyJointAnimation(
-                    skinningQuery, skelQuery, time, skinnedPoints);
+                ApplyJointAnimation(skinningQuery, skelQuery, time, skinnedPoints, data);
             }
         }
         float correctedSampleTime =
@@ -2092,13 +2103,11 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
         FnKat::DataBuilder<FnKat::FloatAttribute> defaultBuilder(tupleSize);
         if (hasBlendShapeTargets)
         {
-            PXR_INTERNAL_NS::ApplyBlendShapeAnimation(
-                skinningQuery, skelQuery, currentTime, skinnedPoints);
+            ApplyBlendShapeAnimation(skinningQuery, skelQuery, currentTime, skinnedPoints);
         }
         if (hasJointIndicesAttr)
         {
-            PXR_INTERNAL_NS::ApplyJointAnimation(
-                skinningQuery, skelQuery, currentTime, skinnedPoints);
+            ApplyJointAnimation(skinningQuery, skelQuery, currentTime, skinnedPoints, data);
         }
         // Package the points in an attribute.
         if (!skinnedPoints.empty())

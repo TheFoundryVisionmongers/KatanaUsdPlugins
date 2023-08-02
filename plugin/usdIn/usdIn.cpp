@@ -1030,8 +1030,15 @@ private:
         }
         const std::vector<double>& motionSampleTimes =
             data.GetMotionSampleTimes();
+        UsdPrim computePrim = prim;
+        if (prim.IsInPrototype())
+        {
+            const SdfPath instancePath = computePrim.GetPath().ReplacePrefix(
+                data.GetPrototypePath(), data.GetInstancePath());
+            computePrim = prim.GetStage()->GetPrimAtPath(instancePath);
+        }
         std::vector<GfBBox3d> bounds =
-            data.GetUsdInArgs()->ComputeBounds(prim, motionSampleTimes);
+            data.GetUsdInArgs()->ComputeBounds(computePrim, motionSampleTimes);
 
         bool hasInfiniteBounds = false;
         bool isMotionBackward = motionSampleTimes.size() > 1 &&
