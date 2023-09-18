@@ -34,7 +34,7 @@ from .VariantsWidget import VariantsWidget
 log = logging.getLogger("UsdMaterialBake.Editor")
 
 NodegraphAPI.AddNodeFlavor("UsdMaterialBake", "3d")
-NodegraphAPI.AddNodeFlavor("UsdMaterialBake", "lookfile")
+NodegraphAPI.AddNodeFlavor("UsdMaterialBake", "usdin")
 
 
 class UsdMaterialBakeEditor(QtWidgets.QFrame):
