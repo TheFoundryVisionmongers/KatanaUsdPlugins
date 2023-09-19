@@ -84,6 +84,7 @@ void __handleUsdLuxLightTypes(const UsdPrim& prim,
                               const UsdTimeCode& currentTimeCode,
                               const UsdKatanaUsdInPrivateData& data,
                               FnKat::GroupBuilder& materialBuilder,
+                              GfVec3d& implicitScale,
                               UsdKatanaAttrMap& geomBuilder)
 {
     UsdKatanaAttrMap lightBuilder;
@@ -118,18 +119,44 @@ void __handleUsdLuxLightTypes(const UsdPrim& prim,
 
     FnAttribute::StringAttribute lightShaderAttr;
 
+    // Capture an implicit scale from radius etc. to bake into the xform.  This
+    // ensures prman light manipulators show up with an appropriate size.
+    implicitScale = GfVec3d(1);
+
     if (UsdLuxCylinderLight l = UsdLuxCylinderLight(prim))
     {
         _SetLightSizeFromRadius(geomBuilder, l.GetRadiusAttr(), currentTimeCode);
         lightShaderAttr = FnAttribute::StringAttribute("UsdLuxCylinderLight");
         geomBuilder.Set("light.width", l.GetLengthAttr());
         lightBuilder.Set("length", l.GetLengthAttr()).Set("radius", l.GetRadiusAttr());
+
+        float length = 1.0f;
+        l.GetLengthAttr().Get(&length, currentTimeCode);
+        implicitScale[0] = length;
+
+        bool treatAsLine = false;
+        l.GetTreatAsLineAttr().Get(&treatAsLine, currentTimeCode);
+        if (treatAsLine)
+        {
+            implicitScale[1] = 0.0;
+            implicitScale[2] = 0.0;
+        }
+        else
+        {
+            float radius = 1.0f;
+            l.GetRadiusAttr().Get(&radius, currentTimeCode);
+            implicitScale[1] = 2.0 * radius;
+            implicitScale[2] = 2.0 * radius;
+        }
     }
     else if (UsdLuxDiskLight l = UsdLuxDiskLight(prim))
     {
         _SetLightSizeFromRadius(geomBuilder, l.GetRadiusAttr(), currentTimeCode);
         lightShaderAttr = FnAttribute::StringAttribute("UsdLuxDiskLight");
         lightBuilder.Set("radius", l.GetRadiusAttr());
+        float radius = 1.0f;
+        l.GetRadiusAttr().Get(&radius, currentTimeCode);
+        implicitScale = GfVec3d(2.0 * radius, 2.0 * radius, 1.0);
     }
     else if (UsdLuxDistantLight l = UsdLuxDistantLight(prim))
     {
@@ -167,12 +194,31 @@ void __handleUsdLuxLightTypes(const UsdPrim& prim,
             .Set("textureFile", l.GetTextureFileAttr())
             .Set("width", l.GetWidthAttr())
             .Set("height", l.GetHeightAttr());
+
+        float width;
+        l.GetWidthAttr().Get(&width, currentTimeCode);
+        float height;
+        l.GetHeightAttr().Get(&height, currentTimeCode);
+        implicitScale = GfVec3d(width, height, 1.0);
     }
     else if (UsdLuxSphereLight l = UsdLuxSphereLight(prim))
     {
         _SetLightSizeFromRadius(geomBuilder, l.GetRadiusAttr(), currentTimeCode);
         lightShaderAttr = FnAttribute::StringAttribute("UsdLuxSphereLight");
         lightBuilder.Set("radius", l.GetRadiusAttr()).Set("treatAsPoint", l.GetTreatAsPointAttr());
+
+        bool treatAsPoint = false;
+        l.GetTreatAsPointAttr().Get(&treatAsPoint, currentTimeCode);
+        if (treatAsPoint)
+        {
+            implicitScale = GfVec3d(0);
+        }
+        else
+        {
+            float radius = 1.0f;
+            l.GetRadiusAttr().Get(&radius, currentTimeCode);
+            implicitScale = GfVec3d(2.0 * radius);
+        }
     }
 
     if (lightShaderAttr.isValid())
@@ -204,13 +250,15 @@ void UsdKatanaReadLight(const UsdPrim& prim,
     UsdKatanaAttrMap geomBuilder;
     geomBuilder.SetUSDTimeCode(currentTimeCode);
     FnKat::GroupBuilder materialBuilder;
+    GfVec3d implicitScale(1);
 
     UsdKatanaKatanaLightAPI katanaLightAPI(prim);
     geomBuilder.Set("centerOfInterest", katanaLightAPI.GetCenterOfInterestAttr());
 
     __handleSdrRegistryLights(prim, currentTimeCode, materialBuilder, geomBuilder);
     // Run the UsdLux logic after trying the Sdr Logic
-    __handleUsdLuxLightTypes(prim, currentTimeCode, data, materialBuilder, geomBuilder);
+    __handleUsdLuxLightTypes(
+        prim, currentTimeCode, data, materialBuilder, implicitScale, geomBuilder);
 
     attrs.set("material", materialBuilder.build());
     attrs.set("geometry", geomBuilder.build());
@@ -222,6 +270,12 @@ void UsdKatanaReadLight(const UsdPrim& prim,
     attrs.set("info.gaffer", gafferBuilder.build());
 
     UsdKatanaReadXformable(UsdGeomXformable(prim), data, attrs);
+
+    // If we have an implicit scale, put it on the top of the xform.
+    if (implicitScale != GfVec3d(1))
+    {
+        attrs.set("xform.lightSize.scale", FnKat::DoubleAttribute(implicitScale.data(), 3, 3));
+    }
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
