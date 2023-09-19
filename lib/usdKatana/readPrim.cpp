@@ -942,9 +942,9 @@ void UsdKatanaReadPrim(const UsdPrim& prim,
     }
 
     //
-    // Set the 'purpose' attribute to exactly match the USD attribute
-    // if it is not 'default' (since that is the default value). And,
-    // if the 'purpose' happens to be 'proxy', make invisible as well.
+    // Set the 'purpose' attribute to exactly match the USD attribute if it is not 'default'
+    // (since that is the default value). And, if the 'purpose' happens to be 'proxy' or 'guide'
+    // make invisible as well.
     //
 
     TfToken purpose;
@@ -955,7 +955,7 @@ void UsdKatanaReadPrim(const UsdPrim& prim,
             attrs.set("usd.purpose", FnKat::StringAttribute(purpose.GetString()));
         }
 
-        if (purpose == UsdGeomTokens->proxy)
+        if (purpose == UsdGeomTokens->proxy || purpose == UsdGeomTokens->guide)
         {
             attrs.set("visible", FnKat::IntAttribute(0));
         }
