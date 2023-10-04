@@ -27,42 +27,35 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
-#include "usdKatana/attrMap.h"
 #include "usdKatana/readPrim.h"
+
+#include <pxr/base/tf/envSetting.h>
+#include <pxr/base/tf/getenv.h>
+#include <pxr/base/tf/stringUtils.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/sdf/path.h>
+#include <pxr/usd/usd/collectionAPI.h>
+#include <pxr/usd/usd/inherits.h>
+#include <pxr/usd/usd/modelAPI.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usdGeom/bboxCache.h>
+#include <pxr/usd/usdGeom/curves.h>
+#include <pxr/usd/usdGeom/gprim.h>
+#include <pxr/usd/usdGeom/imageable.h>
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/scope.h>
+#include <pxr/usd/usdGeom/xform.h>
+#include <pxr/usd/usdRi/statementsAPI.h>
+#include <pxr/usd/usdShade/material.h>
+#include <pxr/usd/usdShade/materialBindingAPI.h>
+#include <pxr/usd/usdUtils/pipeline.h>
+
+#include "usdKatana/attrMap.h"
+#include "usdKatana/blindDataObject.h"
+#include "usdKatana/tokens.h"
 #include "usdKatana/usdInPrivateData.h"
 #include "usdKatana/utils.h"
-#include "usdKatana/tokens.h"
-#include "usdKatana/blindDataObject.h"
-
-
-#include "pxr/usd/usd/prim.h"
-#include "pxr/usd/usd/inherits.h"
-
-#include "pxr/base/tf/getenv.h"
-#include "pxr/base/tf/envSetting.h"
-#include "pxr/base/tf/stringUtils.h"
-
-#include "pxr/usd/usdUtils/pipeline.h"
-
-#include "pxr/usd/usdGeom/bboxCache.h"
-#include "pxr/usd/usdGeom/gprim.h"
-#include "pxr/usd/usdGeom/imageable.h"
-#include "pxr/usd/usdGeom/mesh.h"
-#include "pxr/usd/usdGeom/curves.h"
-#include "pxr/usd/usdGeom/scope.h"
-#include "pxr/usd/usdGeom/xform.h"
-
-#include "pxr/usd/usdShade/material.h"
-#include "pxr/usd/usdShade/materialBindingAPI.h"
-
-#include "pxr/usd/usdRi/statementsAPI.h"
-
-#include "pxr/usd/sdf/path.h"
-#include "pxr/usd/usd/collectionAPI.h"
-#include "pxr/usd/usd/prim.h" 
-#include "pxr/usd/usd/modelAPI.h"
-#include "pxr/usd/usd/stage.h"
 
 #include <pystring/pystring.h>
 #include <FnLogging/FnLogging.h>

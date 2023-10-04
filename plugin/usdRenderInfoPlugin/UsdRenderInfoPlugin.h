@@ -29,10 +29,10 @@
 #include <FnAttribute/FnAttribute.h>
 #include <FnRendererInfo/plugin/RendererInfoBase.h>
 
-#include "pxr/pxr.h"
-#include "pxr/usd/sdr/registry.h"
-#include "pxr/usd/sdr/shaderProperty.h"
-#include "pxr/usd/ndr/registry.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/ndr/registry.h>
+#include <pxr/usd/sdr/registry.h>
+#include <pxr/usd/sdr/shaderProperty.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

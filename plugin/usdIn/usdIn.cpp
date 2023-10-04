@@ -29,39 +29,38 @@
 //
 #include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
 
-#include "pxr/pxr.h"
-#include "usdKatana/blindDataObject.h"
-#include "usdKatana/cache.h"
-#include "usdKatana/locks.h"
-#include "usdKatana/readBlindData.h"
-#include "usdKatana/usdInPluginRegistry.h"
-#include "usdKatana/bootstrap.h"
-#include "vtKatana/bootstrap.h"
+#include <stdio.h>
 
-#include "pxr/usd/usd/modelAPI.h"
-#include "pxr/usd/usd/prim.h"
-#include "pxr/usd/usd/stage.h"
-#include "pxr/usd/usd/variantSets.h"
-#include "pxr/usd/usdGeom/metrics.h"
-#include "pxr/usd/usdGeom/motionAPI.h"
+#include <memory>
+#include <sstream>
+
+#include <pxr/base/tf/pathUtils.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/usd/modelAPI.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/stage.h>
+#include <pxr/usd/usd/variantSets.h>
+#include <pxr/usd/usdGeom/metrics.h>
+#include <pxr/usd/usdGeom/motionAPI.h>
 
 #include <FnGeolib/op/FnGeolibOp.h>
 #include <FnGeolib/util/Path.h>
 #include <FnLogging/FnLogging.h>
 
-#include "usdKatana/utils.h"
-
-#include "pxr/base/tf/pathUtils.h"
-
 #include <pystring/pystring.h>
-#include <stdio.h>
-
-#include <sstream>
-#include <memory>
 
 #include <FnAttributeFunction/plugin/FnAttributeFunctionPlugin.h>
 
 #include <FnAPI/FnAPI.h>
+
+#include "usdKatana/blindDataObject.h"
+#include "usdKatana/bootstrap.h"
+#include "usdKatana/cache.h"
+#include "usdKatana/locks.h"
+#include "usdKatana/readBlindData.h"
+#include "usdKatana/usdInPluginRegistry.h"
+#include "usdKatana/utils.h"
+#include "vtKatana/bootstrap.h"
 
 FnLogSetup("UsdIn")
 

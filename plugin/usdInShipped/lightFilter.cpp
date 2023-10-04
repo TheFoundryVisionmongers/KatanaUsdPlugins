@@ -27,9 +27,11 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/usd/usdLux/lightFilter.h"
-#include "pxr/pxr.h"
 #include "usdInShipped/declareCoreOps.h"
+
+#include <pxr/pxr.h>
+#include <pxr/usd/usdLux/lightFilter.h>
+
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readLightFilter.h"
 #include "usdKatana/usdInPluginRegistry.h"

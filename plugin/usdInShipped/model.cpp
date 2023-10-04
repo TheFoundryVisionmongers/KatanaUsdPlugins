@@ -29,15 +29,15 @@
 //
 #include "usdInShipped/declareCoreOps.h"
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/kind/registry.h>
+#include <pxr/usd/usd/modelAPI.h>
+
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readModel.h"
+#include "usdKatana/tokens.h"
 #include "usdKatana/usdInPrivateData.h"
 #include "usdKatana/utils.h"
-#include "usdKatana/tokens.h"
-
-#include "pxr/usd/kind/registry.h"
-#include "pxr/usd/usd/modelAPI.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

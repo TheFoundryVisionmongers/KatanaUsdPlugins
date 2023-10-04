@@ -30,7 +30,7 @@
 #ifndef USDKATANA_API_H
 #define USDKATANA_API_H
 
-#include "pxr/base/arch/export.h"
+#include <pxr/base/arch/export.h>
 
 #if defined(PXR_STATIC)
 #   define USDKATANA_API

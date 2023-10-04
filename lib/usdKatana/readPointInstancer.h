@@ -31,7 +31,8 @@
 #define USDKATANA_READPOINTINSTANCER_H
 
 #include <vector>
-#include "pxr/pxr.h"
+
+#include <pxr/pxr.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

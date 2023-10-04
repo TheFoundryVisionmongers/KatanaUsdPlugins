@@ -29,11 +29,11 @@
 //
 #include "usdInShipped/declareCoreOps.h"
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/usdGeom/mesh.h>
+
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readMesh.h"
-
-#include "pxr/usd/usdGeom/mesh.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

@@ -27,26 +27,26 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#include "usdInShipped/declareCoreOps.h"
 
 #include <list>
+
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
-#include "pxr/pxr.h"
-#include "pxr/base/tf/envSetting.h"
-#include "pxr/base/tf/stopwatch.h"     // profiling
-#include "pxr/usd/usdShade/material.h"
+#include <pxr/base/tf/envSetting.h>
+#include <pxr/base/tf/stopwatch.h>  // profiling
+#include <pxr/pxr.h>
+#include <pxr/usd/usdShade/material.h>
+
+#include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
+
+#include <FnAPI/FnAPI.h>
 
 #include "usdKatana/blindDataObject.h"
 #include "usdKatana/readBlindData.h"
 #include "usdKatana/readMaterial.h"
 #include "usdKatana/utils.h"
-
-#include "usdInShipped/declareCoreOps.h"
-
-#include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
-
-#include <FnAPI/FnAPI.h>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

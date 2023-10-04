@@ -28,7 +28,7 @@
 // language governing permissions and limitations under the Apache License.
 //
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
 #include "usdInPrman/declarePackageOps.h"
 

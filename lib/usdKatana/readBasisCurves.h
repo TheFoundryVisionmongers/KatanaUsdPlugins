@@ -30,7 +30,7 @@
 #ifndef USDKATANA_READBASISCURVES_H
 #define USDKATANA_READBASISCURVES_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

@@ -27,12 +27,14 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#include "usdInShipped/attrfnc_materialReference.h"
+
 #include <iostream>
 
 #include <FnAttribute/FnGroupBuilder.h>
 
-#include "pxr/pxr.h"
-#include "pxr/usd/usdShade/material.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/usdShade/material.h>
 
 #include "usdKatana/attrMap.h"
 #include "usdKatana/cache.h"
@@ -41,7 +43,6 @@
 #include "usdKatana/readMaterial.h"
 #include "usdKatana/usdInPrivateData.h"
 
-#include "usdInShipped/attrfnc_materialReference.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

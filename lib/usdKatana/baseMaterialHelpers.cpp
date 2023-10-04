@@ -27,15 +27,17 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
 #include "usdKatana/baseMaterialHelpers.h"
-#include "pxr/usd/pcp/layerStack.h"
-#include "pxr/usd/pcp/node.h"
-#include "pxr/usd/pcp/primIndex.h"
-#include "pxr/usd/usd/prim.h"
-#include "pxr/usd/usd/attribute.h"
-#include "pxr/usd/usd/relationship.h"
-#include "pxr/usd/sdf/relationshipSpec.h"
+
+#include <pxr/pxr.h>
+
+#include <pxr/usd/pcp/layerStack.h>
+#include <pxr/usd/pcp/node.h>
+#include <pxr/usd/pcp/primIndex.h>
+#include <pxr/usd/sdf/relationshipSpec.h>
+#include <pxr/usd/usd/attribute.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/relationship.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

@@ -28,14 +28,16 @@
 // language governing permissions and limitations under the Apache License.
 //
 #include "usdKatana/usdInArgs.h"
+
 #include <set>
 #include <string>
-#include "pxr/pxr.h"
-#include "usdKatana/utils.h"
 
-#include "pxr/usd/usdGeom/boundable.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/usdGeom/boundable.h>
 
 #include <FnAttribute/FnDataBuilder.h>
+
+#include "usdKatana/utils.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

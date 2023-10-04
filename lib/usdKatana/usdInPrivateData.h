@@ -30,16 +30,16 @@
 #ifndef USDKATANA_USDIN_PRIVATEDATA_H
 #define USDKATANA_USDIN_PRIVATEDATA_H
 
-#include "pxr/pxr.h"
-#include "usdKatana/usdInArgs.h"
+#include <memory>
 
-#include "usdKatana/api.h"
-
-#include "pxr/usd/usd/prim.h"
-#include "pxr/usd/usdShade/materialBindingAPI.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usdShade/materialBindingAPI.h>
 
 #include <FnGeolib/op/FnGeolibOp.h>
-#include <memory>
+
+#include "usdKatana/api.h"
+#include "usdKatana/usdInArgs.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

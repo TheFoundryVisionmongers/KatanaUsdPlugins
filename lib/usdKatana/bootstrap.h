@@ -30,9 +30,9 @@
 #ifndef USDKATANA_BOOTSTRAP_H
 #define USDKATANA_BOOTSTRAP_H
 
-#include "usdKatana/api.h"
+#include <pxr/pxr.h>
 
-#include "pxr/pxr.h"
+#include "usdKatana/api.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

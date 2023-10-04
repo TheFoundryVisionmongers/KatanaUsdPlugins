@@ -30,9 +30,9 @@
 #ifndef VTKATANA_BOOTSTRAP_H
 #define VTKATANA_BOOTSTRAP_H
 
-#include "vtKatana/api.h"
+#include <pxr/pxr.h>
 
-#include "pxr/pxr.h"
+#include "vtKatana/api.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

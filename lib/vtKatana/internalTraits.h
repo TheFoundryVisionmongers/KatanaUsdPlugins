@@ -30,7 +30,8 @@
 #ifndef VTKATANA_INTERNALTRAITS_H
 #define VTKATANA_INTERNALTRAITS_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+
 #include "vtKatana/traits.h"
 
 PXR_NAMESPACE_OPEN_SCOPE

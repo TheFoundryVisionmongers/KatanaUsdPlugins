@@ -33,7 +33,7 @@
 #include <FnDefaultAttributeProducer/plugin/FnDefaultAttributeProducerPlugin.h>
 #include <FnDefaultAttributeProducer/plugin/FnDefaultAttributeProducerUtil.h>
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

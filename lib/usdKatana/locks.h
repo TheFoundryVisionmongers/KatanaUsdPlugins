@@ -30,9 +30,10 @@
 #ifndef USDKATANA_LOCKS_H
 #define USDKATANA_LOCKS_H
 
-#include "pxr/pxr.h"
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
+
+#include <pxr/pxr.h>
 
 #include "usdKatana/api.h"
 

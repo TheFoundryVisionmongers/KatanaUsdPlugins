@@ -29,14 +29,14 @@
 //
 #include "vtKatana/bootstrap.h"
 
-#include "pxr/base/arch/systemInfo.h"
-#include "pxr/base/tf/stringUtils.h"
-#include "pxr/base/arch/fileSystem.h"
+#include <mutex>  // for std::call_once
+
+#include <pxr/base/arch/fileSystem.h>
+#include <pxr/base/arch/systemInfo.h>
+#include <pxr/base/tf/stringUtils.h>
 
 #include <FnLogging/FnLogging.h>
 #include <FnAttribute/FnAttribute.h>
-
-#include <mutex> // for std::call_once
 
 PXR_NAMESPACE_OPEN_SCOPE
 

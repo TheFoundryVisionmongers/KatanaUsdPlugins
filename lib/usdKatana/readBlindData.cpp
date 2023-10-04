@@ -27,13 +27,16 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
-#include "usdKatana/attrMap.h"
-#include "usdKatana/blindDataObject.h"
 #include "usdKatana/readBlindData.h"
-#include "usdKatana/utils.h"
+
+#include <pxr/pxr.h>
 
 #include <FnLogging/FnLogging.h>
+
+#include "usdKatana/attrMap.h"
+#include "usdKatana/blindDataObject.h"
+#include "usdKatana/utils.h"
+
 
 PXR_NAMESPACE_OPEN_SCOPE
 

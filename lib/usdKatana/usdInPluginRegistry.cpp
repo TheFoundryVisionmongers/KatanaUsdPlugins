@@ -28,16 +28,16 @@
 // language governing permissions and limitations under the Apache License.
 //
 #include "usdKatana/usdInPluginRegistry.h"
+
 #include <map>
 #include <string>
 #include <vector>
-#include "pxr/pxr.h"
 
-#include "pxr/usd/kind/registry.h"
-#include "pxr/usd/usd/schemaBase.h"
-
-#include "pxr/base/plug/plugin.h"
-#include "pxr/base/plug/registry.h"
+#include <pxr/base/plug/plugin.h>
+#include <pxr/base/plug/registry.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/kind/registry.h>
+#include <pxr/usd/usd/schemaBase.h>
 
 #include <FnLogging/FnLogging.h>
 

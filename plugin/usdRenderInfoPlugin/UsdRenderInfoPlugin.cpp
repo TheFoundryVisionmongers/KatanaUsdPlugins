@@ -21,24 +21,24 @@
 // language governing permissions and limitations under the Apache License.
 
 #include "UsdRenderInfoPlugin.h"
-#include "usdKatana/utils.h"
 
 #include <map>
 #include <string>
 #include <vector>
 
-#include "pxr/base/tf/fileUtils.h"
-#include "pxr/base/tf/pathUtils.h"
-#include "pxr/base/tf/token.h"
-#include "pxr/base/tf/type.h"
-#include "pxr/usd/ndr/registry.h"
-#include "pxr/usd/sdr/registry.h"
-#include "pxr/usd/sdr/shaderProperty.h"
-#include "pxr/usd/usdShade/connectableAPI.h"
-#include "pxr/usd/usdShade/material.h"
-#include "pxr/usd/usdShade/utils.h"
+#include <pxr/base/tf/fileUtils.h>
+#include <pxr/base/tf/pathUtils.h>
+#include <pxr/base/tf/token.h>
+#include <pxr/base/tf/type.h>
+#include <pxr/usd/ndr/registry.h>
+#include <pxr/usd/sdr/registry.h>
+#include <pxr/usd/sdr/shaderProperty.h>
+#include <pxr/usd/usdShade/connectableAPI.h>
+#include <pxr/usd/usdShade/material.h>
+#include <pxr/usd/usdShade/utils.h>
 
 #include "FnGeolibServices/FnArgsFile.h"
+#include "usdKatana/utils.h"
 
 namespace
 {

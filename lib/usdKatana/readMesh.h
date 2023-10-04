@@ -30,7 +30,7 @@
 #ifndef USDKATANA_READMESH_H
 #define USDKATANA_READMESH_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

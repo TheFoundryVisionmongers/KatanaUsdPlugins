@@ -27,16 +27,16 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
-#include "usdKatana/attrMap.h"
 #include "usdKatana/readGeomSubset.h"
+#include <pxr/pxr.h>
+#include "usdKatana/attrMap.h"
 #include "usdKatana/readPrim.h"
 #include "usdKatana/usdInPrivateData.h"
 #include "usdKatana/utils.h"
 
-#include "pxr/usd/usdGeom/mesh.h"
-#include "pxr/usd/usdGeom/subset.h"
-#include "pxr/usd/usdShade/material.h"
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/subset.h>
+#include <pxr/usd/usdShade/material.h>
 
 #include <FnLogging/FnLogging.h>
 

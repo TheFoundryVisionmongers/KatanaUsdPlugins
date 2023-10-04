@@ -31,12 +31,13 @@
 #ifndef USDKATANA_READXFORMABLE_H
 #define USDKATANA_READXFORMABLE_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+
+#include <FnAttribute/FnAttribute.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
 #include "usdKatana/api.h"
-#include <FnAttribute/FnAttribute.h>
 
 class UsdKatanaAttrMap;
 class UsdKatanaUsdInPrivateData;

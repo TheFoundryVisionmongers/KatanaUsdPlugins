@@ -30,7 +30,8 @@
 #ifndef USDKATANA_BLINDDATAREADER_H
 #define USDKATANA_BLINDDATAREADER_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+
 #include "usdKatana/api.h"
 
 PXR_NAMESPACE_OPEN_SCOPE

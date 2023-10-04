@@ -31,14 +31,15 @@
 #define USDKATANA_USDIN_ARGS_H
 
 #include <string>
-#include "pxr/base/tf/refPtr.h"
-#include "pxr/pxr.h"
-#include "pxr/usd/usdGeom/bboxCache.h"
-#include "pxr/usd/usdSkel/cache.h"
 
-#include "usdKatana/api.h"
+#include <pxr/base/tf/refPtr.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/usdGeom/bboxCache.h>
+#include <pxr/usd/usdSkel/cache.h>
 
 #include <tbb/enumerable_thread_specific.h>
+
+#include "usdKatana/api.h"
 
 /// \brief Reference counted container for op state that should be constructed
 /// at an ops root and passed to read USD prims into Katana attributes.

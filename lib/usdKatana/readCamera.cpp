@@ -27,20 +27,21 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
-#include "usdKatana/attrMap.h"
 #include "usdKatana/readCamera.h"
-#include "usdKatana/readXformable.h"
-#include "usdKatana/usdInPrivateData.h"
-#include "usdKatana/utils.h"
 
-#include "pxr/base/gf/range2f.h"
-#include "pxr/base/gf/camera.h"
-#include "pxr/imaging/cameraUtil/screenWindowParameters.h"
-#include "pxr/usd/usdGeom/camera.h"
+#include <pxr/base/gf/camera.h>
+#include <pxr/base/gf/range2f.h>
+#include <pxr/imaging/cameraUtil/screenWindowParameters.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/usdGeom/camera.h>
 
 #include <FnAttribute/FnDataBuilder.h>
 #include <FnLogging/FnLogging.h>
+
+#include "usdKatana/attrMap.h"
+#include "usdKatana/readXformable.h"
+#include "usdKatana/usdInPrivateData.h"
+#include "usdKatana/utils.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

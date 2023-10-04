@@ -30,11 +30,15 @@
 #ifndef USDKATANA_ATTRMAP_H
 #define USDKATANA_ATTRMAP_H
 
+// pxr.h required before string to ensure windows related string definitions are made.
 #include <string>
+
+#include <pxr/pxr.h>
+#include <pxr/usd/usd/attribute.h>
+
 #include <FnAttribute/FnGroupBuilder.h>
 #include <FnGeolib/op/FnGeolibOp.h>
-#include "pxr/pxr.h"
-#include "pxr/usd/usd/attribute.h"
+
 #include "usdKatana/api.h"
 
 #include <boost/thread/shared_mutex.hpp>

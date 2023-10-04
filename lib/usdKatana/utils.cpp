@@ -27,65 +27,68 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
-
-#include "pxr/base/arch/demangle.h"
-#include "pxr/base/gf/matrix4d.h"
-#include "pxr/base/gf/vec3d.h"
-#include "pxr/base/gf/vec3f.h"
-#include "pxr/base/gf/vec3h.h"
-#include "pxr/base/tf/getenv.h"
-#include "pxr/base/vt/array.h"
-#include "pxr/base/vt/value.h"
-#include "pxr/base/work/loops.h"
-#include "pxr/usd/ar/resolver.h"
-#include "pxr/usd/ar/resolverScopedCache.h"
-#include "pxr/usd/kind/registry.h"
-#include "pxr/usd/pcp/mapExpression.h"
-#include "pxr/usd/sdr/registry.h"
-#include "pxr/usd/sdr/shaderProperty.h"
-#include "pxr/usd/usd/attribute.h"
-#include "pxr/usd/usd/collectionAPI.h"
-#include "pxr/usd/usd/modelAPI.h"
-#include "pxr/usd/usd/prim.h"
-#include "pxr/usd/usd/relationship.h"
-#include "pxr/usd/usdGeom/boundable.h"
-#include "pxr/usd/usdGeom/camera.h"
-#include "pxr/usd/usdGeom/scope.h"
-#include "pxr/usd/usdLux/lightAPI.h"
-#include "pxr/usd/usdLux/lightFilter.h"
-#include "pxr/usd/usdLux/listAPI.h"
-#include "pxr/usd/usdRi/statementsAPI.h"
-#include "pxr/usd/usdShade/material.h"
-#include "pxr/usd/usdShade/shader.h"
-#include "pxr/usd/usdSkel/bindingAPI.h"
-#include "pxr/usd/usdSkel/blendShapeQuery.h"
-#include "pxr/usd/usdSkel/root.h"
-#include "pxr/usd/usdSkel/skeletonQuery.h"
-#include "pxr/usd/usdSkel/skinningQuery.h"
-#include "pxr/usd/usdUI/sceneGraphPrimAPI.h"
-#include "pxr/usd/usdUtils/pipeline.h"
-
-#include "vtKatana/array.h"
-#include "vtKatana/value.h"
-
 #include "usdKatana/utils.h"
-#include "usdKatana/blindDataObject.h"
-#include "usdKatana/lookAPI.h"
-#include "usdKatana/baseMaterialHelpers.h"
-
-#include <FnLogging/FnLogging.h>
-
-FnLogSetup("UsdKatanaUtils");
-
-#include "boost/filesystem.hpp"
-#include "boost/regex.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <map>
 #include <sstream>
 #include <unordered_map>
+
+#include <pxr/pxr.h>
+
+#include <pxr/base/arch/demangle.h>
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec3h.h>
+#include <pxr/base/tf/getenv.h>
+#include <pxr/base/vt/array.h>
+#include <pxr/base/vt/value.h>
+#include <pxr/base/work/loops.h>
+#include <pxr/usd/ar/resolver.h>
+#include <pxr/usd/ar/resolverScopedCache.h>
+#include <pxr/usd/kind/registry.h>
+#include <pxr/usd/pcp/mapExpression.h>
+#include <pxr/usd/sdr/registry.h>
+#include <pxr/usd/sdr/shaderProperty.h>
+#include <pxr/usd/usd/attribute.h>
+#include <pxr/usd/usd/collectionAPI.h>
+#include <pxr/usd/usd/modelAPI.h>
+#include <pxr/usd/usd/prim.h>
+#include <pxr/usd/usd/relationship.h>
+#include <pxr/usd/usdGeom/boundable.h>
+#include <pxr/usd/usdGeom/camera.h>
+#include <pxr/usd/usdGeom/scope.h>
+#include <pxr/usd/usdLux/lightAPI.h>
+#include <pxr/usd/usdLux/lightFilter.h>
+#include <pxr/usd/usdLux/listAPI.h>
+#include <pxr/usd/usdRi/statementsAPI.h>
+#include <pxr/usd/usdShade/material.h>
+#include <pxr/usd/usdShade/shader.h>
+#include <pxr/usd/usdSkel/bindingAPI.h>
+#include <pxr/usd/usdSkel/blendShapeQuery.h>
+#include <pxr/usd/usdSkel/root.h>
+#include <pxr/usd/usdSkel/skeletonQuery.h>
+#include <pxr/usd/usdSkel/skinningQuery.h>
+#include <pxr/usd/usdUI/sceneGraphPrimAPI.h>
+#include <pxr/usd/usdUtils/pipeline.h>
+
+#include <FnLogging/FnLogging.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
+
+#include "vtKatana/array.h"
+#include "vtKatana/value.h"
+
+#include "usdKatana/blindDataObject.h"
+#include "usdKatana/lookAPI.h"
+#include "usdKatana/baseMaterialHelpers.h"
+
+FnLogSetup("UsdKatanaUtils");
+
+
 
 PXR_NAMESPACE_OPEN_SCOPE
 

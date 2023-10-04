@@ -31,40 +31,40 @@
 
 #include <FnGeolib/op/FnGeolibOp.h>
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/kind/registry.h>
+#include <pxr/usd/usdGeom/basisCurves.h>
+#include <pxr/usd/usdGeom/camera.h>
+#include <pxr/usd/usdGeom/capsule.h>
+#include <pxr/usd/usdGeom/cone.h>
+#include <pxr/usd/usdGeom/cube.h>
+#include <pxr/usd/usdGeom/cylinder.h>
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/nurbsPatch.h>
+#include <pxr/usd/usdGeom/plane.h>
+#include <pxr/usd/usdGeom/pointInstancer.h>
+#include <pxr/usd/usdGeom/points.h>
+#include <pxr/usd/usdGeom/scope.h>
+#include <pxr/usd/usdGeom/sphere.h>
+#include <pxr/usd/usdGeom/subset.h>
+#include <pxr/usd/usdGeom/xform.h>
+#include <pxr/usd/usdLux/boundableLightBase.h>
+#include <pxr/usd/usdLux/cylinderLight.h>
+#include <pxr/usd/usdLux/diskLight.h>
+#include <pxr/usd/usdLux/distantLight.h>
+#include <pxr/usd/usdLux/domeLight.h>
+#include <pxr/usd/usdLux/geometryLight.h>
+#include <pxr/usd/usdLux/lightFilter.h>
+#include <pxr/usd/usdLux/rectLight.h>
+#include <pxr/usd/usdLux/sphereLight.h>
+#include <pxr/usd/usdShade/material.h>
+#include <pxr/usd/usdSkel/root.h>
+#include <pxr/usd/usdVol/openVDBAsset.h>
+#include <pxr/usd/usdVol/volume.h>
+
 #include "usdKatana/bootstrap.h"
 #include "usdKatana/usdInPluginRegistry.h"
 #include "vtKatana/bootstrap.h"
-
-#include "pxr/usd/kind/registry.h"
-#include "pxr/usd/usdGeom/basisCurves.h"
-#include "pxr/usd/usdGeom/camera.h"
-#include "pxr/usd/usdGeom/capsule.h"
-#include "pxr/usd/usdGeom/cone.h"
-#include "pxr/usd/usdGeom/cube.h"
-#include "pxr/usd/usdGeom/cylinder.h"
-#include "pxr/usd/usdGeom/mesh.h"
-#include "pxr/usd/usdGeom/nurbsPatch.h"
-#include "pxr/usd/usdGeom/plane.h"
-#include "pxr/usd/usdGeom/pointInstancer.h"
-#include "pxr/usd/usdGeom/points.h"
-#include "pxr/usd/usdGeom/scope.h"
-#include "pxr/usd/usdGeom/sphere.h"
-#include "pxr/usd/usdGeom/subset.h"
-#include "pxr/usd/usdGeom/xform.h"
-#include "pxr/usd/usdLux/boundableLightBase.h"
-#include "pxr/usd/usdLux/cylinderLight.h"
-#include "pxr/usd/usdLux/diskLight.h"
-#include "pxr/usd/usdLux/distantLight.h"
-#include "pxr/usd/usdLux/domeLight.h"
-#include "pxr/usd/usdLux/geometryLight.h"
-#include "pxr/usd/usdLux/lightFilter.h"
-#include "pxr/usd/usdLux/rectLight.h"
-#include "pxr/usd/usdLux/sphereLight.h"
-#include "pxr/usd/usdShade/material.h"
-#include "pxr/usd/usdSkel/root.h"
-#include "pxr/usd/usdVol/openVDBAsset.h"
-#include "pxr/usd/usdVol/volume.h"
 
 #include "usdInShipped/attrfnc_materialReference.h"
 

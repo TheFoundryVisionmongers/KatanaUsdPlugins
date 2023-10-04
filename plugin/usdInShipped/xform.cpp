@@ -29,7 +29,8 @@
 //
 #include "usdInShipped/declareCoreOps.h"
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readXformable.h"
 

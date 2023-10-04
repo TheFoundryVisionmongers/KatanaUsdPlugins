@@ -28,37 +28,37 @@
 // language governing permissions and limitations under the Apache License.
 //
 #include "usdKatana/readLight.h"
-#include "pxr/pxr.h"
-#include "usdKatana/attrMap.h"
-#include "usdKatana/katanaLightAPI.h"
-#include "usdKatana/readPrim.h"
-#include "usdKatana/readXformable.h"
-#include "usdKatana/utils.h"
-
-#include "pxr/base/tf/stringUtils.h"
-#include "pxr/usd/ndr/declare.h"
-#include "pxr/usd/sdr/registry.h"
-#include "pxr/usd/sdr/shaderProperty.h"
-
-#include "pxr/usd/usdLux/cylinderLight.h"
-#include "pxr/usd/usdLux/diskLight.h"
-#include "pxr/usd/usdLux/distantLight.h"
-#include "pxr/usd/usdLux/domeLight.h"
-#include "pxr/usd/usdLux/geometryLight.h"
-#include "pxr/usd/usdLux/lightAPI.h"
-#include "pxr/usd/usdLux/boundableLightBase.h"
-#include "pxr/usd/usdLux/rectLight.h"
-#include "pxr/usd/usdLux/shadowAPI.h"
-#include "pxr/usd/usdLux/shapingAPI.h"
-#include "pxr/usd/usdLux/sphereLight.h"
-
-#include <FnGeolibServices/FnAttributeFunctionUtil.h>
-#include <FnLogging/FnLogging.h>
 
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#include <pxr/base/tf/stringUtils.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/ndr/declare.h>
+#include <pxr/usd/sdr/registry.h>
+#include <pxr/usd/sdr/shaderProperty.h>
+#include <pxr/usd/usdLux/boundableLightBase.h>
+#include <pxr/usd/usdLux/cylinderLight.h>
+#include <pxr/usd/usdLux/diskLight.h>
+#include <pxr/usd/usdLux/distantLight.h>
+#include <pxr/usd/usdLux/domeLight.h>
+#include <pxr/usd/usdLux/geometryLight.h>
+#include <pxr/usd/usdLux/lightAPI.h>
+#include <pxr/usd/usdLux/rectLight.h>
+#include <pxr/usd/usdLux/shadowAPI.h>
+#include <pxr/usd/usdLux/shapingAPI.h>
+#include <pxr/usd/usdLux/sphereLight.h>
+
+#include <FnGeolibServices/FnAttributeFunctionUtil.h>
+#include <FnLogging/FnLogging.h>
+
+#include "usdKatana/attrMap.h"
+#include "usdKatana/katanaLightAPI.h"
+#include "usdKatana/readPrim.h"
+#include "usdKatana/readXformable.h"
+#include "usdKatana/utils.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

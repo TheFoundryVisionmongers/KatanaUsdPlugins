@@ -29,20 +29,19 @@
 //
 #include <vector>
 
-#include "pxr/pxr.h"
+#include <pxr/base/gf/gamma.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/usdGeom/curves.h>
+#include <pxr/usd/usdGeom/gprim.h>
+#include <pxr/usd/usdGeom/pointBased.h>
+
+#include <FnAPI/FnAPI.h>
+
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readGprim.h"
 #include "usdKatana/readXformable.h"
 #include "usdKatana/usdInPrivateData.h"
 #include "usdKatana/utils.h"
-
-#include "pxr/usd/usdGeom/curves.h"
-#include "pxr/usd/usdGeom/gprim.h"
-#include "pxr/usd/usdGeom/pointBased.h"
-
-#include "pxr/base/gf/gamma.h"
-
-#include <FnAPI/FnAPI.h>
 
 #if KATANA_VERSION_MAJOR >= 3
 #include "vtKatana/array.h"

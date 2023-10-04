@@ -29,23 +29,22 @@
 //
 #include "usdInShipped/declareCoreOps.h"
 
-#include "pxr/pxr.h"
-#include "usdKatana/attrMap.h"
-#include "usdKatana/readMaterial.h"
-#include "usdKatana/blindDataObject.h"
-#include "usdKatana/readBlindData.h"
+#include <list>
+#include <map>
 
-#include "pxr/usd/usdShade/material.h"
-
+#include <pxr/pxr.h>
+#include <pxr/usd/usdShade/material.h>
 
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <list>
-#include <map>
-
 #include <FnAPI/FnAPI.h>
+
+#include "usdKatana/attrMap.h"
+#include "usdKatana/blindDataObject.h"
+#include "usdKatana/readBlindData.h"
+#include "usdKatana/readMaterial.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

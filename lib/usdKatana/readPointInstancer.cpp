@@ -27,20 +27,15 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "usdKatana/attrMap.h"
 #include "usdKatana/readPointInstancer.h"
-#include "usdKatana/readXformable.h"
-#include "usdKatana/usdInPrivateData.h"
-#include "usdKatana/utils.h"
 
-#include "pxr/usd/usdGeom/pointInstancer.h"
-#include "pxr/usd/usdGeom/xform.h"
-#include "pxr/usd/usd/modelAPI.h"
-#include "pxr/usd/usdShade/material.h"
-#include "pxr/usd/kind/registry.h"
-
-#include "pxr/base/gf/transform.h"
-#include "pxr/base/gf/matrix4d.h"
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/transform.h>
+#include <pxr/usd/kind/registry.h>
+#include <pxr/usd/usd/modelAPI.h>
+#include <pxr/usd/usdGeom/pointInstancer.h>
+#include <pxr/usd/usdGeom/xform.h>
+#include <pxr/usd/usdShade/material.h>
 
 #include <FnAPI/FnAPI.h>
 #include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
@@ -50,6 +45,11 @@
 #include <boost/unordered_set.hpp>
 
 #include <pystring/pystring.h>
+
+#include "usdKatana/attrMap.h"
+#include "usdKatana/readXformable.h"
+#include "usdKatana/usdInPrivateData.h"
+#include "usdKatana/utils.h"
 
 #if KATANA_VERSION_MAJOR >= 3
 #include "vtKatana/array.h"

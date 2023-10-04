@@ -29,11 +29,11 @@
 //
 #include "usdInShipped/declareCoreOps.h"
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/usdGeom/nurbsPatch.h>
+
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readNurbsPatch.h"
-
-#include "pxr/usd/usdGeom/nurbsPatch.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

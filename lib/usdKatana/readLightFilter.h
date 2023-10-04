@@ -30,7 +30,7 @@
 #ifndef USDKATANA_READLIGHTFILTER_H
 #define USDKATANA_READLIGHTFILTER_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -40,6 +40,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 class UsdKatanaAttrMap;
 class UsdKatanaUsdInPrivateData;
 class UsdLuxLightFilter;
+class UsdPrim;
 
 /// \brief read \p lightFilter into \p attrs.
 USDKATANA_API void UsdKatanaReadLightFilter(const UsdPrim& lightFilter,

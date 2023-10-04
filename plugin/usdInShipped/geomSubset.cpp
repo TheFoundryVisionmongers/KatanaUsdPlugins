@@ -29,14 +29,14 @@
 //
 #include "usdInShipped/declareCoreOps.h"
 
-#include "pxr/pxr.h"
+#include <pxr/base/tf/envSetting.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/subset.h>
+#include <pxr/usd/usdShade/material.h>
+
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readGeomSubset.h"
-
-#include "pxr/base/tf/envSetting.h"
-#include "pxr/usd/usdShade/material.h"
-#include "pxr/usd/usdGeom/subset.h"
-#include "pxr/usd/usdGeom/mesh.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

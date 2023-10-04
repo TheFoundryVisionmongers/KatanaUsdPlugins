@@ -27,16 +27,17 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
-#include "usdKatana/attrMap.h"
-#include "usdKatana/readGprim.h"
 #include "usdKatana/readPoints.h"
-#include "usdKatana/usdInPrivateData.h"
-#include "usdKatana/utils.h"
 
-#include "pxr/usd/usdGeom/points.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/usdGeom/points.h>
 
 #include <FnAPI/FnAPI.h>
+
+#include "usdKatana/attrMap.h"
+#include "usdKatana/readGprim.h"
+#include "usdKatana/usdInPrivateData.h"
+#include "usdKatana/utils.h"
 
 #if KATANA_VERSION_MAJOR >= 3
 #include "vtKatana/array.h"

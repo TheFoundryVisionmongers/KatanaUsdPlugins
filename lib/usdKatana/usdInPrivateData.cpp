@@ -28,15 +28,17 @@
 // language governing permissions and limitations under the Apache License.
 //
 #include "usdKatana/usdInPrivateData.h"
-#include <string>
-#include "pxr/pxr.h"
-#include "usdKatana/utils.h"
 
-#include "pxr/base/gf/interval.h"
-#include "pxr/usd/usdGeom/xform.h"
+#include <string>
+
+#include <pxr/base/gf/interval.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/usdGeom/xform.h>
 
 #include <pystring/pystring.h>
 #include <FnGeolib/util/Path.h>
+
+#include "usdKatana/utils.h"
 
 namespace
 {

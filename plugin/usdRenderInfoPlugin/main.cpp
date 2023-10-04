@@ -22,7 +22,7 @@
 
 #include "UsdRenderInfoPlugin.h"
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
 using namespace PXR_INTERNAL_NS;
 

@@ -30,10 +30,11 @@
 #ifndef VTKATANA_ARRAY_H
 #define VTKATANA_ARRAY_H
 
-#include "pxr/pxr.h"
 #include <FnAttribute/FnAttribute.h>
 
-#include "pxr/base/vt/array.h"
+#include <pxr/base/vt/array.h>
+#include <pxr/pxr.h>
+
 #include "vtKatana/traits.h"
 
 #if defined(ARCH_OS_WINDOWS)

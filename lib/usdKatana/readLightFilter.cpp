@@ -27,37 +27,38 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
-#include "usdKatana/attrMap.h"
 #include "usdKatana/readLightFilter.h"
-#include "usdKatana/readPrim.h"
-#include "usdKatana/readXformable.h"
-#include "usdKatana/utils.h"
 
-#include "pxr/base/tf/stringUtils.h"
-#include "pxr/usd/sdr/registry.h"
-#include "pxr/usd/usd/schemaRegistry.h"
-#include "pxr/usd/usd/tokens.h"
-#include "pxr/usd/usdLux/boundableLightBase.h"
-#include "pxr/usd/usdLux/diskLight.h"
-#include "pxr/usd/usdLux/distantLight.h"
-#include "pxr/usd/usdLux/domeLight.h"
-#include "pxr/usd/usdLux/geometryLight.h"
-#include "pxr/usd/usdLux/lightAPI.h"
-#include "pxr/usd/usdLux/lightFilter.h"
-#include "pxr/usd/usdLux/rectLight.h"
-#include "pxr/usd/usdLux/shadowAPI.h"
-#include "pxr/usd/usdLux/shapingAPI.h"
-#include "pxr/usd/usdLux/sphereLight.h"
-#include "pxr/usd/usdRi/splineAPI.h"
+#include <stack>
+#include <string>
+#include <unordered_set>
+
+#include <pxr/base/tf/stringUtils.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/sdr/registry.h>
+#include <pxr/usd/usd/schemaRegistry.h>
+#include <pxr/usd/usd/tokens.h>
+#include <pxr/usd/usdLux/boundableLightBase.h>
+#include <pxr/usd/usdLux/diskLight.h>
+#include <pxr/usd/usdLux/distantLight.h>
+#include <pxr/usd/usdLux/domeLight.h>
+#include <pxr/usd/usdLux/geometryLight.h>
+#include <pxr/usd/usdLux/lightAPI.h>
+#include <pxr/usd/usdLux/lightFilter.h>
+#include <pxr/usd/usdLux/rectLight.h>
+#include <pxr/usd/usdLux/shadowAPI.h>
+#include <pxr/usd/usdLux/shapingAPI.h>
+#include <pxr/usd/usdLux/sphereLight.h>
+#include <pxr/usd/usdRi/splineAPI.h>
 
 #include <FnGeolibServices/FnAttributeFunctionUtil.h>
 #include <FnLogging/FnLogging.h>
 #include <pystring/pystring.h>
 
-#include <stack>
-#include <string>
-#include <unordered_set>
+#include "usdKatana/attrMap.h"
+#include "usdKatana/readPrim.h"
+#include "usdKatana/readXformable.h"
+#include "usdKatana/utils.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

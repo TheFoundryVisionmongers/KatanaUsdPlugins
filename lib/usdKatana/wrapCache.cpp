@@ -27,13 +27,13 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#include "usdKatana/cache.h"
+
+#include <pxr/base/tf/pyStaticTokens.h>
 
 #include <boost/python.hpp>
+
 #include <FnAttribute/suite/FnAttributeSuite.h>  // UsdKatana import crashes without this include
-
-#include "pxr/base/tf/pyStaticTokens.h"
-
-#include "cache.h"
 
 using namespace boost::python;
 

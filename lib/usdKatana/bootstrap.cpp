@@ -29,21 +29,22 @@
 //
 #include "usdKatana/bootstrap.h"
 
-#include "pxr/base/arch/systemInfo.h"
-#include "pxr/base/tf/stringUtils.h"
-#include "pxr/base/arch/fileSystem.h"
-#include "pxr/base/tf/dl.h"
+#if defined(ARCH_OS_WINDOWS)
+#include "Windows.h"
+#endif
+
+#include <mutex>  // for std::call_once
+
+#include <pxr/base/arch/fileSystem.h>
+#include <pxr/base/arch/systemInfo.h>
+#include <pxr/base/tf/dl.h>
+#include <pxr/base/tf/stringUtils.h>
 
 #include <FnPluginManager/FnPluginManager.h>
 #include <FnLogging/FnLogging.h>
 #include <FnConfig/FnConfig.h>
 #include <FnAttribute/FnAttribute.h>
 
-#if defined(ARCH_OS_WINDOWS)
-#include "Windows.h"
-#endif
-
-#include <mutex> // for std::call_once
 
 typedef FnPluginManagerHostSuite_v1 const* (*GetFnPluginManagerHostSuite)(
     char const* apiName, unsigned int apiVersion);

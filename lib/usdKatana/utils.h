@@ -30,28 +30,28 @@
 #ifndef USDKATANA_ATTRUTILS_H
 #define USDKATANA_ATTRUTILS_H
 
-#include "pxr/pxr.h"
+#include <type_traits>
+#include <unordered_set>
+#include <vector>
+
 #include "usdKatana/attrMap.h"
 #include "usdKatana/katanaLightAPI.h"
 #include "usdKatana/usdInPrivateData.h"
 
 #include "usdKatana/api.h"
 
-#include "pxr/usd/usd/relationship.h"
-
-#include "pxr/base/vt/value.h"
-#include "pxr/usd/sdf/path.h"
-#include "pxr/usd/sdf/types.h"
-#include "pxr/usd/sdr/shaderNode.h"
-#include "pxr/usd/usdGeom/pointBased.h"
+#include <pxr/base/vt/value.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/sdf/path.h>
+#include <pxr/usd/sdf/types.h>
+#include <pxr/usd/sdr/shaderNode.h>
+#include <pxr/usd/usd/relationship.h>
+#include <pxr/usd/usdGeom/pointBased.h>
 
 #include <FnAttribute/FnGroupBuilder.h>
 #include <FnAttribute/FnDataBuilder.h>
 #include <FnGeolib/op/FnGeolibOp.h>
 
-#include <type_traits>
-#include <unordered_set>
-#include <vector>
 
 namespace FnKat = Foundry::Katana;
 

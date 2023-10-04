@@ -41,15 +41,15 @@
 #include <pxr/usd/usdGeom/sphere.h>
 #include <pxr/usd/usdGeom/xform.h>
 
+#include <FnConfig/FnConfig.h>
+#include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
+#include <FnLogging/FnLogging.h>
+
 #include "usdKatana/attrMap.h"
 #include "usdKatana/debugCodes.h"
 #include "usdKatana/readGprim.h"
 #include "usdKatana/readPrimitive.h"
 #include "usdKatana/usdInPrivateData.h"
-
-#include <FnConfig/FnConfig.h>
-#include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
-#include <FnLogging/FnLogging.h>
 
 #include "vtKatana/array.h"
 

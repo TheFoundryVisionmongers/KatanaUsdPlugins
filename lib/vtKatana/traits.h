@@ -30,34 +30,29 @@
 #ifndef VTKATANA_TRAITS_H
 #define VTKATANA_TRAITS_H
 
-#include "pxr/pxr.h"
-
 #include <type_traits>
 
 #include <FnAttribute/FnAttribute.h>
 
-#include "pxr/base/tf/envSetting.h"
-#include "pxr/base/tf/token.h"
-
-#include "pxr/base/vt/array.h"
-
-#include "pxr/base/gf/vec2d.h"
-#include "pxr/base/gf/vec2f.h"
-#include "pxr/base/gf/vec2h.h"
-#include "pxr/base/gf/vec3d.h"
-#include "pxr/base/gf/vec3f.h"
-#include "pxr/base/gf/vec3h.h"
-#include "pxr/base/gf/vec4d.h"
-#include "pxr/base/gf/vec4f.h"
-#include "pxr/base/gf/vec4h.h"
-
-#include "pxr/base/gf/matrix3d.h"
-#include "pxr/base/gf/matrix3f.h"
-#include "pxr/base/gf/matrix4d.h"
-#include "pxr/base/gf/matrix4f.h"
-
-#include "pxr/usd/sdf/assetPath.h"
-#include "pxr/usd/sdf/path.h"
+#include <pxr/base/gf/matrix3d.h>
+#include <pxr/base/gf/matrix3f.h>
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/vec2d.h>
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/vec2h.h>
+#include <pxr/base/gf/vec3d.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec3h.h>
+#include <pxr/base/gf/vec4d.h>
+#include <pxr/base/gf/vec4f.h>
+#include <pxr/base/gf/vec4h.h>
+#include <pxr/base/tf/envSetting.h>
+#include <pxr/base/tf/token.h>
+#include <pxr/base/vt/array.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/sdf/assetPath.h>
+#include <pxr/usd/sdf/path.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

@@ -30,15 +30,14 @@
 #ifndef USDKATANA_USDIN_PLUGINREGISTRY_H
 #define USDKATANA_USDIN_PLUGINREGISTRY_H
 
-#include "pxr/pxr.h"
-#include "usdKatana/usdInPrivateData.h"
-
-#include "usdKatana/api.h"
-
-#include "pxr/usd/usd/prim.h"
-#include "pxr/base/tf/type.h"
+#include <pxr/base/tf/type.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/usd/prim.h>
 
 #include <FnGeolib/op/FnGeolibOp.h>
+
+#include "usdKatana/api.h"
+#include "usdKatana/usdInPrivateData.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

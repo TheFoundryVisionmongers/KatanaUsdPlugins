@@ -30,7 +30,9 @@
 #ifndef USDKATANA_READPRIM_H
 #define USDKATANA_READPRIM_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+
+#include <FnAttribute/FnGroupBuilder.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

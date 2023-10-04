@@ -30,8 +30,8 @@
 #ifndef USDKATANA_DEBUGCODES_H
 #define USDKATANA_DEBUGCODES_H
 
-#include "pxr/pxr.h"
-#include "pxr/base/tf/debug.h"
+#include <pxr/base/tf/debug.h>
+#include <pxr/pxr.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

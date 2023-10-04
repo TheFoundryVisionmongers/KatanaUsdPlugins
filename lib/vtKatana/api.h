@@ -30,7 +30,7 @@
 #ifndef VTKATANA_API_H
 #define VTKATANA_API_H
 
-#include "pxr/base/arch/export.h"
+#include <pxr/base/arch/export.h>
 
 #if defined(PXR_STATIC)
 #   define VTKATANA_API

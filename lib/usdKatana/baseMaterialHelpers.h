@@ -30,7 +30,7 @@
 #ifndef USDKATANA_BASEMATERIALHELPERS_H
 #define USDKATANA_BASEMATERIALHELPERS_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

@@ -27,20 +27,21 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
-#include "usdKatana/attrMap.h"
-#include "usdKatana/readPrim.h"
 #include "usdKatana/readXformable.h"
-#include "usdKatana/usdInPrivateData.h"
-#include "usdKatana/utils.h"
 
-#include "pxr/usd/usdGeom/xform.h"
+#include <sstream>
+
+#include <pxr/pxr.h>
+#include <pxr/usd/usdGeom/xform.h>
 
 #include <FnAttribute/FnDataBuilder.h>
 #include <FnGeolibServices/FnXFormUtil.h>
 #include <FnLogging/FnLogging.h>
 
-#include <sstream>
+#include "usdKatana/attrMap.h"
+#include "usdKatana/readPrim.h"
+#include "usdKatana/usdInPrivateData.h"
+#include "usdKatana/utils.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

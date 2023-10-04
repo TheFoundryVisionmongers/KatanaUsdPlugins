@@ -20,24 +20,23 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
+
+#include <pxr/base/tf/envSetting.h>
+#include <pxr/base/tf/getenv.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/usdLux/boundableLightBase.h>
+#include <pxr/usd/usdLux/cylinderLight.h>
+#include <pxr/usd/usdLux/diskLight.h>
+#include <pxr/usd/usdLux/distantLight.h>
+#include <pxr/usd/usdLux/domeLight.h>
+#include <pxr/usd/usdLux/geometryLight.h>
+#include <pxr/usd/usdLux/lightAPI.h>
+#include <pxr/usd/usdLux/rectLight.h>
+#include <pxr/usd/usdLux/shadowAPI.h>
+#include <pxr/usd/usdLux/shapingAPI.h>
+#include <pxr/usd/usdLux/sphereLight.h>
 
 #include "usdInPrman/declarePackageOps.h"
-
-#include "pxr/base/tf/envSetting.h"
-#include "pxr/base/tf/getenv.h"
-#include "pxr/usd/usdLux/cylinderLight.h"
-#include "pxr/usd/usdLux/diskLight.h"
-#include "pxr/usd/usdLux/distantLight.h"
-#include "pxr/usd/usdLux/domeLight.h"
-#include "pxr/usd/usdLux/geometryLight.h"
-#include "pxr/usd/usdLux/lightAPI.h"
-#include "pxr/usd/usdLux/boundableLightBase.h"
-#include "pxr/usd/usdLux/rectLight.h"
-#include "pxr/usd/usdLux/shadowAPI.h"
-#include "pxr/usd/usdLux/shapingAPI.h"
-#include "pxr/usd/usdLux/sphereLight.h"
-
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readPrim.h"
 

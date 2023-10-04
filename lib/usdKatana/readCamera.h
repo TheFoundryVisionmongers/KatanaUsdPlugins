@@ -30,7 +30,7 @@
 #ifndef USDKATANA_READCAMERA_H
 #define USDKATANA_READCAMERA_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

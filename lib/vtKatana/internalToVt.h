@@ -27,15 +27,15 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
 #include <memory>
 #include <type_traits>
 
 #include <FnAttribute/FnAttribute.h>
 
-#include "pxr/base/tf/envSetting.h"
-#include "pxr/base/vt/array.h"
+#include <pxr/base/tf/envSetting.h>
+#include <pxr/base/vt/array.h>
 
 #include "vtKatana/internalTraits.h"
 

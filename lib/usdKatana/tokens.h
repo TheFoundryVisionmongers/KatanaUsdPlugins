@@ -39,11 +39,13 @@
 // 
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
-#include "pxr/pxr.h"
-#include "usdKatana/api.h"
-#include "pxr/base/tf/staticData.h"
-#include "pxr/base/tf/token.h"
 #include <vector>
+
+#include <pxr/base/tf/staticData.h>
+#include <pxr/base/tf/token.h>
+#include <pxr/pxr.h>
+
+#include "usdKatana/api.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

@@ -30,15 +30,13 @@
 #ifndef USDKATANA_CACHE_H
 #define USDKATANA_CACHE_H
 
-#include "pxr/pxr.h"
-#include "pxr/usd/usd/stage.h"
-#include "pxr/usd/sdf/declareHandles.h"
-#include "pxr/base/tf/singleton.h"
-
-#include <boost/shared_ptr.hpp>
-
 #include <map>
 #include <string>
+
+#include <pxr/base/tf/singleton.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/sdf/declareHandles.h>
+#include <pxr/usd/usd/stage.h>
 
 #include <FnAttribute/FnAttribute.h>
 

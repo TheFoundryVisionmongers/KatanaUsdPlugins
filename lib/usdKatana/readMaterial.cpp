@@ -27,41 +27,42 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
-
-#include <FnPluginManager/FnPluginManager.h>
-#include <FnRendererInfo/plugin/RendererInfoBase.h>
-#include <FnRendererInfo/suite/FnRendererInfoSuite.h>
-#include <FnRendererInfo/FnRendererInfoPluginClient.h>
-
-#include "usdKatana/attrMap.h"
 #include "usdKatana/readMaterial.h"
-#include "usdKatana/readPrim.h"
-#include "usdKatana/utils.h"
-#include "usdKatana/baseMaterialHelpers.h"
-
-#include "pxr/usd/sdf/layerUtils.h"
-#include "pxr/base/tf/stringUtils.h"
-
-#include "pxr/usd/usdGeom/scope.h"
-
-#include "pxr/usd/usdShade/connectableAPI.h"
-#include "pxr/usd/usdShade/material.h"
-#include "pxr/usd/usdShade/utils.h"
-
-#include "pxr/usd/usdRi/materialAPI.h"
-#include "pxr/usd/usdUI/nodeGraphNodeAPI.h"
-
-#include <FnConfig/FnConfig.h>
-#include <FnGeolibServices/FnAttributeFunctionUtil.h>
-#include <FnLogging/FnLogging.h>
-#include <pystring/pystring.h>
 
 #include <cctype>
 #include <map>
 #include <mutex>
 #include <stack>
 #include <utility>
+
+#include <pxr/pxr.h>
+
+#include <FnPluginManager/FnPluginManager.h>
+#include <FnRendererInfo/plugin/RendererInfoBase.h>
+#include <FnRendererInfo/suite/FnRendererInfoSuite.h>
+#include <FnRendererInfo/FnRendererInfoPluginClient.h>
+
+#include <pxr/base/tf/stringUtils.h>
+#include <pxr/usd/sdf/layerUtils.h>
+
+#include <pxr/usd/usdGeom/scope.h>
+
+#include <pxr/usd/usdShade/connectableAPI.h>
+#include <pxr/usd/usdShade/material.h>
+#include <pxr/usd/usdShade/utils.h>
+
+#include <pxr/usd/usdRi/materialAPI.h>
+#include <pxr/usd/usdUI/nodeGraphNodeAPI.h>
+
+#include <FnConfig/FnConfig.h>
+#include <FnGeolibServices/FnAttributeFunctionUtil.h>
+#include <FnLogging/FnLogging.h>
+#include <pystring/pystring.h>
+
+#include "usdKatana/attrMap.h"
+#include "usdKatana/baseMaterialHelpers.h"
+#include "usdKatana/readPrim.h"
+#include "usdKatana/utils.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

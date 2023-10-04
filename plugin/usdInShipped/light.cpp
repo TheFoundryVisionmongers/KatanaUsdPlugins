@@ -27,13 +27,14 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#include "usdInShipped/declareCoreOps.h"
+
 #include <FnGeolibServices/FnBuiltInOpArgsUtil.h>
 
-#include "pxr/pxr.h"
-#include "pxr/usd/usdLux/boundableLightBase.h"
-#include "pxr/usd/usdLux/lightAPI.h"
+#include <pxr/pxr.h>
+#include <pxr/usd/usdLux/boundableLightBase.h>
+#include <pxr/usd/usdLux/lightAPI.h>
 
-#include "usdInShipped/declareCoreOps.h"
 #include "usdKatana/attrMap.h"
 #include "usdKatana/readLight.h"
 #include "usdKatana/usdInPluginRegistry.h"

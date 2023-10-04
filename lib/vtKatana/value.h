@@ -30,7 +30,8 @@
 #ifndef VTKATANA_VALUE_H
 #define VTKATANA_VALUE_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
+
 #include "vtKatana/traits.h"
 
 #if defined(ARCH_OS_WINDOWS)
