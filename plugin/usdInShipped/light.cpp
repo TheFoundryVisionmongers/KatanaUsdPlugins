@@ -112,9 +112,9 @@ static void lightListFnc(UsdKatanaUtilsLightListAccess& lightList)
     if (prim && (prim.HasAPI<UsdLuxLightAPI>() || prim.GetTypeName() == "Light")) {
         UsdLuxLightAPI light(prim);
         lightList.Set("path", lightList.GetLocation());
-        lightList.SetLinks(light.GetLightLinkCollectionAPI(), "light");
+        lightList.SetLinks(light.GetLightLinkCollectionAPI(), "enable");
         lightList.Set("enable", true);
-        lightList.SetLinks(light.GetShadowLinkCollectionAPI(), "shadow");
+        lightList.SetLinks(light.GetShadowLinkCollectionAPI(), "geoShadowEnable");
     }
 
     TfType pxrAovLight = TfType::FindByName("UsdRiPxrAovLight");

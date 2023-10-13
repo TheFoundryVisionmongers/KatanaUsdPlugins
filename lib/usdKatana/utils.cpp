@@ -2215,6 +2215,7 @@ bool UsdKatanaUtilsLightListAccess::SetLinks(const UsdCollectionAPI& collectionA
 {
     bool isLinked = false;
     FnKat::GroupBuilder onBuilder, offBuilder;
+    std::vector<std::string> onLocations, offLocations;
 
     // See if the prim has special blind data for round-tripping CEL
     // expressions.
@@ -2228,14 +2229,12 @@ bool UsdKatanaUtilsLightListAccess::SetLinks(const UsdCollectionAPI& collectionA
         VtArray<std::string> patterns;
         if (off.IsValid() && off.Get(&patterns)) {
             for (const auto& pattern: patterns) {
-                const FnKat::StringAttribute patternAttr(pattern);
-                offBuilder.set(patternAttr.getHash().str(), patternAttr);
+                offLocations.push_back(pattern);
             }
         }
         if (on.IsValid() && on.Get(&patterns)) {
             for (const auto& pattern: patterns) {
-                const FnKat::StringAttribute patternAttr(pattern);
-                onBuilder.set(patternAttr.getHash().str(), patternAttr);
+                onLocations.push_back(pattern);
             }
         }
 
@@ -2253,30 +2252,37 @@ bool UsdKatanaUtilsLightListAccess::SetLinks(const UsdCollectionAPI& collectionA
                 // Skip property paths
                 continue;
             }
-            // By convention, entries are "link.TYPE.{on,off}.HASH" where
-            // HASH is getHash() of the CEL and TYPE is the type of linking
-            // (light, shadow, etc). In this case we can just hash the
-            // string attribute form of the location.
             const std::string location =
                 UsdKatanaUtils::ConvertUsdPathToKatLocation(entry.first, _usdInArgs);
-            const FnKat::StringAttribute locAttr(location);
-            const std::string linkHash = locAttr.getHash().str();
             const bool on = (entry.second != UsdTokens->exclude);
-            (on ? onBuilder : offBuilder).set(linkHash, locAttr);
+            (on ? onLocations : offLocations).push_back(location);
             isLinked = true;
         }
     }
 
-    // Set off and then on attributes, in order, to ensure
-    // stable override semantics when katana applies these.
-    // (This matches what the Gaffer node does.)
-    FnKat::GroupAttribute offAttr = offBuilder.build();
-    if (offAttr.getNumberOfChildren()) {
-        _Set("link."+linkName+".off", offAttr);
-    }
-    FnKat::GroupAttribute onAttr = onBuilder.build();
-    if (onAttr.getNumberOfChildren()) {
-        _Set("link."+linkName+".on", onAttr);
+    auto ConvertVectorToString = [](const std::vector<std::string>& locations) -> std::string
+    {
+        std::ostringstream oss;
+        oss << '(';
+        for (size_t i = 0; i < locations.size(); ++i)
+        {
+            if (i != 0)
+            {
+                oss << ' ';
+            }
+            oss << locations[i];
+        }
+        oss << ')';
+        return oss.str();
+    };
+
+    if (!onLocations.empty() || !offLocations.empty())
+    {
+        std::string onStr = onLocations.empty() ? "" : ConvertVectorToString(onLocations);
+        _Set("linking." + linkName + ".onCEL", FnAttribute::StringAttribute(onStr));
+
+        std::string offStr = offLocations.empty() ? "" : ConvertVectorToString(offLocations);
+        _Set("linking." + linkName + ".offCEL", FnAttribute::StringAttribute(offStr));
     }
 
     return isLinked;
