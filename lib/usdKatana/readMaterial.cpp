@@ -245,21 +245,20 @@ _DecodeUsdExportPortName(const std::string& portName, bool isTerminal)
     return result;
 }
 
-template<typename UsdShadeT>
-static void
-_ProcessShaderConnections(
-    const UsdPrim& prim,
-    const UsdShadeT& connection,
-    const std::string& handle,
-    double currentTime,
-    FnKat::GroupBuilder& nodesBuilder,
-    FnKat::GroupBuilder& paramsBuilder,
-    FnKat::GroupBuilder& interfaceBuilder,
-    FnKat::GroupBuilder& layoutBuilder,
-    FnKat::GroupBuilder& connectionsBuilder,
-    std::vector<std::string>& connectionsList,
-    const std::string& targetName,
-    bool flatten)
+template <typename UsdShadeT>
+static void _ProcessShaderConnections(const UsdPrim& prim,
+                                      const UsdShadeT& connection,
+                                      const std::string& handle,
+                                      double currentTime,
+                                      FnKat::GroupBuilder& nodesBuilder,
+                                      FnKat::GroupBuilder& paramsBuilder,
+                                      FnKat::GroupBuilder& interfaceBuilder,
+                                      FnKat::GroupBuilder& layoutBuilder,
+                                      FnKat::GroupBuilder& connectionsBuilder,
+                                      std::vector<std::string>& connectionsList,
+                                      std::vector<std::string>& returnConnectionsList,
+                                      const std::string& targetName,
+                                      bool flatten)
 {
     static_assert(std::is_same<UsdShadeT, UsdShadeInput>::value ||
                   std::is_same<UsdShadeT, UsdShadeOutput>::value,
@@ -272,17 +271,14 @@ _ProcessShaderConnections(
 
     // We can have multiple incoming connections, we get a whole set of paths
     SdfPathVector sourcePaths;
-    if (UsdShadeConnectableAPI::GetRawConnectedSourcePaths(
-            connection, &sourcePaths))
+    if (UsdShadeConnectableAPI::GetRawConnectedSourcePaths(connection, &sourcePaths))
     {
         bool multipleConnections = sourcePaths.size() > 1;
 
         // Check the relationship(s) representing this connection to see if
         // the targets come from a base material. If so, ignore them.
         bool createConnections =
-            flatten ||
-            !UsdShadeConnectableAPI::IsSourceConnectionFromBaseMaterial(
-                connection);
+            flatten || !UsdShadeConnectableAPI::IsSourceConnectionFromBaseMaterial(connection);
 
         int connectionIdx = 0;
         for (const SdfPath& sourcePath : sourcePaths)
@@ -294,8 +290,7 @@ _ProcessShaderConnections(
             }
 
             UsdShadeConnectableAPI source =
-                UsdShadeConnectableAPI::Get(prim.GetStage(),
-                                            sourcePath.GetPrimPath());
+                UsdShadeConnectableAPI::Get(prim.GetStage(), sourcePath.GetPrimPath());
             if (!static_cast<bool>(source))
             {
                 continue;
@@ -303,40 +298,143 @@ _ProcessShaderConnections(
 
             TfToken sourceName;
             UsdShadeAttributeType sourceType;
-            std::tie(sourceName, sourceType) =
-                UsdShadeUtils::GetBaseNameAndType(
-                    sourcePath.GetNameToken());
+            // The sourcePrim and sourcePathName relate to the actual shader Node which this
+            // connection is connected to, ignoring any ShadingGroups or other non-contributing
+            // nodes. This sourcePrim and sourcePathName may be altered by the logic which
+            // iterates through parent UsdShadeNodeGraph prims.
+            TfToken sourcePathName = sourcePath.GetNameToken();
+            std::tie(sourceName, sourceType) = UsdShadeUtils::GetBaseNameAndType(sourcePathName);
+            UsdPrim sourcePrim = source.GetPrim();
             if (sourceType != UsdShadeAttributeType::Output)
             {
-                continue;
+                if (!sourcePrim.IsA<UsdShadeNodeGraph>() && !sourcePrim.IsA<UsdShadeMaterial>())
+                    continue;
             }
 
-            std::string targetHandle = _CreateShadingNode(
-                source.GetPrim(),
-                currentTime,
-                nodesBuilder,
-                interfaceBuilder,
-                layoutBuilder,
-                targetName,
-                flatten);
+            const std::string layoutTargetHandle = _CreateShadingNode(sourcePrim,
+                                                                      currentTime,
+                                                                      nodesBuilder,
+                                                                      interfaceBuilder,
+                                                                      layoutBuilder,
+                                                                      targetName,
+                                                                      flatten);
+
+            // We want to unravel Shading node connections which go through a ShadingNodeGraph
+            // since material.nodes attributes do not retain NodeGraph or UI elements.
+            // We want to retrieve the direct connections between valid shaders.
+            // We should have also already created a valid shader via the recursion of
+            // _CreateShadingNode above before we get to writing connections down.
+            std::string nodeGraphPassthroughHandle = layoutTargetHandle;
+            // Cache the ShadingNodeGraph source names etc.. since we will still want to use
+            // them for layout attributes.
+            TfToken nodeGraphDestinationSourceName = sourceName;
+            UsdShadeAttributeType nodeGraphDestinationSourceType = sourceType;
+            bool invalidLinks = false;
+            while (sourcePrim.IsA<UsdShadeNodeGraph>() && !sourcePrim.IsA<UsdShadeMaterial>())
+            {
+                UsdAttribute nodeGraphConnection;
+                UsdShadeNodeGraph sourceShadeNodeGraph = UsdShadeNodeGraph(sourcePrim);
+                if (nodeGraphDestinationSourceType == UsdShadeAttributeType::Input)
+                {
+                    nodeGraphConnection =
+                        sourceShadeNodeGraph.GetInput(nodeGraphDestinationSourceName);
+                }
+                else if (nodeGraphDestinationSourceType == UsdShadeAttributeType::Output)
+                {
+                    nodeGraphConnection =
+                        sourceShadeNodeGraph.GetOutput(nodeGraphDestinationSourceName);
+                }
+                else
+                {
+                    break;
+                }
+                SdfPathVector shadingNodeGroupSourcePaths;
+                nodeGraphConnection.GetConnections(&shadingNodeGroupSourcePaths);
+                if (shadingNodeGroupSourcePaths.empty())
+                {
+                    break;
+                }
+                for (const auto& nodeGraphSourcePath : shadingNodeGroupSourcePaths)
+                {
+                    UsdShadeConnectableAPI nodeGraphSource = UsdShadeConnectableAPI::Get(
+                        sourcePrim.GetStage(), nodeGraphSourcePath.GetPrimPath());
+                    if (!nodeGraphSource)
+                    {
+                        invalidLinks = true;
+                    }
+                    std::tie(nodeGraphDestinationSourceName, nodeGraphDestinationSourceType) =
+                        UsdShadeUtils::GetBaseNameAndType(nodeGraphSourcePath.GetNameToken());
+                    sourcePrim = nodeGraphSource.GetPrim();
+                    if (!sourcePrim.IsValid())
+                    {
+                        invalidLinks = true;
+                    }
+                    nodeGraphPassthroughHandle =
+                        UsdKatanaUtils::GenerateShadingNodeHandle(sourcePrim);
+                }
+                // To prevent us never returning if there's a circular connection or a
+                // connection to a ShadingNodeGroup that doesn't connect to another shader.
+                if (invalidLinks)
+                {
+                    createConnections = false;
+                    break;
+                }
+            }
 
             // These targets are local, so include them.
             if (createConnections)
             {
-                bool validData = false;
-                UsdShadeShader shaderSchema = UsdShadeShader(prim);
-                if (shaderSchema)
-                {
-                    validData = true;
-                }
+                auto CreateUnconnectedShadingGroups = [&layoutTargetHandle,
+                                                       &currentTime,
+                                                       &nodesBuilder,
+                                                       &interfaceBuilder,
+                                                       &layoutBuilder,
+                                                       &targetName,
+                                                       &flatten](UsdPrim& prim) {
+                    while (!prim.IsA<UsdShadeMaterial>() && prim.IsA<UsdShadeNodeGraph>())
+                    {
+                        std::string parentTargetHandle =
+                            UsdKatanaUtils::GenerateShadingNodeHandle(prim);
+                        if (parentTargetHandle != layoutTargetHandle)
+                        {
+                            UsdShadeNodeGraph sourceNodeGraph = UsdShadeNodeGraph(prim);
+                            if (sourceNodeGraph.GetInputs().empty() &&
+                                sourceNodeGraph.GetOutputs().empty())
+                            {
+                                parentTargetHandle = _CreateShadingNode(prim,
+                                                                        currentTime,
+                                                                        nodesBuilder,
+                                                                        interfaceBuilder,
+                                                                        layoutBuilder,
+                                                                        targetName,
+                                                                        flatten);
+                            }
+                        }
+
+                        prim = prim.GetParent();
+                    }
+                };
+                // Check to see if this shader or its source shader has a parent which is a
+                // UsdShadeNodeGraph (and not a material), if it does, we need to make sure its
+                // connections go via this shader.
+                UsdPrim sourceParent = sourcePrim.GetParent();
+                CreateUnconnectedShadingGroups(sourceParent);
+                UsdPrim parentPrim = prim.GetParent();
+                CreateUnconnectedShadingGroups(parentPrim);
 
                 // Only assume the connection needs terminal decoding if
                 // it is for an invalid node. I.e the NetworkMaterial node.
-                bool isTerminal = !validData;
-                std::string connAttrName = isTerminal
-                    ? _GetKatanaTerminalName(connectionId) : connectionId;
-                connAttrName = _DecodeUsdExportPortName(
-                    connAttrName, isTerminal);
+                bool isTerminal = true;
+                const UsdShadeShader shaderSchema = UsdShadeShader(prim);
+                const UsdShadeNodeGraph nodeGraphSchema = UsdShadeNodeGraph(prim);
+                const UsdShadeMaterial materialSchema = UsdShadeMaterial(prim);
+                if (shaderSchema || (nodeGraphSchema && !materialSchema))
+                {
+                    isTerminal = false;
+                }
+                std::string connAttrName =
+                    isTerminal ? _GetKatanaTerminalName(connectionId) : connectionId;
+                connAttrName = _DecodeUsdExportPortName(connAttrName, isTerminal);
 
                 // In the case of multiple input connections for array
                 // types, we append a ":idx" to the name.
@@ -346,13 +444,33 @@ _ProcessShaderConnections(
                     connectionIdx++;
                 }
 
-                std::string sourceStr = _DecodeUsdExportPortName(
-                    sourceName.GetString(), isTerminal);
-                sourceStr += '@' + targetHandle;
+                const std::string sourceStrNodes =
+                    _DecodeUsdExportPortName(nodeGraphDestinationSourceName.GetString(),
+                                             isTerminal) +
+                    '@' + nodeGraphPassthroughHandle;
+                const std::string sourceStrLayout =
+                    _DecodeUsdExportPortName(sourceName.GetString(), isTerminal) + '@' +
+                    layoutTargetHandle;
 
-                connectionsBuilder.set(connAttrName,
-                                       FnKat::StringAttribute(sourceStr));
-                connectionsList.push_back(connAttrName + ':' + sourceStr);
+                connectionsBuilder.set(connAttrName, FnKat::StringAttribute(sourceStrNodes));
+                if (nodeGraphSchema && !materialSchema)
+                {
+                    // A ShadingGroup's nodeSpecificAttributes will record the connections
+                    // for input and output ports based on the connectionsList and
+                    // returnConnectionsList.
+                    if (std::is_same<UsdShadeT, UsdShadeOutput>::value)
+                    {
+                        returnConnectionsList.push_back(connAttrName + ':' + sourceStrLayout);
+                    }
+                    else if (std::is_same<UsdShadeT, UsdShadeInput>::value)
+                    {
+                        connectionsList.push_back(connAttrName + ':' + sourceStrLayout);
+                    }
+                }
+                else
+                {
+                    connectionsList.push_back(connAttrName + ':' + sourceStrLayout);
+                }
             }
         }
     }
@@ -414,19 +532,20 @@ _ProcessShaderConnections(
     }
 }
 
-static void
-_GatherShadingParameters(
-    const UsdShadeShader &shaderSchema,
-    const std::string &handle,
-    double currentTime,
-    FnKat::GroupBuilder& nodesBuilder,
-    FnKat::GroupBuilder& paramsBuilder,
-    FnKat::GroupBuilder& interfaceBuilder,
-    FnKat::GroupBuilder& layoutBuilder,
-    FnKat::GroupBuilder& connectionsBuilder,
-    std::vector<std::string>& connectionsList,
-    const std::string & targetName,
-    bool flatten)
+// Templated for shaderSchema derivatives.
+template <typename T>
+static void _GatherShadingParameters(const T& shaderSchema,
+                                     const std::string& handle,
+                                     double currentTime,
+                                     FnKat::GroupBuilder& nodesBuilder,
+                                     FnKat::GroupBuilder& paramsBuilder,
+                                     FnKat::GroupBuilder& interfaceBuilder,
+                                     FnKat::GroupBuilder& layoutBuilder,
+                                     FnKat::GroupBuilder& connectionsBuilder,
+                                     std::vector<std::string>& connectionsList,
+                                     std::vector<std::string>& returnConnectionsList,
+                                     const std::string& targetName,
+                                     const bool flatten)
 {
     UsdPrim prim = shaderSchema.GetPrim();
     std::string primName = prim.GetName();
@@ -434,19 +553,36 @@ _GatherShadingParameters(
     std::vector<UsdShadeInput> shaderInputs = shaderSchema.GetInputs();
     TF_FOR_ALL(shaderInputIter, shaderInputs)
     {
-        _ProcessShaderConnections(
-            prim, *shaderInputIter, handle, currentTime, nodesBuilder,
-            paramsBuilder, interfaceBuilder, layoutBuilder, connectionsBuilder,
-            connectionsList, targetName, flatten);
+        _ProcessShaderConnections(prim,
+                                  *shaderInputIter,
+                                  handle,
+                                  currentTime,
+                                  nodesBuilder,
+                                  paramsBuilder,
+                                  interfaceBuilder,
+                                  layoutBuilder,
+                                  connectionsBuilder,
+                                  connectionsList,
+                                  returnConnectionsList,
+                                  targetName,
+                                  flatten);
     }
-
     std::vector<UsdShadeOutput> shaderOutputs = shaderSchema.GetOutputs();
     TF_FOR_ALL(shaderOutputIter, shaderOutputs)
     {
-        _ProcessShaderConnections(
-            prim, *shaderOutputIter, handle, currentTime, nodesBuilder,
-            paramsBuilder, interfaceBuilder, layoutBuilder, connectionsBuilder,
-            connectionsList, targetName, flatten);
+        _ProcessShaderConnections(prim,
+                                  *shaderOutputIter,
+                                  handle,
+                                  currentTime,
+                                  nodesBuilder,
+                                  paramsBuilder,
+                                  interfaceBuilder,
+                                  layoutBuilder,
+                                  connectionsBuilder,
+                                  connectionsList,
+                                  returnConnectionsList,
+                                  targetName,
+                                  flatten);
     }
 }
 
@@ -519,8 +655,18 @@ _ReadLayoutAttrs(const UsdPrim& shadingNode, const std::string& handle,
             }
         }
     }
-
-    layoutBuilder.set(handle + ".parent", FnKat::StringAttribute("USD"));
+    // If there is no parent, we just default to "UsdIn". This would signify to NME that
+    // there is no parent shading group or otherwise and that these shaders are at the top.
+    if (shadingNode.IsA<UsdShadeMaterial>() || shadingNode.GetParent().IsA<UsdShadeMaterial>())
+    {
+        layoutBuilder.set(handle + ".parent", FnKat::StringAttribute("UsdIn"));
+    }
+    else
+    {
+        const std::string parentHandle =
+            UsdKatanaUtils::GenerateShadingNodeHandle(shadingNode.GetParent());
+        layoutBuilder.set(handle + ".parent", FnKat::StringAttribute(parentHandle));
+    }
 }
 
 static void
@@ -612,25 +758,40 @@ _CreateShadingNode(
         return "";
     }
 
-    // Check if we know about this node already
-    FnKat::GroupAttribute curNodes = nodesBuilder.build(
-            nodesBuilder.BuildAndRetain);
-    if (curNodes.getChildByName(handle).isValid()) {
-        // If so, just return and don't create anything
-        return handle;
+    const UsdShadeNodeGraph shadingGroup = UsdShadeNodeGraph(shadingNode);
+    const UsdShadeMaterial materialPrim = UsdShadeMaterial(shadingNode);
+    if (shadingGroup && !materialPrim)
+    {
+        // Check if we know about this node already
+        const FnKat::GroupAttribute curLayout = layoutBuilder.build(layoutBuilder.BuildAndRetain);
+        if (curLayout.getChildByName(handle).isValid())
+        {
+            // If so, just return and don't create anything
+            return handle;
+        }
+        // Create an empty group at the handle to prevent infinite recursion
+        layoutBuilder.set(handle, FnKat::GroupBuilder().build());
+    }
+    else
+    {
+        // Check if we know about this node already
+        const FnKat::GroupAttribute curNodes = nodesBuilder.build(nodesBuilder.BuildAndRetain);
+        if (curNodes.getChildByName(handle).isValid())
+        {
+            // If so, just return and don't create anything
+            return handle;
+        }
+
+        // Create an empty group at the handle to prevent infinite recursion
+        nodesBuilder.set(handle, FnKat::GroupBuilder().build());
     }
 
-    // Create an empty group at the handle to prevent infinite recursion
-    nodesBuilder.set(handle, FnKat::GroupBuilder().build());
-
     FnKat::GroupBuilder shdNodeBuilder;
-    bool validData = false;
     std::string id;
 
     UsdShadeShader shaderSchema = UsdShadeShader(shadingNode);
     if (shaderSchema)
     {
-        validData = true;
         TfToken tokenId;
         shaderSchema.GetIdAttr().Get(&tokenId, currentTime);
         const std::string& idString = tokenId.GetString();
@@ -647,11 +808,37 @@ _CreateShadingNode(
     FnKat::GroupBuilder paramsBuilder;
     FnKat::GroupBuilder connectionsBuilder;
     std::vector<std::string> connectionsList;
-
-    _GatherShadingParameters(
-        shaderSchema, handle, currentTime, nodesBuilder, paramsBuilder,
-        interfaceBuilder, layoutBuilder, connectionsBuilder, connectionsList,
-        targetName, flatten);
+    std::vector<std::string> returnConnectionsList;
+    if (shadingGroup)
+    {
+        _GatherShadingParameters(shadingGroup,
+                                 handle,
+                                 currentTime,
+                                 nodesBuilder,
+                                 paramsBuilder,
+                                 interfaceBuilder,
+                                 layoutBuilder,
+                                 connectionsBuilder,
+                                 connectionsList,
+                                 returnConnectionsList,
+                                 targetName,
+                                 flatten);
+    }
+    else
+    {
+        _GatherShadingParameters(shaderSchema,
+                                 handle,
+                                 currentTime,
+                                 nodesBuilder,
+                                 paramsBuilder,
+                                 interfaceBuilder,
+                                 layoutBuilder,
+                                 connectionsBuilder,
+                                 connectionsList,
+                                 returnConnectionsList,
+                                 targetName,
+                                 flatten);
+    }
 
     FnKat::GroupAttribute paramsAttr = paramsBuilder.build();
     if (paramsAttr.getNumberOfChildren() > 0) {
@@ -674,7 +861,7 @@ _CreateShadingNode(
     _ReadLayoutAttrs(shadingNode, handle, layoutBuilder);
 
     std::string target = targetName;
-    if (validData)
+    if (shaderSchema)
     {
         const std::string result = _GetRenderTarget(id);
         if (!result.empty())
@@ -689,36 +876,82 @@ _CreateShadingNode(
             shdNodeBuilder.set("target", FnKat::StringAttribute(target));
         }
     }
-
     FnKat::GroupAttribute shdNodeAttr = shdNodeBuilder.build();
-    nodesBuilder.set(handle, shdNodeAttr);
+    // We don't write shading group information in the material.nodes attributes
+    if (!shadingGroup)
+    {
+        nodesBuilder.set(handle, shdNodeAttr);
+    }
 
     // Copy node attributes to layout so NME can create the shading network.
+    // Node specific Attrs.
+    FnKat::GroupBuilder nodeSpecificBuilder;
     if (shdNodeAttr.getNumberOfChildren() > 0)
     {
-        FnKat::GroupBuilder gb;
-        gb.set("name", shdNodeAttr.getChildByName("name"));
-        gb.set("shaderType", FnKat::StringAttribute(id));
-        gb.set("target", shdNodeAttr.getChildByName("target"));
+        nodeSpecificBuilder.set("name", shdNodeAttr.getChildByName("name"));
+        nodeSpecificBuilder.set("shaderType", FnKat::StringAttribute(id));
+        nodeSpecificBuilder.set("target", shdNodeAttr.getChildByName("target"));
+    }
 
-        FnKat::GroupAttribute nodeSpecificAttrs = gb.build();
-        if (nodeSpecificAttrs.getNumberOfChildren() > 0)
+    // Shading group specific layout attrs.
+    if (shadingGroup && !materialPrim)
+    {
+        if (!returnConnectionsList.empty())
         {
-            layoutBuilder.set(
-                handle + ".nodeSpecificAttributes", nodeSpecificAttrs);
+            FnKat::StringAttribute layoutConns(
+                returnConnectionsList.data(), returnConnectionsList.size(), 1);
+            nodeSpecificBuilder.set("returnConnections", layoutConns);
         }
+        auto writeConnectionsToPorts = [](const std::vector<std::string>& connections,
+                                          FnKat::GroupBuilder& ioPortAttrs) {
+            for (const auto& connection : connections)
+            {
+                FnKat::GroupBuilder portAttrs;
+                const size_t it = connection.find(":");
+                if (it != std::string::npos)
+                {
+                    const std::string portName = connection.substr(0, it);
+                    const FnKat::StringAttribute portNameAttr{portName};
+                    portAttrs.set("name", portNameAttr);
+                    portAttrs.set("displayName", portNameAttr);
+                    // We could figure out what the tags are, but we'd need to potentially
+                    // search the network to find where these are connected.
+                    // This doesn't prevent functionality but does mean the colour of the knots
+                    // isn't totally correct.
+                    portAttrs.set("tags", FnKat::StringAttribute());
+                    ioPortAttrs.set(portName, portAttrs.build());
+                }
+            }
+        };
+        FnKat::GroupBuilder inputPortsAttrs;
+        writeConnectionsToPorts(connectionsList, inputPortsAttrs);
+        nodeSpecificBuilder.set("inputPorts", inputPortsAttrs.build());
+        FnKat::GroupBuilder outputPortsAttrs;
+        writeConnectionsToPorts(returnConnectionsList, outputPortsAttrs);
+        nodeSpecificBuilder.set("outputPorts", outputPortsAttrs.build());
+    }
+
+    FnKat::GroupAttribute nodeSpecificAttrs = nodeSpecificBuilder.build();
+    if (nodeSpecificAttrs.getNumberOfChildren() > 0)
+    {
+        layoutBuilder.set(handle + ".nodeSpecificAttributes", nodeSpecificAttrs);
     }
 
     // Set Katana node type.
     std::string nodeType;
-    if (validData)
+    if (materialPrim)
+    {
+        nodeType = "NetworkMaterial";
+    }
+    else if (shaderSchema)
     {
         nodeType = target + "ShadingNode";
         nodeType[0] = static_cast<char>(std::toupper(nodeType[0]));
     }
-    else
+    else if (shadingGroup)
     {
-        nodeType = "NetworkMaterial";
+        // A Material Prim is a type of ShadingGroup. This conditional must come after.
+        nodeType = "ShadingGroup";
     }
 
     layoutBuilder.set(
@@ -912,7 +1145,6 @@ _GetMaterialAttr(
             UsdShadeAttributeType sourceType;
             materialOutput.GetConnectedSource(&materialOutSource, &sourceName,
                                               &sourceType);
-            UsdShadeShader shader = UsdShadeShader(materialOutSource.GetPrim());
             const SdfPath& connectedShaderPath = materialOutSource.GetPath();
             const std::string katanaTerminalPortName =
                 katanaTerminalName + "Port";

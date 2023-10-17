@@ -963,11 +963,14 @@ void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
 std::string UsdKatanaUtils::GenerateShadingNodeHandle(const UsdPrim& shadingNode)
 {
     std::string name;
+    // Concatenate shadingNode names if they have UsdShadeNodeGraph as a parent (Katana
+    // ShadingGroups) or Scopes. Materials are a UsdShadeNodeGraph, so ensure they are not caught as
+    // well.
     for (UsdPrim curr = shadingNode;
-            curr && (
-                curr == shadingNode ||
-                curr.IsA<UsdGeomScope>());
-            curr = curr.GetParent()) {
+         curr && (curr == shadingNode || curr.IsA<UsdGeomScope>() ||
+                  (curr.IsA<UsdShadeNodeGraph>() && !curr.IsA<UsdShadeMaterial>()));
+         curr = curr.GetParent())
+    {
         name = curr.GetName().GetString() + name;
     }
 
