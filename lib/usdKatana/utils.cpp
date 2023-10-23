@@ -89,6 +89,11 @@ FnLogSetup("UsdKatanaUtils");
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+TF_DEFINE_ENV_SETTING(USD_KATANA_NESTED_NODE_DELIMITER,
+                      "",
+                      "Defines the character used to concatenate names of nested "
+                      "prims in the shading context. If not set, defaults to an empty string.");
+
 #if defined(ARCH_OS_WINDOWS)
 TF_DEFINE_ENV_SETTING(
     USD_KATANA_LOOK_TOKENS,
@@ -962,18 +967,23 @@ void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
 
 std::string UsdKatanaUtils::GenerateShadingNodeHandle(const UsdPrim& shadingNode)
 {
-    std::string name;
+    if (!shadingNode)
+    {
+        return "";
+    }
+    static const std::string delimiterStr = TfGetEnvSetting(USD_KATANA_NESTED_NODE_DELIMITER);
+    std::string name = shadingNode.GetName().GetString();
     // Concatenate shadingNode names if they have UsdShadeNodeGraph as a parent (Katana
     // ShadingGroups) or Scopes. Materials are a UsdShadeNodeGraph, so ensure they are not caught as
     // well.
-    for (UsdPrim curr = shadingNode;
-         curr && (curr == shadingNode || curr.IsA<UsdGeomScope>() ||
-                  (curr.IsA<UsdShadeNodeGraph>() && !curr.IsA<UsdShadeMaterial>()));
+    for (UsdPrim curr = shadingNode.GetParent();
+         curr && (curr.IsA<UsdGeomScope>() ||
+                  (curr.IsA<UsdShadeNodeGraph>() && !curr.IsA<UsdShadeMaterial>()) ||
+                  !curr.HasAuthoredTypeName());
          curr = curr.GetParent())
     {
-        name = curr.GetName().GetString() + name;
+        name = curr.GetName().GetString() + delimiterStr + name;
     }
-
     return name;
 }
 

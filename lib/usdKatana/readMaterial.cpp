@@ -390,7 +390,8 @@ static void _ProcessShaderConnections(const UsdPrim& prim,
                                                        &interfaceBuilder,
                                                        &layoutBuilder,
                                                        &targetName,
-                                                       &flatten](UsdPrim& prim) {
+                                                       &flatten](UsdPrim& prim)
+                {
                     while (!prim.IsA<UsdShadeMaterial>() && prim.IsA<UsdShadeNodeGraph>())
                     {
                         std::string parentTargetHandle =
@@ -902,8 +903,9 @@ _CreateShadingNode(
                 returnConnectionsList.data(), returnConnectionsList.size(), 1);
             nodeSpecificBuilder.set("returnConnections", layoutConns);
         }
-        auto writeConnectionsToPorts = [](const std::vector<std::string>& connections,
-                                          FnKat::GroupBuilder& ioPortAttrs) {
+        auto writeConnectionsToPorts =
+            [](const std::vector<std::string>& connections, FnKat::GroupBuilder& ioPortAttrs)
+        {
             for (const auto& connection : connections)
             {
                 FnKat::GroupBuilder portAttrs;
