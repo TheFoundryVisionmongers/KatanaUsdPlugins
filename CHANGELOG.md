@@ -1,6 +1,6 @@
 # Change List
 
-# 21.05_fn8_py2
+# 21.05_fn8_py2 - 21.05_fn8_py3
 
 ## Bug fixes
 - ID-536034 - For a UsdSkel asset with multiple variantSets, if a variantSetName under the UsdInVariantSelect node was switched to a different one with the selection under the variantSelection field unchanged and belonging to the previous variantSetName, Katana crashed.
