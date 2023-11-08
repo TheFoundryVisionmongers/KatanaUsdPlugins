@@ -1,5 +1,17 @@
 # Change List
 
+# 23.05_fn2
+
+## Feature Enhancements
+- ID-471827 - Convert UsdLux radius/size/length into xform when imported
+
+## Bug fixes
+- ID-554277 - Change all includes to <> for third-party libraries in KatanaUsdPlugins
+- ID-533271 - When prim's purpose attribute was set to "guide", visibility was set to on(1)
+- ID-551217 - UsdIn* nodes have been to moved to a 3D Nodes > UsdIn category and all USD Native nodes are now categorized under a USD Nodes heading
+- ID-536530 - Binding information on instanced UsdSkel prims imported through the UsdIn node will correctly apply to meshes when using the expanded instance mode.
+- ID-546294 - When baking materials with UsdMaterialBake node, MaterialBindingAPI was not applied to the Prim with the material binding Relationship.
+
 # 22.05_fn3
 
 ## Feature Enhancements
