@@ -1,5 +1,19 @@
 # Change List
 
+# 22.05_fn3
+
+## Feature Enhancements
+- ID-547170 - Support Importing ShadingGroups/UsdShadeNodeGraph and typeless subnet Prims from USD within Materials.
+
+## Bug fixes
+- ID-547185 - When importing usd files into Katana with UsdIn node, nested prims within the Shading context were not retained, causing loss of important group nodes like Shading Group or Subnets.
+- ID-547790 - When using the UsdIn node to import light linking information, the light linking data was incorrectly imported as resolved and placed in the /root/world location, rather than importing as an unresolved list similar to how GafferThree presents it.
+
+# 21.05_fn8_py2 - 21.05_fn8_py3
+
+## Bug fixes
+- ID-536034 - For a UsdSkel asset with multiple variantSets, if a variantSetName under the UsdInVariantSelect node was switched to a different one with the selection under the variantSelection field unchanged and belonging to the previous variantSetName, Katana crashed.
+
 # 23.05_fn1
 
 ## Feature Enhancements

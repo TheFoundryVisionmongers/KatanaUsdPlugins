@@ -81,12 +81,18 @@ FnLogSetup("UsdKatanaUtils");
 #include "boost/filesystem.hpp"
 #include "boost/regex.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <map>
 #include <sstream>
 #include <unordered_map>
 
 PXR_NAMESPACE_OPEN_SCOPE
+
+TF_DEFINE_ENV_SETTING(USD_KATANA_NESTED_NODE_DELIMITER,
+                      "",
+                      "Defines the character used to concatenate names of nested "
+                      "prims in the shading context. If not set, defaults to an empty string.");
 
 #if defined(ARCH_OS_WINDOWS)
 TF_DEFINE_ENV_SETTING(
@@ -961,15 +967,23 @@ void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
 
 std::string UsdKatanaUtils::GenerateShadingNodeHandle(const UsdPrim& shadingNode)
 {
-    std::string name;
-    for (UsdPrim curr = shadingNode;
-            curr && (
-                curr == shadingNode ||
-                curr.IsA<UsdGeomScope>());
-            curr = curr.GetParent()) {
-        name = curr.GetName().GetString() + name;
+    if (!shadingNode)
+    {
+        return "";
     }
-
+    static const std::string delimiterStr = TfGetEnvSetting(USD_KATANA_NESTED_NODE_DELIMITER);
+    std::string name = shadingNode.GetName().GetString();
+    // Concatenate shadingNode names if they have UsdShadeNodeGraph as a parent (Katana
+    // ShadingGroups) or Scopes. Materials are a UsdShadeNodeGraph, so ensure they are not caught as
+    // well.
+    for (UsdPrim curr = shadingNode.GetParent();
+         curr && (curr.IsA<UsdGeomScope>() ||
+                  (curr.IsA<UsdShadeNodeGraph>() && !curr.IsA<UsdShadeMaterial>()) ||
+                  !curr.HasAuthoredTypeName());
+         curr = curr.GetParent())
+    {
+        name = curr.GetName().GetString() + delimiterStr + name;
+    }
     return name;
 }
 
@@ -1992,7 +2006,7 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
 
     // Get skinning query
     const UsdSkelSkinningQuery skinningQuery = skelCache.GetSkinningQuery(prim);
-    if (!skinningQuery)
+    if (!skinningQuery.IsValid())
     {
         return skinnedPointsAttr;
     }
@@ -2000,7 +2014,7 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
     // Get skeleton query
     const UsdSkelSkeleton skel = UsdSkelBindingAPI(prim).GetInheritedSkeleton();
     const UsdSkelSkeletonQuery skelQuery = skelCache.GetSkelQuery(skel);
-    if (!skelQuery)
+    if (!skelQuery.IsValid())
     {
         return skinnedPointsAttr;
     }
@@ -2024,6 +2038,14 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
         jointXformMotionSamples.push_back(currentTime);
     }
 
+    // The boolean values below are for the mesh prim with SkelBindingAPI schema 
+    // applied which won't have joints indices property when switched to an invalid variant.
+    // Adding a check for blendshape targets too. We would want to
+    // apply animation only to prims with valid blendshapes and joints!
+    const bool hasJointIndicesAttr = UsdSkelBindingAPI(prim).GetJointIndicesAttr().HasValue();
+    const bool hasBlendShapeTargets =
+        UsdSkelBindingAPI(prim).GetBlendShapeTargetsRel().HasAuthoredTargets();
+
     std::map<float, VtArray<GfVec3f>> timeToSampleMap;
     // Prioritise JointTransform samples. Could prioritise either
     for (double relSampleTime : matchingMotionSamples)
@@ -2031,18 +2053,6 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
         double time = currentTime + relSampleTime;
         VtVec3fArray skinnedPoints;
         points.GetPointsAttr().Get(&skinnedPoints, time);
-        // Retrieve the base points again!
-
-        if (std::count(blendShapeMotionSamples.begin(), blendShapeMotionSamples.end(), time))
-        {
-            PXR_INTERNAL_NS::ApplyBlendShapeAnimation(skinningQuery, skelQuery, time,
-                                                      skinnedPoints);
-        }
-        if (std::count(jointXformMotionSamples.begin(), jointXformMotionSamples.end(), time))
-        {
-            PXR_INTERNAL_NS::ApplyJointAnimation(skinningQuery, skelQuery, time, skinnedPoints);
-        }
-
         if (!timeToSampleMap.empty())
         {
             if (timeToSampleMap.begin()->second.size() != skinnedPoints.size())
@@ -2050,6 +2060,25 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
                 timeToSampleMap.clear();
                 varyingTopology = true;
                 break;
+            }
+        }
+        // Retrieve the base points again!
+        if (hasBlendShapeTargets)
+        {
+            if (std::find(blendShapeMotionSamples.cbegin(), blendShapeMotionSamples.cend(), time) !=
+                blendShapeMotionSamples.cend())
+            {
+                PXR_INTERNAL_NS::ApplyBlendShapeAnimation(
+                    skinningQuery, skelQuery, time, skinnedPoints);
+            }
+        }
+        if (hasJointIndicesAttr)
+        {
+            if (std::find(jointXformMotionSamples.cbegin(), jointXformMotionSamples.cend(), time) !=
+                jointXformMotionSamples.cend())
+            {
+                PXR_INTERNAL_NS::ApplyJointAnimation(
+                    skinningQuery, skelQuery, time, skinnedPoints);
             }
         }
         float correctedSampleTime =
@@ -2061,10 +2090,16 @@ FnKat::Attribute UsdKatanaUtils::ApplySkinningToPoints(const UsdGeomPointBased& 
         VtVec3fArray skinnedPoints;
         points.GetPointsAttr().Get(&skinnedPoints, currentTime);
         FnKat::DataBuilder<FnKat::FloatAttribute> defaultBuilder(tupleSize);
-
-        PXR_INTERNAL_NS::ApplyBlendShapeAnimation(skinningQuery, skelQuery, currentTime,
-                                                  skinnedPoints);
-        PXR_INTERNAL_NS::ApplyJointAnimation(skinningQuery, skelQuery, currentTime, skinnedPoints);
+        if (hasBlendShapeTargets)
+        {
+            PXR_INTERNAL_NS::ApplyBlendShapeAnimation(
+                skinningQuery, skelQuery, currentTime, skinnedPoints);
+        }
+        if (hasJointIndicesAttr)
+        {
+            PXR_INTERNAL_NS::ApplyJointAnimation(
+                skinningQuery, skelQuery, currentTime, skinnedPoints);
+        }
         // Package the points in an attribute.
         if (!skinnedPoints.empty())
         {
@@ -2193,6 +2228,7 @@ bool UsdKatanaUtilsLightListAccess::SetLinks(const UsdCollectionAPI& collectionA
 {
     bool isLinked = false;
     FnKat::GroupBuilder onBuilder, offBuilder;
+    std::vector<std::string> onLocations, offLocations;
 
     // See if the prim has special blind data for round-tripping CEL
     // expressions.
@@ -2206,14 +2242,12 @@ bool UsdKatanaUtilsLightListAccess::SetLinks(const UsdCollectionAPI& collectionA
         VtArray<std::string> patterns;
         if (off.IsValid() && off.Get(&patterns)) {
             for (const auto& pattern: patterns) {
-                const FnKat::StringAttribute patternAttr(pattern);
-                offBuilder.set(patternAttr.getHash().str(), patternAttr);
+                offLocations.push_back(pattern);
             }
         }
         if (on.IsValid() && on.Get(&patterns)) {
             for (const auto& pattern: patterns) {
-                const FnKat::StringAttribute patternAttr(pattern);
-                onBuilder.set(patternAttr.getHash().str(), patternAttr);
+                onLocations.push_back(pattern);
             }
         }
 
@@ -2231,30 +2265,37 @@ bool UsdKatanaUtilsLightListAccess::SetLinks(const UsdCollectionAPI& collectionA
                 // Skip property paths
                 continue;
             }
-            // By convention, entries are "link.TYPE.{on,off}.HASH" where
-            // HASH is getHash() of the CEL and TYPE is the type of linking
-            // (light, shadow, etc). In this case we can just hash the
-            // string attribute form of the location.
             const std::string location =
                 UsdKatanaUtils::ConvertUsdPathToKatLocation(entry.first, _usdInArgs);
-            const FnKat::StringAttribute locAttr(location);
-            const std::string linkHash = locAttr.getHash().str();
             const bool on = (entry.second != UsdTokens->exclude);
-            (on ? onBuilder : offBuilder).set(linkHash, locAttr);
+            (on ? onLocations : offLocations).push_back(location);
             isLinked = true;
         }
     }
 
-    // Set off and then on attributes, in order, to ensure
-    // stable override semantics when katana applies these.
-    // (This matches what the Gaffer node does.)
-    FnKat::GroupAttribute offAttr = offBuilder.build();
-    if (offAttr.getNumberOfChildren()) {
-        _Set("link."+linkName+".off", offAttr);
-    }
-    FnKat::GroupAttribute onAttr = onBuilder.build();
-    if (onAttr.getNumberOfChildren()) {
-        _Set("link."+linkName+".on", onAttr);
+    auto ConvertVectorToString = [](const std::vector<std::string>& locations) -> std::string
+    {
+        std::ostringstream oss;
+        oss << '(';
+        for (size_t i = 0; i < locations.size(); ++i)
+        {
+            if (i != 0)
+            {
+                oss << ' ';
+            }
+            oss << locations[i];
+        }
+        oss << ')';
+        return oss.str();
+    };
+
+    if (!onLocations.empty() || !offLocations.empty())
+    {
+        std::string onStr = onLocations.empty() ? "" : ConvertVectorToString(onLocations);
+        _Set("linking." + linkName + ".onCEL", FnAttribute::StringAttribute(onStr));
+
+        std::string offStr = offLocations.empty() ? "" : ConvertVectorToString(offLocations);
+        _Set("linking." + linkName + ".offCEL", FnAttribute::StringAttribute(offStr));
     }
 
     return isLinked;
