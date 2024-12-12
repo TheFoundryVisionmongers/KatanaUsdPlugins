@@ -79,7 +79,8 @@ static FnKat::Attribute _GetMaterialAssignAttrFromPath(const SdfPath& inputTarge
                                                        const SdfPath& errorContextPath)
 {
     SdfPath targetPath = inputTargetPath;
-    UsdPrim targetPrim = data.GetUsdInArgs()->GetStage()->GetPrimAtPath(targetPath);
+    const UsdPrim targetPrim = data.GetUsdInArgs()->GetStage()->GetPrimAtPath(targetPath);
+    const UsdPrim contextPrim = data.GetUsdInArgs()->GetStage()->GetPrimAtPath(errorContextPath);
     // If the target is inside a prototype, then it needs to be re-targeted
     // to the instance.
     //
@@ -128,6 +129,27 @@ static FnKat::Attribute _GetMaterialAssignAttrFromPath(const SdfPath& inputTarge
             //         << " is within a prototype, but the associated "
             //         "instancePath is unknown.");
             // return FnKat::Attribute();
+        }
+    }
+    // If the prim we're doing the assignment on is an instance and the target material prim is an
+    // instance proxy of the same prim, we need to work out where the instance source will be to
+    // reassign the binding to the "Prototypes/prototype/variants/m<n>/..." location.
+    else if (contextPrim && targetPrim && contextPrim.IsInstance() &&
+             targetPath.HasPrefix(errorContextPath) && targetPrim.IsInstanceProxy())
+    {
+        if (const FnKat::GroupAttribute& mappingAttr = data.getInstancePrototypeMapping();
+            mappingAttr.isValid())
+        {
+            const FnAttribute::StringAttribute prototypePathAttr = mappingAttr.getChildByName(
+                FnKat::DelimiterEncode(contextPrim.GetPrototype().GetPath().GetString()));
+            const std::string prototypePath = prototypePathAttr.getValue("", false);
+            const SdfPath path = targetPrim.GetPrimInPrototype()
+                                     .GetPath()
+                                     .MakeRelativePath(contextPrim.GetPrototype().GetPath())
+                                     .MakeAbsolutePath(PXR_NS::SdfPath::AbsoluteRootPath());
+
+            targetPath = SdfPath("/Prototypes/" + prototypePath + path.GetAsString());
+            // ConvertUsdMaterialPathToKatLocation will prepend the required root path for us.
         }
     }
 
@@ -187,37 +209,37 @@ static FnKat::Attribute _GetCollectionBasedMaterialAssignments(
 {
     UsdShadeMaterialBindingAPI bindingAPI(prim);
 
-    const auto & purposes = data.GetUsdInArgs()->GetMaterialBindingPurposes();
+    const TfTokenVector& purposes = data.GetUsdInArgs()->GetMaterialBindingPurposes();
     if (purposes.empty())
     {
         return FnKat::Attribute();    
     }
 
-
     FnAttribute::GroupBuilder gb(FnAttribute::GroupBuilder::BuilderModeStrict);
-
-    int bindingCount = 0;
-
+    bool hasBindings = false;
 
     for (const auto & purpose : purposes)
     {
-        if (auto boundMaterial = bindingAPI.ComputeBoundMaterial(
-                data.GetBindingsCache(),
-                data.GetCollectionQueryCache(),
-                purpose))
+        // We only hold a cache for purposes which we have been told about. If for whatever reason
+        // the purpose here has not been declared on the UsdIn node, use an empty cache by default.
+        UsdShadeMaterialBindingAPI::BindingsCache emptyCache;
+        UsdShadeMaterialBindingAPI::BindingsCache* cache = data.GetBindingsCache(purpose);
+        cache = cache ? cache : &emptyCache;
+
+        if (const UsdShadeMaterial boundMaterial =
+                bindingAPI.ComputeBoundMaterial(cache, data.GetCollectionQueryCache(), purpose))
         {
-            ++bindingCount;
+            hasBindings = true;
             gb.set(purpose == UsdShadeTokens->allPurpose ? "allPurpose" : purpose.GetText(),
-                    _GetMaterialAssignAttrFromPath(
-                            boundMaterial.GetPrim().GetPath(), data, prim.GetPath()));
+                   _GetMaterialAssignAttrFromPath(
+                       boundMaterial.GetPrim().GetPath(), data, prim.GetPath()));
         }
     }
 
-    if (bindingCount)
+    if (hasBindings)
     {
         return gb.build();
     }
-
 
     return FnKat::Attribute();
 }
@@ -888,20 +910,6 @@ void UsdKatanaReadPrim(const UsdPrim& prim,
 
     attrs.set("materialAssign", _GetMaterialAssignAttr(prim, data));
 
-
-    //
-    // Set the 'usd.materialBindings' attribute from collection-based material
-    // bindings.
-    //
-
-    FnKat::Attribute bindingsAttr =
-            _GetCollectionBasedMaterialAssignments(prim, data);
-    if (bindingsAttr.isValid())
-    {
-        attrs.set("usd.materialBindings", bindingsAttr);
-    }
-
-
     //
     // Set the 'prmanStatements' attribute.
     //
@@ -917,6 +925,17 @@ void UsdKatanaReadPrim(const UsdPrim& prim,
             attrs.set("prmanStatements", statements);
         }
         attrs.set("usd", statements);
+    }
+
+    //
+    // Set the 'usd.materialBindings' attribute from collection-based material
+    // bindings.
+    //
+
+    FnKat::Attribute bindingsAttr = _GetCollectionBasedMaterialAssignments(prim, data);
+    if (bindingsAttr.isValid())
+    {
+        attrs.set("usd.materialBindings", bindingsAttr);
     }
 
     //

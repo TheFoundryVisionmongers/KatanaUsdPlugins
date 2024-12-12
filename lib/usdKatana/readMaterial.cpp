@@ -1328,7 +1328,7 @@ _UnrollInterfaceFromPrim(const UsdPrim& prim,
 
         VtValue vtValue;
 
-        if (attr.Get(&vtValue) && !vtValue.IsEmpty())
+        if (attr.Get(&vtValue, currentTime) && !vtValue.IsEmpty())
         {
             bool isUdim = false;
             if (vtValue.IsHolding<SdfAssetPath>())

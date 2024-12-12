@@ -30,16 +30,19 @@
 #ifndef USDKATANA_USDIN_PRIVATEDATA_H
 #define USDKATANA_USDIN_PRIVATEDATA_H
 
+#include <map>
 #include <memory>
+
+#include "pxr/pxr.h"
+#include "usdKatana/usdInArgs.h"
+
+#include "usdKatana/api.h"
 
 #include <pxr/pxr.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usdShade/materialBindingAPI.h>
 
 #include <FnGeolib/op/FnGeolibOp.h>
-
-#include "usdKatana/api.h"
-#include "usdKatana/usdInArgs.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -184,21 +187,25 @@ public:
     ///              it's intended for use the callers of those. 
     USDKATANA_API FnAttribute::GroupAttribute updateExtensionOpArgs(
             FnAttribute::GroupAttribute opArgs) const;
-    
-    
-    /// \brief Access to shared caches relevant to efficient binding of
-    ///        materials across the hierarchy.
-    UsdShadeMaterialBindingAPI::CollectionQueryCache *
-    GetCollectionQueryCache() const;
-    UsdShadeMaterialBindingAPI::BindingsCache *
-    GetBindingsCache() const;
-    
 
+    /// \brief Access to shared caches relevant to efficient binding of materials across the
+    ///        hierarchy.
+    UsdShadeMaterialBindingAPI::CollectionQueryCache* GetCollectionQueryCache() const;
+    UsdShadeMaterialBindingAPI::BindingsCache* GetBindingsCache(
+        const TfToken& purpose = UsdShadeTokens->allPurpose) const;
 
     /// \brief extract private data from either the interface (its natural
     ///        location) with room for future growth
     USDKATANA_API static UsdKatanaUsdInPrivateData* GetPrivateData(
         const FnKat::GeolibCookInterface& interface);
+
+    /// \brief Set the Instance Prototype Mapping which will be used by material assignment
+    ///        for mapping assignment against the correct instance source location when using the
+    ///        'As sources and instances' option.
+    USDKATANA_API void setInstancePrototypeMapping(
+        FnAttribute::GroupAttribute instancePrototypeMapping);
+    /// \brief Gets the Instance Prototype Mapping.
+    USDKATANA_API const FnKat::GroupAttribute& getInstancePrototypeMapping() const;
 
 private:
 
@@ -220,15 +227,15 @@ private:
     
     mutable FnAttribute::GroupBuilder * _extGb;
 
-
+    FnAttribute::GroupAttribute _instancePrototypeMapping;
 
     typedef std::shared_ptr<UsdShadeMaterialBindingAPI::CollectionQueryCache>
             _CollectionQueryCachePtr;
-    typedef std::shared_ptr<UsdShadeMaterialBindingAPI::BindingsCache>
-            _BindingsCachePtr;
+    typedef std::shared_ptr<UsdShadeMaterialBindingAPI::BindingsCache> _BindingsCachePtr;
+    typedef std::map<TfToken, _BindingsCachePtr> _PurposeBasedBindingsCache;
 
     _CollectionQueryCachePtr _collectionQueryCache;
-    _BindingsCachePtr _bindingsCache;
+    _PurposeBasedBindingsCache _bindingsCache;
 
     bool _evaluateUsdSkelBindings{true};
 };

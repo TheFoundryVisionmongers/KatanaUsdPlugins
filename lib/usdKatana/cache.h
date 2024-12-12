@@ -64,9 +64,9 @@ class UsdKatanaCache : public TfSingleton<UsdKatanaCache>
 
     /// Construct a session layer from the groupAttr encoding of variants
     /// and deactivations -- or return a previously created one
-    SdfLayerRefPtr& _FindOrCreateSessionLayer(
-            FnAttribute::GroupAttribute sessionAttr,
-            const std::string& rootLocation);
+    SdfLayerRefPtr& _FindOrCreateSessionLayer(FnAttribute::GroupAttribute sessionAttr,
+                                              const std::string& rootLocation,
+                                              const std::string& isolatePath = "");
 
     /// Mute layers by name
     static void _SetMutedLayers(
