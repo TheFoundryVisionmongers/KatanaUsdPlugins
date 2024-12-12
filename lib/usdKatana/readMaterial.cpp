@@ -33,6 +33,8 @@
 #include <map>
 #include <mutex>
 #include <stack>
+#include <tuple>
+#include <unordered_map>
 #include <utility>
 
 #include <pxr/pxr.h>
@@ -68,28 +70,34 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 FnLogSetup("UsdKatanaReadMaterial");
 
-static std::string
-_CreateShadingNode(
-        UsdPrim shadingNode,
-        double currentTime,
-        FnKat::GroupBuilder& nodesBuilder,
-        FnKat::GroupBuilder& interfaceBuilder,
-        FnKat::GroupBuilder& layoutBuilder,
-        const std::string & targetName,
-        bool flatten);
+namespace
+{
+struct ShadingNodeTraversalData
+{
+    std::string target{};
+    bool targetOverwritten{false};
+    bool isMaterial{false};
+};
+
+std::unordered_map<std::string, std::vector<std::string>> s_shaderIdToRenderTarget;
+std::once_flag s_onceFlag;
+}  // namespace
+
+static std::string _CreateShadingNode(UsdPrim shadingNode,
+                                      double currentTime,
+                                      FnKat::GroupBuilder& nodesBuilder,
+                                      FnKat::GroupBuilder& interfaceBuilder,
+                                      FnKat::GroupBuilder& layoutBuilder,
+                                      const ShadingNodeTraversalData& traversalData,
+                                      bool flatten);
 
 SdfLayerHandle _FindLayerHandle(const UsdAttribute& attr, const UsdTimeCode& time);
 
-std::string
-_GetRenderTarget(const std::string& shaderId);
-
-FnKat::Attribute
-_GetMaterialAttr(
-        const UsdShadeMaterial& materialSchema,
-        double currentTime,
-        const std::string& targetName,
-        const bool prmanOutputTarget,
-        bool flatten);
+FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
+                                  double currentTime,
+                                  const std::string& defaultTargetName,
+                                  const bool prmanOutputTarget,
+                                  bool flatten);
 
 void
 _UnrollInterfaceFromPrim(
@@ -163,12 +171,34 @@ void UsdKatanaReadMaterial(const UsdShadeMaterial& material,
 ////////////////////////////////////////////////////////////////////////
 // Protected methods
 
-static std::string
-_GetKatanaTerminalName(const std::string& terminalName)
+static std::string _GetRenderTargetFromRenderContext(const TfToken& renderContext)
+{
+    static const std::unordered_map<TfToken, std::string, TfToken::HashFunctor>
+        s_contextToTargetMap{
+            {TfToken("ri"), "prman"},
+            {TfToken("glslfx"), "usd"},
+            {TfToken("arnold"), "arnold"},
+            {TfToken("nsi"), "dl"},
+        };
+
+    const auto& it = s_contextToTargetMap.find(renderContext);
+    if (it == s_contextToTargetMap.end())
+    {
+        return {};
+    }
+    return it->second;
+}
+
+struct _TerminalInfo
+{
+    std::string terminalName;
+    std::string targetName;
+};
+static _TerminalInfo _GetKatanaTerminalName(const std::string& terminalName)
 {
     if (terminalName.empty())
     {
-        return terminalName;
+        return {terminalName, {}};
     }
 
     size_t offset = 0;
@@ -211,7 +241,7 @@ _GetKatanaTerminalName(const std::string& terminalName)
             toupper(result[prefix.size()]));
     }
 
-    return result;
+    return {result, prefix};
 }
 
 // Helper to revert encodings made in UsdExport/material.py.
@@ -258,7 +288,7 @@ static void _ProcessShaderConnections(const UsdPrim& prim,
                                       FnKat::GroupBuilder& connectionsBuilder,
                                       std::vector<std::string>& connectionsList,
                                       std::vector<std::string>& returnConnectionsList,
-                                      const std::string& targetName,
+                                      ShadingNodeTraversalData& traversalData,
                                       bool flatten)
 {
     static_assert(std::is_same<UsdShadeT, UsdShadeInput>::value ||
@@ -266,6 +296,22 @@ static void _ProcessShaderConnections(const UsdPrim& prim,
                   "UsdShadeT must be an input or an output.");
 
     std::string connectionId = connection.GetBaseName();
+    if (traversalData.isMaterial)
+    {
+        // Connection id is for example `ri:surface` or `nsi:surface` or `surface`.
+        const TfTokenVector tokens = SdfPath::TokenizeIdentifierAsTokens(connectionId);
+        if (tokens.size() >= 2)
+        {
+            traversalData.target = _GetRenderTargetFromRenderContext(tokens[0]);
+            traversalData.targetOverwritten = true;
+        }
+        // If we can't find a rendercontext we don't overwrite the target.
+        // The method _GetRenderTargetAndShaderType will return the correct target name.
+        else
+        {
+            traversalData.targetOverwritten = false;
+        }
+    }
 
     // We do not try to extract presentation metadata from parameters -
     // only material interface attributes should bother recording such.
@@ -323,7 +369,7 @@ static void _ProcessShaderConnections(const UsdPrim& prim,
                                                                       nodesBuilder,
                                                                       interfaceBuilder,
                                                                       layoutBuilder,
-                                                                      targetName,
+                                                                      traversalData,
                                                                       flatten);
 
             // We want to unravel Shading node connections which go through a ShadingNodeGraph
@@ -391,13 +437,7 @@ static void _ProcessShaderConnections(const UsdPrim& prim,
             // These targets are local, so include them.
             if (createConnections)
             {
-                auto CreateUnconnectedShadingGroups = [&layoutTargetHandle,
-                                                       &currentTime,
-                                                       &nodesBuilder,
-                                                       &interfaceBuilder,
-                                                       &layoutBuilder,
-                                                       &targetName,
-                                                       &flatten](UsdPrim& prim)
+                auto CreateUnconnectedShadingGroups = [&](UsdPrim& prim)
                 {
                     while (!prim.IsA<UsdShadeMaterial>() && prim.IsA<UsdShadeNodeGraph>())
                     {
@@ -414,7 +454,7 @@ static void _ProcessShaderConnections(const UsdPrim& prim,
                                                                         nodesBuilder,
                                                                         interfaceBuilder,
                                                                         layoutBuilder,
-                                                                        targetName,
+                                                                        traversalData,
                                                                         flatten);
                             }
                         }
@@ -441,7 +481,7 @@ static void _ProcessShaderConnections(const UsdPrim& prim,
                     isTerminal = false;
                 }
                 std::string connAttrName =
-                    isTerminal ? _GetKatanaTerminalName(connectionId) : connectionId;
+                    isTerminal ? _GetKatanaTerminalName(connectionId).terminalName : connectionId;
                 connAttrName = _DecodeUsdExportPortName(connAttrName, isTerminal);
 
                 // In the case of multiple input connections for array
@@ -552,7 +592,7 @@ static void _GatherShadingParameters(const T& shaderSchema,
                                      FnKat::GroupBuilder& connectionsBuilder,
                                      std::vector<std::string>& connectionsList,
                                      std::vector<std::string>& returnConnectionsList,
-                                     const std::string& targetName,
+                                     ShadingNodeTraversalData& traversalData,
                                      const bool flatten)
 {
     UsdPrim prim = shaderSchema.GetPrim();
@@ -572,7 +612,7 @@ static void _GatherShadingParameters(const T& shaderSchema,
                                   connectionsBuilder,
                                   connectionsList,
                                   returnConnectionsList,
-                                  targetName,
+                                  traversalData,
                                   flatten);
     }
     std::vector<UsdShadeOutput> shaderOutputs = shaderSchema.GetOutputs();
@@ -589,7 +629,7 @@ static void _GatherShadingParameters(const T& shaderSchema,
                                   connectionsBuilder,
                                   connectionsList,
                                   returnConnectionsList,
-                                  targetName,
+                                  traversalData,
                                   flatten);
     }
 }
@@ -677,8 +717,8 @@ _ReadLayoutAttrs(const UsdPrim& shadingNode, const std::string& handle,
     }
 }
 
-static void
-_FillShaderIdToRenderTarget(std::map<std::string, std::string>& output)
+static void _FillShaderIdToRenderTarget(
+    std::unordered_map<std::string, std::vector<std::string>>& output)
 {
     std::vector<std::string> pluginNames;
     FnPluginManager::PluginManager::getPluginNames("RendererInfoPlugin",
@@ -727,39 +767,62 @@ _FillShaderIdToRenderTarget(std::map<std::string, std::string>& output)
                                                    typeTags, shaderNames);
         for (const auto& shaderName : shaderNames)
         {
-            output[shaderName] = rendererName;
+            // Two different renderers may use the same shader names (for example "bump2d"
+            // in both 3Delight and Arnold). At the moment, if the shader in the USD file is not
+            // namespaced, the wrong one may be picked. The solution/workflow is not trivial.
+            output[shaderName].push_back(rendererName);
         }
     }
 }
 
-std::string
-_GetRenderTarget(const std::string& shaderId)
+// Return two strings which are RenderTarget and ShaderType from Shader Prim and
+// defaultRenderTarget. RenderTarget is a short form of renderer name used in the attribute
+// "material.nodes.<NODE NAME>.target". ShaderType is a shader name used in the attribute
+// "material.nodes.<NODE NAME>.shaderType"
+std::tuple<std::string, std::string> _GetRenderTargetAndShaderType(
+    const UsdShadeShader& shaderPrim,
+    const std::string& defaultRenderTarget)
 {
-    // A static map from shader ID to renderer target name.
-    static std::map<std::string, std::string> s_shaderIdToRenderTarget;
+    TfToken shaderId;
+    if (!shaderPrim.GetShaderId(&shaderId))
+    {
+        FnLogError("Cannot find shaderId from " << shaderPrim.GetPath().GetString());
+        return {{defaultRenderTarget}, {}};
+    }
 
-    // If the map has not been filled, do so now; take care to do this exactly
-    // once from exactly one thread (since UsdIn is multithreaded).
-    static std::once_flag s_onceFlag;
-    std::call_once(
-        s_onceFlag,
-        [&]() { _FillShaderIdToRenderTarget(s_shaderIdToRenderTarget); });
+    // Namespaced is the first priority. Currently, only Arnold uses namespaced shader ID such as
+    // "arnold:clump". It's uncertain whether other renderers will use it.
+    if (TfTokenVector tokens = SdfPath::TokenizeIdentifierAsTokens(shaderId); tokens.size() == 2u)
+    {
+        const std::string& renderTarget = tokens[0].GetString();
+        const std::string& shaderType = tokens[1].GetString();
+        return {renderTarget, shaderType};
+    }
 
     // Other threads can only get here once the lucky thread has filled the map.
-    auto it = s_shaderIdToRenderTarget.find(shaderId);
-    return (it == s_shaderIdToRenderTarget.end()) ? std::string() : it->second;
+    std::string renderTarget = defaultRenderTarget;
+    std::call_once(s_onceFlag, [&]() { _FillShaderIdToRenderTarget(s_shaderIdToRenderTarget); });
+    if (auto it = s_shaderIdToRenderTarget.find(shaderId); it != s_shaderIdToRenderTarget.end())
+    {
+        const std::vector<std::string>& renderTargets = it->second;
+        if (renderTargets.size() >= 1u &&
+            std::find(renderTargets.begin(), renderTargets.end(), defaultRenderTarget) ==
+                renderTargets.end())
+        {
+            renderTarget = renderTargets[0];
+        }
+    }
+    return {renderTarget, shaderId};
 }
 
 // NOTE: the Ris codepath doesn't use the interfaceBuilder
-std::string
-_CreateShadingNode(
-        UsdPrim shadingNode,
-        double currentTime,
-        FnKat::GroupBuilder& nodesBuilder,
-        FnKat::GroupBuilder& interfaceBuilder,
-        FnKat::GroupBuilder& layoutBuilder,
-        const std::string & targetName,
-        bool flatten)
+std::string _CreateShadingNode(UsdPrim shadingNode,
+                               double currentTime,
+                               FnKat::GroupBuilder& nodesBuilder,
+                               FnKat::GroupBuilder& interfaceBuilder,
+                               FnKat::GroupBuilder& layoutBuilder,
+                               const ShadingNodeTraversalData& traversalData,
+                               bool flatten)
 {
     std::string handle = UsdKatanaUtils::GenerateShadingNodeHandle(shadingNode);
     if (handle.empty()) {
@@ -795,19 +858,7 @@ _CreateShadingNode(
     }
 
     FnKat::GroupBuilder shdNodeBuilder;
-    std::string id;
-
     UsdShadeShader shaderSchema = UsdShadeShader(shadingNode);
-    if (shaderSchema)
-    {
-        TfToken tokenId;
-        shaderSchema.GetIdAttr().Get(&tokenId, currentTime);
-        const std::string& idString = tokenId.GetString();
-        // Check for namespaced Id's like arnold:standard_surface
-        auto idx = idString.rfind(":");
-        id = idx != std::string::npos ? idString.substr(idx + 1) : idString;
-        shdNodeBuilder.set("type", FnKat::StringAttribute(id));
-    }
 
     // We gather shading parameters even if shaderSchema is invalid; we need to
     // get connection attributes for the enclosing network material.  Moreover
@@ -817,8 +868,10 @@ _CreateShadingNode(
     FnKat::GroupBuilder connectionsBuilder;
     std::vector<std::string> connectionsList;
     std::vector<std::string> returnConnectionsList;
+    ShadingNodeTraversalData curStackData{traversalData};
     if (shadingGroup)
     {
+        curStackData.isMaterial = bool{materialPrim};
         _GatherShadingParameters(shadingGroup,
                                  handle,
                                  currentTime,
@@ -829,7 +882,7 @@ _CreateShadingNode(
                                  connectionsBuilder,
                                  connectionsList,
                                  returnConnectionsList,
-                                 targetName,
+                                 curStackData,
                                  flatten);
     }
     else
@@ -844,7 +897,7 @@ _CreateShadingNode(
                                  connectionsBuilder,
                                  connectionsList,
                                  returnConnectionsList,
-                                 targetName,
+                                 curStackData,
                                  flatten);
     }
 
@@ -868,14 +921,17 @@ _CreateShadingNode(
 
     _ReadLayoutAttrs(shadingNode, handle, layoutBuilder);
 
-    std::string target = targetName;
+    std::string shaderType;
+    std::string target = traversalData.target;
     if (shaderSchema)
     {
-        const std::string result = _GetRenderTarget(id);
-        if (!result.empty())
+        std::tie(target, shaderType) =
+            _GetRenderTargetAndShaderType(shaderSchema, traversalData.target);
+        if (traversalData.targetOverwritten)
         {
-            target = result;
+            target = traversalData.target;
         }
+        shdNodeBuilder.set("type", FnKat::StringAttribute(shaderType));
 
         if (flatten || !UsdKatana_IsPrimDefFromBaseMaterial(shadingNode))
         {
@@ -897,7 +953,7 @@ _CreateShadingNode(
     if (shdNodeAttr.getNumberOfChildren() > 0)
     {
         nodeSpecificBuilder.set("name", shdNodeAttr.getChildByName("name"));
-        nodeSpecificBuilder.set("shaderType", FnKat::StringAttribute(id));
+        nodeSpecificBuilder.set("shaderType", FnKat::StringAttribute(shaderType));
         nodeSpecificBuilder.set("target", shdNodeAttr.getChildByName("target"));
     }
 
@@ -981,9 +1037,9 @@ _CreateEnclosingNetworkMaterialLayout(
     const std::string & targetName,
     bool flatten)
 {
+    ShadingNodeTraversalData data{targetName};
     std::string handle = _CreateShadingNode(
-        materialPrim, currentTime, nodesBuilder, interfaceBuilder,
-        layoutBuilder, targetName, flatten);
+        materialPrim, currentTime, nodesBuilder, interfaceBuilder, layoutBuilder, data, flatten);
 
     // Remove from material.nodes, as there is no accompanying shading node.
     nodesBuilder.del(handle);
@@ -1003,13 +1059,11 @@ _CreateEnclosingNetworkMaterialLayout(
     return handle;
 }
 
-FnKat::Attribute
-_GetMaterialAttr(
-        const UsdShadeMaterial& materialSchema,
-        double currentTime,
-        const std::string& targetName,
-        const bool prmanOutputTarget,
-        bool flatten)
+FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
+                                  double currentTime,
+                                  const std::string& defaultTargetName,
+                                  const bool prmanOutputTarget,
+                                  bool flatten)
 {
     UsdPrim materialPrim = materialSchema.GetPrim();
 
@@ -1028,13 +1082,18 @@ _GetMaterialAttr(
     // RSL SECTION
     /////////////////
 
+    ShadingNodeTraversalData prmanData{"prman"};
     // look for surface
     UsdShadeShader surfaceShader = riMaterialAPI.GetSurface(
             /*ignoreBaseMaterial*/ not flatten);
     if (surfaceShader.GetPrim()) {
-        std::string handle = _CreateShadingNode(
-            surfaceShader.GetPrim(), currentTime,
-            nodesBuilder, interfaceBuilder, layoutBuilder, "prman", flatten);
+        std::string handle = _CreateShadingNode(surfaceShader.GetPrim(),
+                                                currentTime,
+                                                nodesBuilder,
+                                                interfaceBuilder,
+                                                layoutBuilder,
+                                                prmanData,
+                                                flatten);
 
         terminalsBuilder.set("prmanBxdf",
                                 FnKat::StringAttribute(handle));
@@ -1046,11 +1105,14 @@ _GetMaterialAttr(
     UsdShadeShader displacementShader = riMaterialAPI.GetDisplacement(
             /*ignoreBaseMaterial*/ not flatten);
     if (displacementShader.GetPrim()) {
-        std::string handle = _CreateShadingNode(
-            displacementShader.GetPrim(), currentTime,
-            nodesBuilder, interfaceBuilder, layoutBuilder, "prman", flatten);
-        terminalsBuilder.set("prmanDisplacement",
-                             FnKat::StringAttribute(handle));
+        std::string handle = _CreateShadingNode(displacementShader.GetPrim(),
+                                                currentTime,
+                                                nodesBuilder,
+                                                interfaceBuilder,
+                                                layoutBuilder,
+                                                prmanData,
+                                                flatten);
+        terminalsBuilder.set("prmanDisplacement", FnKat::StringAttribute(handle));
     }
 
     /////////////////
@@ -1102,11 +1164,14 @@ _GetMaterialAttr(
                 std::string terminalName = rel.GetName();
                 terminalName = terminalName.substr(terminalName.find(':')+1);
 
-                std::string handle = _CreateShadingNode(
-                    patternPrim, currentTime, nodesBuilder,
-                    interfaceBuilder, layoutBuilder, "prman", flatten);
-                terminalsBuilder.set("prmanCustom_"+terminalName,
-                    FnKat::StringAttribute(handle));
+                std::string handle = _CreateShadingNode(patternPrim,
+                                                        currentTime,
+                                                        nodesBuilder,
+                                                        interfaceBuilder,
+                                                        layoutBuilder,
+                                                        prmanData,
+                                                        flatten);
+                terminalsBuilder.set("prmanCustom_" + terminalName, FnKat::StringAttribute(handle));
                 terminalsBuilder.set("prmanCustom_"+terminalName+"Port",
                     FnKat::StringAttribute(patternPort));
             }
@@ -1129,7 +1194,7 @@ _GetMaterialAttr(
     // into the schema?
 
     std::vector<UsdShadeOutput> materialOutputs = materialSchema.GetOutputs();
-
+    std::string targetName = defaultTargetName;
     for (auto& materialOutput : materialOutputs)
     {
         if (materialOutput.HasConnectedSource())
@@ -1142,11 +1207,18 @@ _GetMaterialAttr(
                 continue;
             }
 
-            std::string katanaTerminalName = _GetKatanaTerminalName(
-                materialOutTerminalName.GetString());
+            auto [katanaTerminalName, terminalTargetName] =
+                _GetKatanaTerminalName(materialOutTerminalName.GetString());
             if (katanaTerminalName.empty())
             {
                 continue;
+            }
+
+            if (terminalTargetName != "usd")
+            {
+                // If multiple outputs specify different targets, we'll just use the last one
+                // encountered. Not ideal.
+                targetName = terminalTargetName;
             }
 
             UsdShadeConnectableAPI materialOutSource;
@@ -1172,6 +1244,7 @@ _GetMaterialAttr(
 
     std::stack<UsdPrim> dfs;
     dfs.push(materialPrim);
+    ShadingNodeTraversalData traversalData{targetName};
     while (!dfs.empty()) {
         UsdPrim curr = dfs.top();
         dfs.pop();
@@ -1189,9 +1262,13 @@ _GetMaterialAttr(
                 // relying on traversing the bxdf.
                 // We can remove this once the "derives" usd composition
                 // works, along with partial composition
-                std::string handle = _CreateShadingNode(
-                    curr, currentTime, nodesBuilder, interfaceBuilder,
-                    layoutBuilder, targetName, flatten);
+                std::string handle = _CreateShadingNode(curr,
+                                                        currentTime,
+                                                        nodesBuilder,
+                                                        interfaceBuilder,
+                                                        layoutBuilder,
+                                                        traversalData,
+                                                        flatten);
             }
 
             if (!curr.IsA<UsdGeomScope>()) {
@@ -1256,8 +1333,7 @@ _GetMaterialAttr(
             if (UsdShadeMaterial baseMaterial = UsdShadeMaterial::Get(stage, baseMaterialPath)) {
                 // Make a fake context to grab parent data, and recurse on that
                 FnKat::GroupAttribute parentMaterial = _GetMaterialAttr(
-                    baseMaterial, currentTime, targetName,
-                    prmanOutputTarget, true);
+                    baseMaterial, currentTime, defaultTargetName, prmanOutputTarget, true);
                 FnAttribute::GroupBuilder flatMaterialBuilder;
                 flatMaterialBuilder.update(parentMaterial);
                 flatMaterialBuilder.deepUpdate(localMaterialAttr);
