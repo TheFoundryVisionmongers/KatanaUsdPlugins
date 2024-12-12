@@ -293,6 +293,10 @@ FnKat::Attribute UsdKatanaUtils::ConvertVtValueToKatAttr(const VtValue& val, boo
     if (val.IsHolding<int>()) {
         return FnKat::IntAttribute(val.UncheckedGet<int>());
     }
+    if (val.IsHolding<uint32_t>()) {
+        // Lossy translation of 32bit unsigned int to int
+        return FnKat::IntAttribute(static_cast<int>(val.UncheckedGet<uint32_t>()));
+    }
     if (val.IsHolding<float>()) {
         return FnKat::FloatAttribute(val.UncheckedGet<float>());
     }

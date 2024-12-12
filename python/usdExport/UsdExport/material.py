@@ -252,6 +252,10 @@ def CreateEmptyShaders(stage, materialNodes, materialPath):
         shader = UsdShade.Shader.Define(stage, shaderPath)
         shaderIdAttr = materialNode.getChildByName("type")
         shaderId = str(shaderIdAttr.getValue())
+        # Special case for Arnold
+        targetAttr = materialNode.getChildByName("target")
+        if targetAttr.getValue() == "arnold":
+            shaderId = f"arnold:{shaderId}"
         shader.SetShaderId(shaderId)
 
 
@@ -288,7 +292,7 @@ def AddTerminals(stage, terminals, material):
         # If we understand the renderer, use the render context
         # appropriate to it
         if terminalName.startswith("usd"):
-            outputPrefix = "glslfx:"
+            # Don't prefix the output, and leave target type deduction to other means.
             outputType = terminalName[3:].lower()
         elif terminalName.startswith("prman"):
             outputPrefix = "ri:"
@@ -393,7 +397,8 @@ def AddParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
         log.warning('Unable to find shaderId, and sdfType is not provided for '
                     'shaderParamName:%s', shaderParamName)
     if sdfType is None:
-        sdfType = GetShaderAttrSdfType(shaderId, shaderParamName,
+        shaderType = _ShaderIdToShaderType(shaderId)
+        sdfType = GetShaderAttrSdfType(shaderType, shaderParamName,
                                        isOutput=False)
         if sdfType is None:
             log.debug('Unable to find input port "%s" on input '
@@ -409,6 +414,10 @@ def AddParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
             # Used in properties such as the texcoordreader inputs,
             # but the sdftype of 'string' does not work, so force to a token
             sdfType = Sdf.ValueTypeNames.Token
+        if paramName in ("ramp_Knots", "ramp_Floats", "ramp_Colors"):
+            # Special case for some ramp shaders where neither the sdr registry
+            # nor the info shader tags give us the correct sdf type
+            sdfType = Sdf.ValueTypeNames.FloatArray
         if sdfType is None:
             log.warning('Unable to find an Sdf conversion of '
                         'shader:%s and param:%s', shaderId, paramName)
@@ -424,6 +433,13 @@ def AddParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
         shaderInput.Set(paramValue)
         return shaderInput
     return None
+
+def _ShaderIdToShaderType(shaderId):
+    idTokens = Sdf.Path.TokenizeIdentifier(shaderId)
+    # Only Arnold uses namespaced ShaderID now
+    if len(idTokens) == 2:
+        return idTokens[1]
+    return shaderId
 
 def _EncodePortName(name):
     """
@@ -478,7 +494,7 @@ def _GetConnectionInputPort(shaderNode, portName):
     return None
 
 
-def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shaderPath,
+def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shader,
                           connectionPrefix=None):
     """
     Adds the shader connections from C{connectionsAttr}, recursing if necessary
@@ -487,21 +503,21 @@ def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shaderPath,
     @type stage: C{Usd.Stage}
     @type connectionsAttr: C{FnAttribute.GroupAttribute}
     @type materialPath: C{Sdf.Path}
-    @type shaderPath: C{Sdf.Path}
+    @type shader: C{UsdShade.Shader}
     @type connectionPrefix: C{str} or C{None}
     @rtype: C{list} of C{str}
     @param stage: The USD stage to write into.
     @param connectionsAttr: The C{GroupAttribute} to read connections from.
     @param materialPath: The USD path for the material containing
         ``shaderNode``.
-    @param shaderPath: The USD path for the shader to add connections to.
+    @param shader: The USD Prim for the shader to add connections to.
     @param connectionPrefix: A string prepended to port names when recursing.
     @return: The port order for ``shaderNode``.
     """
     if not isinstance(connectionsAttr, FnAttribute.GroupAttribute):
         log.warning("Connections attribute for '%s' is malformed.",
                     materialPath)
-        return
+        return None
 
     portOrder = []
     for childName, childAttr in connectionsAttr.childList():
@@ -515,7 +531,7 @@ def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shaderPath,
         if isinstance(childAttr, FnAttribute.GroupAttribute):
             portOrder.extend(
                 _ReadConnectionsGroup(stage, childAttr, materialPath,
-                                      shaderPath, connectionName))
+                                      shader, connectionName))
         elif isinstance(childAttr, FnAttribute.StringAttribute):
             connection = childAttr.getValue()
 
@@ -536,19 +552,19 @@ def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shaderPath,
             # Currently we cannot be sure that the connectionName such as
             # out.r is in the SdrRegistry.
             portConnectionSdfType = GetShaderAttrSdfType(
-                shaderPath.GetShaderId(), connectionName, isOutput=False)
+                _ShaderIdToShaderType(shader.GetShaderId()), connectionName, isOutput=False)
             if portConnectionSdfType is None:
                     log.warning(
                         'Unable to find input port for connection "%s".',
                         connection)
                     continue
             connectionName = _EncodePortName(connectionName)
-            inputPort = shaderPath.CreateInput(
+            inputPort = shader.CreateInput(
                 connectionName, portConnectionSdfType)
 
             # We need to specify the output type of the source, or it inherits
             # the input type.
-            sourceSdfType = GetShaderAttrSdfType(outputShader.GetShaderId(),
+            sourceSdfType = GetShaderAttrSdfType(_ShaderIdToShaderType(outputShader.GetShaderId()),
                                                  outputPortName,
                                                  isOutput=True)
             if not sourceSdfType:
@@ -569,12 +585,12 @@ def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shaderPath,
         else:
             log.warning(
                 'Connections attribute for "%s" is malformed; expected a '
-                'StringAttribute or a GroupuAttribute.', materialPath)
+                'StringAttribute or a GroupAttribute.', materialPath)
 
     return portOrder
 
 
-def AddShaderConnections(stage, connectionsAttr, materialPath, shaderPath):
+def AddShaderConnections(stage, connectionsAttr, materialPath, shader):
     """
     Adds the connections between the shaders from the
     C{material.nodes.<nodeName>.connections} attribute. The shaders must be
@@ -585,21 +601,19 @@ def AddShaderConnections(stage, connectionsAttr, materialPath, shaderPath):
     @type stage: C{Usd.Stage}
     @type connectionsAttr: C{FnAttribute.GroupAttribute}
     @type materialPath: C{Sdf.Path}
-    @type shaderPath: C{Sdf.Path}
+    @type shader: C{UsdShade.Shader}
     @param stage: The Usd stage to write to.
     @param connectionsAttr: The material.nodes.<nodeName>.connections Katana
         attribute to read the connection information from.
     @param materialPath: The USD path for the material for this shader and the
         shader it will connect to.
-    @param shaderPath: The USD path for the shader to add the connection to.
+    @param shader: The USD Prim for the shader to add the connection to.
     """
-    shaderId = shaderPath.GetShaderId()
-
     # In Katana, the order of ports can be important, e.g. NetworkMaterialEdit
     # and Switch nodes.
     portOrder = _ReadConnectionsGroup(
-        stage, connectionsAttr, materialPath, shaderPath)
-    shaderPath.GetPrim().SetPropertyOrder(portOrder)
+        stage, connectionsAttr, materialPath, shader)
+    shader.GetPrim().SetPropertyOrder(portOrder)
 
 
 def OverwriteMaterialInterfaces(parametersAttr, material, parentMaterial):
@@ -672,6 +686,7 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
         sourceShaderPath = material.GetPath().AppendChild(sourceShaderName)
         sourceShader = UsdShade.Shader.Get(stage, sourceShaderPath)
         shaderId = sourceShader.GetShaderId()
+        shaderType = _ShaderIdToShaderType(shaderId)
         #Save the parameter name so we can find it in the parameters attribute.
         parameterName = interfaceName
 
@@ -684,7 +699,7 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
                     paramName=interfaceName)
 
         if not materialPort:
-            sdfType = GetShaderAttrSdfType(shaderId, sourceParamName,
+            sdfType = GetShaderAttrSdfType(shaderType, sourceParamName,
                                            isOutput=False)
             #Default to Token Type if not found.
             if sdfType is None:
@@ -698,7 +713,7 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
                 value = sourceShaderPort.Get()
                 materialPort.Set(value)
             else:
-                shaderNode = GetShaderNodeFromRegistry(shaderId)
+                shaderNode = GetShaderNodeFromRegistry(shaderType)
                 if shaderNode:
                     shaderNodeInput = shaderNode.GetInput(sourceParamName)
                     materialPort.Set(shaderNodeInput.GetDefaultValue())

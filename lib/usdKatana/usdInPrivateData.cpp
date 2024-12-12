@@ -29,6 +29,7 @@
 //
 #include "usdKatana/usdInPrivateData.h"
 #include <string>
+#include <utility>
 #include "pxr/pxr.h"
 #include "usdKatana/utils.h"
 
@@ -367,7 +368,8 @@ UsdKatanaUsdInPrivateData::UsdKatanaUsdInPrivateData(const UsdPrim& prim,
     {
         _collectionQueryCache = parentData->_collectionQueryCache;
         _bindingsCache = parentData->_bindingsCache;
-        
+
+        _instancePrototypeMapping = parentData->_instancePrototypeMapping;
     }
 
     if (!_collectionQueryCache)
@@ -376,10 +378,14 @@ UsdKatanaUsdInPrivateData::UsdKatanaUsdInPrivateData(const UsdPrim& prim,
                 new UsdShadeMaterialBindingAPI::CollectionQueryCache);
     }
 
-    if (!_bindingsCache)
+    TfTokenVector purposes = _usdInArgs->GetMaterialBindingPurposes();
+    if (std::find(purposes.begin(), purposes.end(), UsdShadeTokens->allPurpose) == purposes.end())
     {
-        _bindingsCache.reset(
-            new UsdShadeMaterialBindingAPI::BindingsCache);
+        purposes.emplace_back(UsdShadeTokens->allPurpose);
+    }
+    for (const TfToken& purpose : purposes)
+    {
+        _bindingsCache[purpose].reset(new UsdShadeMaterialBindingAPI::BindingsCache);
     }
 
     _evaluateUsdSkelBindings = _usdInArgs->GetEvaluateUsdSkelBindings();
@@ -758,15 +764,28 @@ UsdKatanaUsdInPrivateData::GetCollectionQueryCache() const
    
 }
 
-UsdShadeMaterialBindingAPI::BindingsCache* UsdKatanaUsdInPrivateData::GetBindingsCache() const
+UsdShadeMaterialBindingAPI::BindingsCache* UsdKatanaUsdInPrivateData::GetBindingsCache(
+    const TfToken& purpose) const
 {
-    return _bindingsCache.get();
+    auto purposeBindings = _bindingsCache.find(purpose);
+    return purposeBindings != _bindingsCache.end() ? purposeBindings->second.get() : nullptr;
 }
 
 UsdKatanaUsdInPrivateData* UsdKatanaUsdInPrivateData::GetPrivateData(
     const FnKat::GeolibCookInterface& interface)
 {
     return static_cast<UsdKatanaUsdInPrivateData*>(interface.getPrivateData());
+}
+
+void UsdKatanaUsdInPrivateData::setInstancePrototypeMapping(
+    FnAttribute::GroupAttribute instancePrototypeMapping)
+{
+    _instancePrototypeMapping = std::move(instancePrototypeMapping);
+}
+
+const FnKat::GroupAttribute& UsdKatanaUsdInPrivateData::getInstancePrototypeMapping() const
+{
+    return _instancePrototypeMapping;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

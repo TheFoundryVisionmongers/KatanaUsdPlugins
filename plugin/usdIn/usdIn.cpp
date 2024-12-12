@@ -366,6 +366,12 @@ public:
                                                                      usdInArgs, privateData));
                 privateData = localPrivateData.get();
             }
+            if (FnAttribute::GroupAttribute prototypeMapping =
+                    additionalOpArgs.getChildByName("prototypeMapping");
+                prototypeMapping.isValid())
+            {
+                privateData->setInstancePrototypeMapping(prototypeMapping);
+            }
         }
         // Validate usdInArgs.
         if (!usdInArgs) {

@@ -113,10 +113,10 @@ namespace
     }
 }  // namespace
 
-SdfLayerRefPtr& 
-UsdKatanaCache::_FindOrCreateSessionLayer(
-    FnAttribute::GroupAttribute sessionAttr,
-    const std::string& rootLocation) {
+SdfLayerRefPtr& UsdKatanaCache::_FindOrCreateSessionLayer(FnAttribute::GroupAttribute sessionAttr,
+                                                          const std::string& rootLocation,
+                                                          const std::string& isolatePath)
+{
     // Grab a reader lock for reading the _sessionKeyCache
     boost::upgrade_lock<boost::upgrade_mutex>
                 readerLock(UsdKatanaGetSessionCacheLock());
@@ -157,11 +157,8 @@ UsdKatanaCache::_FindOrCreateSessionLayer(
             {
                 continue;
             }
-            
-            
-            std::string primPath = pystring::slice(entryName,
-                    rootLocation.size());
-            
+
+            const SdfPath varSelPath(isolatePath + pystring::slice(entryName, rootLocation.size()));
             for (int64_t i = 0, e = entryVariantSets.getNumberOfChildren();
                     i != e; ++i)
             {
@@ -173,13 +170,8 @@ UsdKatanaCache::_FindOrCreateSessionLayer(
                 {
                     continue;
                 }
-                
-                std::string variantSetSelection =
-                        variantValueAttr.getValue("", false);
-                
-                SdfPath varSelPath(primPath);
-                
-                
+
+                const std::string variantSetSelection = variantValueAttr.getValue("", false);
                 SdfPrimSpecHandle spec = SdfCreatePrimInLayer(
                         sessionLayer, varSelPath.GetPrimPath());
                 if (spec)
@@ -213,14 +205,11 @@ UsdKatanaCache::_FindOrCreateSessionLayer(
             {
                 continue;
             }
-            
-            std::string primPath = pystring::slice(entryName,
-                    rootLocation.size());
-            
-            SdfPath varSelPath(primPath);
-            
-            SdfPrimSpecHandle spec = SdfCreatePrimInLayer(
-                        sessionLayer, varSelPath.GetPrimPath());
+
+            const SdfPath activationsPath(isolatePath +
+                                          pystring::slice(entryName, rootLocation.size()));
+            SdfPrimSpecHandle spec =
+                SdfCreatePrimInLayer(sessionLayer, activationsPath.GetPrimPath());
             spec->SetActive(stateAttr.getValue());
         }
         
@@ -240,15 +229,9 @@ UsdKatanaCache::_FindOrCreateSessionLayer(
             {
                 continue;
             }
-            
-            std::string primPath = pystring::slice(entryName,
-                    rootLocation.size());
-            
-            SdfPath varSelPath(primPath);
-            
-            SdfPrimSpecHandle spec = SdfCreatePrimInLayer(
-                        sessionLayer, varSelPath.GetPrimPath());
-            
+
+            const SdfPath attrsPath(isolatePath + pystring::slice(entryName, rootLocation.size()));
+            SdfPrimSpecHandle spec = SdfCreatePrimInLayer(sessionLayer, attrsPath.GetPrimPath());
             if (!spec)
             {
                 continue;
@@ -334,15 +317,10 @@ UsdKatanaCache::_FindOrCreateSessionLayer(
             {
                 continue;
             }
-            
-            std::string primPath = pystring::slice(entryName,
-                    rootLocation.size());
-            
-            SdfPath varSelPath(primPath);
-            
-            SdfPrimSpecHandle spec = SdfCreatePrimInLayer(
-                        sessionLayer, varSelPath.GetPrimPath());
-            
+
+            const SdfPath metadataPath(isolatePath +
+                                       pystring::slice(entryName, rootLocation.size()));
+            SdfPrimSpecHandle spec = SdfCreatePrimInLayer(sessionLayer, metadataPath.GetPrimPath());
             if (!spec)
             {
                 continue;
@@ -466,7 +444,6 @@ UsdKatanaCache::_FindOrCreateSessionLayer(
     
     return _sessionKeyCache[cacheKey];
 }
-
 
 /* static */
 void
@@ -683,7 +660,7 @@ UsdStageRefPtr UsdKatanaCache::GetStage(
 
     if (SdfLayerRefPtr rootLayer = SdfLayer::FindOrOpen(fileName)) {
         SdfLayerRefPtr& sessionLayer =
-                _FindOrCreateSessionLayer(sessionAttr, sessionRootLocation);
+            _FindOrCreateSessionLayer(sessionAttr, sessionRootLocation, isolatePath);
 
         UsdStageCache& stageCache = UsdUtilsStageCache::Get();
 
@@ -750,9 +727,7 @@ UsdKatanaCache::GetUncachedStage(std::string const& fileName,
 
     if (SdfLayerRefPtr rootLayer = SdfLayer::FindOrOpen(fileName)) {
         SdfLayerRefPtr& sessionLayer =
-                _FindOrCreateSessionLayer(sessionAttr, sessionRootLocation);
-        
-        
+            _FindOrCreateSessionLayer(sessionAttr, sessionRootLocation, isolatePath);
         UsdStagePopulationMask mask;
         FillPopulationMaskFromSessionAttr(sessionAttr, sessionRootLocation, isolatePath, mask);
 

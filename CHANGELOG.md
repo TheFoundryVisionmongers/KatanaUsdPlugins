@@ -1,5 +1,17 @@
 # Change List
 
+
+# 22.05_fn4
+
+- ID-565975 - Target renderers explicitly or implicitly specified in USD shader nodes were not always respected when importing the shader nodes through a UsdIn node.
+- ID-580075 - perhaps not?
+- ID-569853 - Some attributes from Arnold's ramp_rbg shaders were not exported correctly from the UsdMaterialBake node.
+- ID-574279 - Attributes of type `uint` were not imported into Katana via KatanaUsdPlugins. Lossy conversion has been added to import `uint` Attributes as IntAttributes via static casting.
+- ID-539856 - When an instanceable USD Prim with an authored material assignment relationship to an instance proxy child prim was imported through a UsdIn node with the instanceMode parameter set to as sources and instances, the created materialAssign attribute would not be remapped to the instance source created in the Prototypes scene graph location.
+- ID-564412 - When importing USD scenes with varying time samples using UsdIn node, the attributes would sometimes display inaccurately, affecting the scene's visual fidelity and animation accuracy.
+- ID-532860 - When the usePurposeBasedMaterialBindings parameter on the UsdIn node was enabled and one or more additionalBindingPurposeNames were set, setting a corresponding purpose on a downstream UsdInResolveMaterialBindings node would not assign the material bound to the set purpose.
+- ID-505195 - The isolatePath parameter on the UsdIn node would not work in conjunction with a downstream UsdInVariantSet, UsdInActivationSet or UsdInAttributeSet node.
+
 # 22.05_fn3
 
 ## Feature Enhancements
