@@ -1,5 +1,10 @@
 # Change List
 
+
+# 23.05_fn3
+
+- ID-561394 - Fixed issue caused by ID-547170 where Materials with promoted parameters exported with UsdMaterialBake do not render correctly.
+
 # 23.05_fn2
 
 ## Feature Enhancements

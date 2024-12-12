@@ -308,8 +308,14 @@ static void _ProcessShaderConnections(const UsdPrim& prim,
             UsdPrim sourcePrim = source.GetPrim();
             if (sourceType != UsdShadeAttributeType::Output)
             {
-                if (!sourcePrim.IsA<UsdShadeNodeGraph>() && !sourcePrim.IsA<UsdShadeMaterial>())
+                if (sourcePrim.IsA<UsdShadeMaterial>())
+                {
                     continue;
+                }
+                if (!sourcePrim.IsA<UsdShadeNodeGraph>() && !sourcePrim.IsA<UsdShadeMaterial>())
+                {
+                    continue;
+                }
             }
 
             const std::string layoutTargetHandle = _CreateShadingNode(sourcePrim,

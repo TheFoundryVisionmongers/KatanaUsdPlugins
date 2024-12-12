@@ -24,19 +24,20 @@ __all__ = ['BaseUsdExportPlugin']
 
 class BaseUsdExportPlugin(object):
     """
-    A Plug-in Class to assist in setting up your USD Export custom logic.
-    Use this as a base class and ensure that you override the WritePrim.
-    You may register a plug-in to multiple Types of location if it applies
-    to many location types. See the C{RegisterUsdExportPlugin} function
+    A plug-in class to assist in setting up your USD Export custom logic.
+    Use this as a base class and ensure that you override `WritePrim()`.
+    You may register a plug-in to multiple types of locations if it applies
+    to many location types. See the `RegisterUsdExportPlugin()` function
     for more details.
 
-    @type priority: C{int}
-    @cvar priority: An optional value to allow overriding where in the
+    :type priority: `int`
+    :cvar priority: An optional value to allow overriding where in the
         plug-in list your plug-in will be run. Specifically useful if you
         know there is an order you wish your own subset of plug-ins to run
-        in.  Your value must be defined as the default argument to priority.
-        Must be strictly lower than sys.maxint.
+        in. Your value must be defined as the default argument to `priority`.
+        Must be strictly lower than `sys.maxint`.
     """
+
     priority = 0
 
     @staticmethod
