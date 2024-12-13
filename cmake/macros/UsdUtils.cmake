@@ -387,7 +387,6 @@ endfunction() # _get_resources_dir
 function(_plugInfo_subst libTarget pluginToLibraryPath plugInfoPath)
     _get_resources_dir_name(PLUG_INFO_RESOURCE_PATH)
     set(PLUG_INFO_ROOT "..")
-    set(PLUG_INFO_PLUGIN_NAME "${PXR_PY_PACKAGE_NAME}.${libTarget}")
     set(PLUG_INFO_LIBRARY_PATH "${pluginToLibraryPath}")
 
     configure_file(

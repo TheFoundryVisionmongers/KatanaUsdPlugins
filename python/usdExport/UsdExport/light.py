@@ -38,7 +38,7 @@ try:
                                      ConvertParameterValueToGfType)
 except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
-                '"[USD install]/lib/python" in PYTHONPATH?', e.message)
+                '"[USD install]/lib/python" in PYTHONPATH?', str(e))
 
 rendererPrefixMapping = {
     "prman" : "ri",

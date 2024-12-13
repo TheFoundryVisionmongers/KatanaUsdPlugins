@@ -45,7 +45,18 @@ function(add_boost_interface)
             add_definitions(-DBOOST_ALL_NO_LIB)
             add_definitions(-DBOOST_ALL_DYN_LINK)
             set(Boost_ARCHITECTURE -x64)
-            set(Boost_COMPILER -vc141)
+            if(MSVC_VERSION GREATER_EQUAL 1930)
+                set(Boost_COMPILER -vc143)
+            elseif(MSVC_VERSION GREATER_EQUAL 1920)
+                set(Boost_COMPILER -vc142)
+            elseif(MSVC_VERSION GREATER_EQUAL 1910)
+                set(Boost_COMPILER -vc141)
+            elseif(MSVC_VERSION GREATER_EQUAL 1900)
+                set(Boost_COMPILER -vc140)
+            else()
+                message(FATL_ERROR "Unable to find MSVC version for detecting Boost version in "
+                    "Katana")
+            endif()
         endif()
         add_compile_definitions(Boost_NAMESPACE=${Boost_NAMESPACE})
     endif()
@@ -55,6 +66,7 @@ function(add_boost_interface)
             filesystem
             ${Boost_PYTHON_COMPONENT}
             chrono # Required by thread
+            date_time
             thread
             system
             regex

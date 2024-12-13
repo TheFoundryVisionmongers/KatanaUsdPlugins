@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/KatanaUsdPlugins
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -79,4 +73,7 @@ void wrapUsdKatanaTokens()
     _AddToken(cls, "katanaSuppressGroupToAssemblyPromotion", UsdKatanaTokens->katanaSuppressGroupToAssemblyPromotion);
     _AddToken(cls, "katanaType", UsdKatanaTokens->katanaType);
     _AddToken(cls, "katanaVisible", UsdKatanaTokens->katanaVisible);
+    _AddToken(cls, "BlindDataObject", UsdKatanaTokens->BlindDataObject);
+    _AddToken(cls, "ChildMaterialAPI", UsdKatanaTokens->ChildMaterialAPI);
+    _AddToken(cls, "KatanaLightAPI", UsdKatanaTokens->KatanaLightAPI);
 }

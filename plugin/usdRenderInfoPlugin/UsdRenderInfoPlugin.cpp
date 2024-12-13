@@ -171,6 +171,7 @@ ShaderWidgetInfo GetWidgetInfoFromShaderInputProperty(
 
         static const std::map<std::string, std::string> widgetTypes = {
             {"std::string", "string"},
+            {"TfToken", "string"},
             {"SdfAssetPath", "assetIdInput"},
             {"float", "number"},
             {"int", "number"}};
@@ -366,7 +367,14 @@ void UsdRenderInfoPlugin::fillShaderTagsFromUsdShaderProperty(
     if (sdfTypePair.second.IsEmpty())
     {
         // Scenario 1
-        sdfType = sdfTypePair.first.GetType().GetTypeName();
+        if (isOutput && shaderProperty->GetType().GetString() == "terminal")
+        {
+            sdfType = shaderProperty->GetName();
+        }
+        else
+        {
+            sdfType = sdfTypePair.first.GetType().GetTypeName();
+        }
     }
     else
     {

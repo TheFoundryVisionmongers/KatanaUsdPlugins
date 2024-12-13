@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/KatanaUsdPlugins
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -27,116 +21,88 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "usdKatana/katanaLightAPI.h"
+#include "usdKatana/childMaterialAPI.h"
+#include "pxr/usd/usd/schemaRegistry.h"
+#include "pxr/usd/usd/typed.h"
 
-#include <pxr/usd/sdf/assetPath.h>
-#include <pxr/usd/sdf/types.h>
-#include <pxr/usd/usd/schemaRegistry.h>
-#include <pxr/usd/usd/tokens.h>
-#include <pxr/usd/usd/typed.h>
+#include "pxr/usd/sdf/assetPath.h"
+#include "pxr/usd/sdf/types.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
 // Register the schema with the TfType system.
 TF_REGISTRY_FUNCTION(TfType)
 {
-    TfType::Define<UsdKatanaKatanaLightAPI,
-        TfType::Bases< UsdAPISchemaBase > >();
-
+    TfType::Define<UsdKatanaChildMaterialAPI, TfType::Bases<UsdAPISchemaBase> >();
 }
 
 /* virtual */
-UsdKatanaKatanaLightAPI::~UsdKatanaKatanaLightAPI()
-{
-}
+UsdKatanaChildMaterialAPI::~UsdKatanaChildMaterialAPI() {}
 
 /* static */
-UsdKatanaKatanaLightAPI
-UsdKatanaKatanaLightAPI::Get(const UsdStagePtr &stage, const SdfPath &path)
+UsdKatanaChildMaterialAPI UsdKatanaChildMaterialAPI::Get(const UsdStagePtr& stage,
+                                                         const SdfPath& path)
 {
     if (!stage) {
         TF_CODING_ERROR("Invalid stage");
-        return UsdKatanaKatanaLightAPI();
+        return UsdKatanaChildMaterialAPI();
     }
-    return UsdKatanaKatanaLightAPI(stage->GetPrimAtPath(path));
+    return UsdKatanaChildMaterialAPI(stage->GetPrimAtPath(path));
 }
 
 
 /* virtual */
-UsdSchemaKind UsdKatanaKatanaLightAPI::_GetSchemaKind() const
+UsdSchemaKind UsdKatanaChildMaterialAPI::_GetSchemaKind() const
 {
-    return UsdKatanaKatanaLightAPI::schemaKind;
+    return UsdKatanaChildMaterialAPI::schemaKind;
 }
 
 /* static */
-bool
-UsdKatanaKatanaLightAPI::CanApply(
-    const UsdPrim &prim, std::string *whyNot)
+bool UsdKatanaChildMaterialAPI::CanApply(const UsdPrim& prim, std::string* whyNot)
 {
-    return prim.CanApplyAPI<UsdKatanaKatanaLightAPI>(whyNot);
+    return prim.CanApplyAPI<UsdKatanaChildMaterialAPI>(whyNot);
 }
 
 /* static */
-UsdKatanaKatanaLightAPI
-UsdKatanaKatanaLightAPI::Apply(const UsdPrim &prim)
+UsdKatanaChildMaterialAPI UsdKatanaChildMaterialAPI::Apply(const UsdPrim& prim)
 {
-    if (prim.ApplyAPI<UsdKatanaKatanaLightAPI>()) {
-        return UsdKatanaKatanaLightAPI(prim);
+    if (prim.ApplyAPI<UsdKatanaChildMaterialAPI>())
+    {
+        return UsdKatanaChildMaterialAPI(prim);
     }
-    return UsdKatanaKatanaLightAPI();
+    return UsdKatanaChildMaterialAPI();
 }
 
 /* static */
-const TfType &
-UsdKatanaKatanaLightAPI::_GetStaticTfType()
+const TfType& UsdKatanaChildMaterialAPI::_GetStaticTfType()
 {
-    static TfType tfType = TfType::Find<UsdKatanaKatanaLightAPI>();
+    static TfType tfType = TfType::Find<UsdKatanaChildMaterialAPI>();
     return tfType;
 }
 
 /* static */
-bool
-UsdKatanaKatanaLightAPI::_IsTypedSchema()
+bool UsdKatanaChildMaterialAPI::_IsTypedSchema()
 {
     static bool isTyped = _GetStaticTfType().IsA<UsdTyped>();
     return isTyped;
 }
 
 /* virtual */
-const TfType &
-UsdKatanaKatanaLightAPI::_GetTfType() const
+const TfType& UsdKatanaChildMaterialAPI::_GetTfType() const
 {
     return _GetStaticTfType();
 }
 
-UsdAttribute
-UsdKatanaKatanaLightAPI::GetIdAttr() const
+UsdAttribute UsdKatanaChildMaterialAPI::GetPrimNameAttr() const
 {
-    return GetPrim().GetAttribute(UsdKatanaTokens->katanaId);
+    return GetPrim().GetAttribute(UsdKatanaTokens->katanaPrimName);
 }
 
-UsdAttribute
-UsdKatanaKatanaLightAPI::CreateIdAttr(VtValue const &defaultValue, bool writeSparsely) const
+UsdAttribute UsdKatanaChildMaterialAPI::CreatePrimNameAttr(VtValue const& defaultValue,
+                                                           bool writeSparsely) const
 {
-    return UsdSchemaBase::_CreateAttr(UsdKatanaTokens->katanaId,
-                       SdfValueTypeNames->StringArray,
-                       /* custom = */ false,
-                       SdfVariabilityUniform,
-                       defaultValue,
-                       writeSparsely);
-}
-
-UsdAttribute
-UsdKatanaKatanaLightAPI::GetCenterOfInterestAttr() const
-{
-    return GetPrim().GetAttribute(UsdKatanaTokens->geometryCenterOfInterest);
-}
-
-UsdAttribute
-UsdKatanaKatanaLightAPI::CreateCenterOfInterestAttr(VtValue const &defaultValue, bool writeSparsely) const
-{
-    return UsdSchemaBase::_CreateAttr(UsdKatanaTokens->geometryCenterOfInterest,
-                       SdfValueTypeNames->Double,
+    return UsdSchemaBase::_CreateAttr(UsdKatanaTokens->katanaPrimName,
+                       SdfValueTypeNames->String,
                        /* custom = */ false,
                        SdfVariabilityUniform,
                        defaultValue,
@@ -156,12 +122,10 @@ _ConcatenateAttributeNames(const TfTokenVector& left,const TfTokenVector& right)
 }
 
 /*static*/
-const TfTokenVector&
-UsdKatanaKatanaLightAPI::GetSchemaAttributeNames(bool includeInherited)
+const TfTokenVector& UsdKatanaChildMaterialAPI::GetSchemaAttributeNames(bool includeInherited)
 {
     static TfTokenVector localNames = {
-        UsdKatanaTokens->katanaId,
-        UsdKatanaTokens->geometryCenterOfInterest,
+        UsdKatanaTokens->katanaPrimName,
     };
     static TfTokenVector allNames =
         _ConcatenateAttributeNames(

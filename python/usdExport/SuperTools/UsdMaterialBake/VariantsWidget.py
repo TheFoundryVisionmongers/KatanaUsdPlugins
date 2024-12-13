@@ -129,7 +129,7 @@ class VariantsWidget(QtWidgets.QFrame):
         self.deleteSelectedAction.setEnabled(self.listWidget.currentRow() > -1)
         menu = QtWidgets.QMenu()
         menu.addAction(self.deleteSelectedAction)
-        menu.exec_(QtGui.QCursor.pos())
+        menu.exec(QtGui.QCursor.pos())
 
     # pylint: disable=undefined-variable
     def __onRowMoved(self, parent, start, end, dest, row):

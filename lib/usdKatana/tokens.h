@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/KatanaUsdPlugins
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -40,11 +34,9 @@
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 #include <vector>
-
-#include <pxr/base/tf/staticData.h>
-#include <pxr/base/tf/token.h>
-#include <pxr/pxr.h>
-
+#include "pxr/base/tf/staticData.h"
+#include "pxr/base/tf/token.h"
+#include "pxr/pxr.h"
 #include "usdKatana/api.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -91,8 +83,8 @@ struct UsdKatanaTokensType {
     /// Special token for the usdKatana library.
     const TfToken katanaLooksScopePathSubstring;
     /// \brief "katana:primName"
-    /// 
-    /// UsdKatanaLookAPI
+    ///
+    /// UsdKatanaChildMaterialAPI
     const TfToken katanaPrimName;
     /// \brief "katana:suppressGroupToAssemblyPromotion"
     /// 
@@ -106,6 +98,18 @@ struct UsdKatanaTokensType {
     /// 
     /// UsdKatanaBlindDataObject
     const TfToken katanaVisible;
+    /// \brief "BlindDataObject"
+    ///
+    /// Schema identifer and family for UsdKatanaBlindDataObject
+    const TfToken BlindDataObject;
+    /// \brief "ChildMaterialAPI"
+    ///
+    /// Schema identifer and family for UsdKatanaChildMaterialAPI
+    const TfToken ChildMaterialAPI;
+    /// \brief "KatanaLightAPI"
+    ///
+    /// Schema identifer and family for UsdKatanaKatanaLightAPI
+    const TfToken KatanaLightAPI;
     /// A vector of all of the tokens listed above.
     const std::vector<TfToken> allTokens;
 };

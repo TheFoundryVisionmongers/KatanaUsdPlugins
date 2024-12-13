@@ -1,0 +1,9 @@
+-- glslfx version 0.1
+
+-- configuration
+{
+    "techniques": {
+        "default": {
+        }
+    }
+}

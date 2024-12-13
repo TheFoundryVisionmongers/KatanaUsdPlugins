@@ -33,16 +33,14 @@
 #include <map>
 #include <memory>
 
-#include "pxr/pxr.h"
-#include "usdKatana/usdInArgs.h"
-
-#include "usdKatana/api.h"
-
 #include <pxr/pxr.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usdShade/materialBindingAPI.h>
 
 #include <FnGeolib/op/FnGeolibOp.h>
+
+#include "usdKatana/api.h"
+#include "usdKatana/usdInArgs.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -91,23 +89,16 @@ public:
 
     const SdfPath& GetPrototypePath() const { return _prototypePath; }
 
-    const double GetCurrentTime() const {
-        return _currentTime;
-    }
+    double GetCurrentTime() const { return _currentTime; }
 
-    const double GetShutterOpen() const {
-        return _shutterOpen;
-    }
+    double GetShutterOpen() const { return _shutterOpen; }
 
-    const double GetShutterClose() const {
-        return _shutterClose;
-    }
+    double GetShutterClose() const { return _shutterClose; }
 
-    const bool GetEvaluateUsdSkelBindings() const {
-        return _evaluateUsdSkelBindings;
-    }
+    bool GetEvaluateUsdSkelBindings() const { return _evaluateUsdSkelBindings; }
 
-    const bool hasOutputTarget(const std::string& renderer) const {
+    bool hasOutputTarget(const std::string& renderer) const
+    {
         return _outputTargets.find(renderer) != _outputTargets.end();
     }
 
@@ -120,7 +111,7 @@ public:
     /// UsdIn supports both forward and backward motion blur. Motion
     /// blur is considered backward if multiple samples are requested
     /// and the first specified sample is later than the last sample.
-    const bool IsMotionBackward() const;
+    bool IsMotionBackward() const;
 
     /// \brief Return frame-relative sample times based on how the given
     ///        attribute is sampled with respect to the shutter range.

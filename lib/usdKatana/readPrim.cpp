@@ -855,6 +855,8 @@ FnKat::Attribute UsdKatanaGeomGetPrimvarGroup(const UsdGeomImageable& imageable,
         FnKat::GroupBuilder attrBuilder;
         attrBuilder.set("scope", scopeAttr);
         attrBuilder.set("inputType", inputTypeAttr);
+        // Retain the usd type name so that we can use this attribute when converting back to USD
+        attrBuilder.set("usd.usdType", FnKat::StringAttribute(typeName.GetAsToken().GetString()));
 
         if (!typeName.GetRole().GetString().empty()) {
             attrBuilder.set("usd.role",

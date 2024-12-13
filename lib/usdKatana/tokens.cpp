@@ -1,9 +1,3 @@
-// These files began life as part of the main USD distribution
-// https://github.com/PixarAnimationStudios/USD.
-// In 2019, Foundry and Pixar agreed Foundry should maintain and curate
-// these plug-ins, and they moved to
-// https://github.com/TheFoundryVisionmongers/KatanaUsdPlugins
-// under the same Modified Apache 2.0 license, as shown below.
 //
 // Copyright 2016 Pixar
 //
@@ -42,17 +36,21 @@ UsdKatanaTokensType::UsdKatanaTokensType()
                                              TfToken::Immortal),
       katanaType("katana:type", TfToken::Immortal),
       katanaVisible("katana:visible", TfToken::Immortal),
-      allTokens({
-        geometryCenterOfInterest,
-        katanaId,
-        katanaLooksChildNameExclusionAttrName,
-        katanaLooksScopeName,
-        katanaLooksScopePathSubstring,
-        katanaPrimName,
-        katanaSuppressGroupToAssemblyPromotion,
-        katanaType,
-        katanaVisible
-    })
+      BlindDataObject("BlindDataObject", TfToken::Immortal),
+      ChildMaterialAPI("ChildMaterialAPI", TfToken::Immortal),
+      KatanaLightAPI("KatanaLightAPI", TfToken::Immortal),
+      allTokens({geometryCenterOfInterest,
+                 katanaId,
+                 katanaLooksChildNameExclusionAttrName,
+                 katanaLooksScopeName,
+                 katanaLooksScopePathSubstring,
+                 katanaPrimName,
+                 katanaSuppressGroupToAssemblyPromotion,
+                 katanaType,
+                 katanaVisible,
+                 BlindDataObject,
+                 ChildMaterialAPI,
+                 KatanaLightAPI})
 {
 }
 

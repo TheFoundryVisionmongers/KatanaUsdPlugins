@@ -1,0 +1,31 @@
+#usda 1.0
+(
+    defaultPrim = "root"
+)
+
+def "root" (
+    prepend apiSchemas = ["ListAPI"]
+    kind = "component"
+)
+{
+    rel lightList = [
+        </root/lgt/gaffer/UsdCubeLight>,
+    ]
+    token lightList:cacheBehavior = "consumeAndHalt"
+
+    def "lgt"
+    {
+        def "gaffer"
+        {
+            def Cube "UsdCubeLight" (
+                prepend apiSchemas = ["MeshLightAPI", "ShadowAPI", "ShapingAPI"]
+            )
+            {
+                uniform double geometry:centerOfInterest = 9.340992464287838
+                color3f inputs:color = (0.1, 0.2, 0.3)
+                float inputs:intensity = 40
+                bool inputs:shadow:enable = 1
+            }
+        }
+    }
+}

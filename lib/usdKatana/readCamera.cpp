@@ -210,8 +210,33 @@ void UsdKatanaReadCamera(const UsdGeomCamera& camera,
     // Record isZUp until all code site/nodes that prerotate the camera
     // node to accommodate potential z-Up cameras has been removed.
     geoBuilder.set("isZUp", FnKat::IntAttribute(0));
-    
+
+    const auto& prim = data.GetUsdPrim();
+    const auto coiAttr = prim.GetAttribute(TfToken("centerOfInterest"));
+    if (coiAttr.IsValid())
+    {
+        double coiVal{};
+        coiAttr.Get<double>(&coiVal, currentTime);
+        geoBuilder.set("centerOfInterest", FnKat::DoubleAttribute(coiVal));
+    }
     attrs.set("geometry", geoBuilder.build());
+
+    //
+    // Set the 'info.usd' attributes.
+    //
+
+    FnKat::GroupBuilder usdBuilder;
+    usdBuilder.set("fStop", FnKat::FloatAttribute(cam.GetFStop()));
+    usdBuilder.set("focalLength", FnKat::FloatAttribute(cam.GetFocalLength()));
+    usdBuilder.set("verticalAperture", FnKat::FloatAttribute(cam.GetVerticalAperture()));
+    usdBuilder.set("verticalApertureOffset",
+                   FnKat::FloatAttribute(cam.GetVerticalApertureOffset()));
+    usdBuilder.set("horizontalAperture", FnKat::FloatAttribute(cam.GetHorizontalAperture()));
+    usdBuilder.set("horizontalApertureOffset",
+                   FnKat::FloatAttribute(cam.GetHorizontalApertureOffset()));
+    usdBuilder.set("focusDistance", FnKat::FloatAttribute(cam.GetFocusDistance()));
+
+    attrs.set("info.usdCamera", usdBuilder.build());
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

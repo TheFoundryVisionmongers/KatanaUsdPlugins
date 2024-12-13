@@ -1,0 +1,52 @@
+#usda 1.0
+(
+    "This file describes the Katana USD Attribute Editor schemata for code generation."
+    subLayers = [
+        @usd/schema.usda@
+    ]
+
+)
+
+def "GLOBAL" (
+    customData = {
+        string libraryName = "usdKatanaSchemas"
+        bool skipCodeGeneration = 1
+    }
+)
+{
+}
+
+class "KatanaAttributeEditorAPI" (
+    inherits = </APISchemaBase>
+    doc = """Katana-specific transient attributes that enable manipulator support for usd."""
+)
+{
+    uniform string katana:attributeEditor:exclusiveTo:xform (
+        doc = """A string value that stores the node on which to reflect xform manipulator changes.
+        """
+        customData = {
+            string apiName = "exclusiveToXform"
+        }
+        katanaXformOpName = ""
+        katanaRotationOrder = 0
+        katanaTransformOrder = 0
+    )
+}
+
+class "KatanaUsdCameraAPI" (
+    customData = {
+        token[] apiSchemaAutoApplyTo = ["Camera"]
+        token[] apiSchemaCanOnlyApplyTo = ["Camera"]
+    }
+    inherits = </APISchemaBase>
+    doc = """Katana-specific camera attributes that enable COI support for USD camera."""
+)
+{
+    double centerOfInterest = 20.0 (
+        doc = """Center of interest holds a distance extending from the camera's
+        origin in the direction it is facing. This defines a point at which the
+        camera can be pivoted around or translated towards or away from using
+        Katana's transform tools.
+        """
+    )
+}

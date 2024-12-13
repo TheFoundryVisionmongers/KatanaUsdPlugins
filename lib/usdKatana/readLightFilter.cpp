@@ -117,7 +117,6 @@ void UsdKatanaReadLightFilter(const UsdPrim& filterPrim,
 
     GroupBuilder materialBuilder;
     GroupBuilder filterBuilder;
-    _UsdBuilder usdBuilder = {filterBuilder, currentTime};
 
     // Gather prman statements
     FnKat::GroupBuilder primStatements;

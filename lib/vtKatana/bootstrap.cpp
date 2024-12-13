@@ -42,13 +42,21 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 FnLogSetup("VtKatanaBootstrap");
 
-void VtKatanaBootstrap()
+void VtKatanaBootstrap(const std::string& katanaPath)
 {
     static std::once_flag once;
-    std::call_once(once, []()
+    std::call_once(once, [katanaPath]()
     {
-        // Path of the katana process (without filename).
-        std::string path = TfGetPathName(ArchGetExecutablePath());
+        std::string path; 
+        if (katanaPath.empty())
+        {
+            // Path of the katana process (without filename).
+            path = TfGetPathName(ArchGetExecutablePath());
+        }
+        else
+        {
+            path = katanaPath + "/";
+        }
 
         // FnAttribute::Bootstrap() appends 'bin', so remove it here.
         std::string const binPrefix("bin" ARCH_PATH_SEP);

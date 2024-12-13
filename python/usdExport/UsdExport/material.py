@@ -102,9 +102,9 @@ def WriteChildMaterial(stage, materialSdfPath, materialAttribute,
     if oldestParentMaterial and youngestParentMaterial:
         material.SetBaseMaterial(youngestParentMaterial)
         childName = (materialSdfPath.name)[len(youngestParentSdfPath.name)+1:]
-        katanaLookAPISchema = UsdKatana.LookAPI(materialPrim)
-        katanaLookAPISchema.Apply(materialPrim)
-        katanaLookAPISchema.CreatePrimNameAttr(childName)
+        katanaChildMaterialAPISchema = UsdKatana.ChildMaterialAPI(materialPrim)
+        katanaChildMaterialAPISchema.Apply(materialPrim)
+        katanaChildMaterialAPISchema.CreatePrimNameAttr(childName)
         if materialAttribute:
             parameters = materialAttribute.getChildByName("parameters")
             # We cant add materialInterfaces to child materials in Katana at

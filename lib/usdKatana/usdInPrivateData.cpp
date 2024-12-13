@@ -393,7 +393,7 @@ UsdKatanaUsdInPrivateData::UsdKatanaUsdInPrivateData(const UsdPrim& prim,
     _evaluateUsdSkelBindings = _usdInArgs->GetEvaluateUsdSkelBindings();
 }
 
-const bool UsdKatanaUsdInPrivateData::IsMotionBackward() const
+bool UsdKatanaUsdInPrivateData::IsMotionBackward() const
 {
     if (_motionSampleTimesOverride.size() > 0)
     {

@@ -1,5 +1,14 @@
 # Change List
 
+# 24.05_fn1
+
+- ID-587622 - Updated CMake to enable building against latest release lines.
+- ID-580061 - Added support for round tripping of Material Overrides as exported by KatanaToUsd
+- ID-575398 - Correctly convert Perspective Cameras which have been exported to Usd via KatanaToUsd
+- ID-576367 - Support USD 24.05
+- ID-567357 - Added extra `usd.usdType` attribute to arbitrary attributes to describe the exact USD type. Used when converting back from Katana to Usd via katanaToUsd.
+- ID-562995 - Added UsdKatanaKatanaAttributeEditorAPI schema.
+
 # 23.05_fn5 - 22.05_fn4 
 
 - ID-565975 - Target renderers explicitly or implicitly specified in USD shader nodes were not always respected when importing the shader nodes through a UsdIn node.

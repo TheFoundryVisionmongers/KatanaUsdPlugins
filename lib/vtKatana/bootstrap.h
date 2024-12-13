@@ -30,6 +30,8 @@
 #ifndef VTKATANA_BOOTSTRAP_H
 #define VTKATANA_BOOTSTRAP_H
 
+#include <string>
+
 #include <pxr/pxr.h>
 
 #include "vtKatana/api.h"
@@ -38,7 +40,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 /// \brief bootstrap Geolib.
 VTKATANA_API
-void VtKatanaBootstrap();
+void VtKatanaBootstrap(const std::string& katanaPath = "");
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

@@ -110,7 +110,7 @@ static UsdKatanaUsdInArgsRefPtr InitUsdInArgs(const FnKat::GroupAttribute& opArg
     std::string variants = FnKat::StringAttribute(
         opArgs.getChildByName("variants")).getValue("", false);
     std::set<std::string> selStrings = TfStringTokenizeToSet(variants);
-    for (const std::string selString : selStrings)
+    for (const std::string& selString : selStrings)
     {
         std::string errMsg;
         if (SdfPath::IsValidPathString(selString, &errMsg))
@@ -380,7 +380,7 @@ public:
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            ERROR(usdInArgs->GetErrorMessage().c_str());
+            ERROR("%s", usdInArgs->GetErrorMessage().c_str());
             return;
         }
 
@@ -1142,7 +1142,7 @@ public:
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            ERROR(usdInArgs->GetErrorMessage().c_str());
+            ERROR("%s", usdInArgs->GetErrorMessage().c_str());
             return;
         }
 
@@ -1220,7 +1220,7 @@ public:
         
         if (!usdInArgs->GetErrorMessage().empty())
         {
-            ERROR(usdInArgs->GetErrorMessage().c_str());
+            ERROR("%s", usdInArgs->GetErrorMessage().c_str());
             return;
         }
 

@@ -30,6 +30,8 @@
 #ifndef USDKATANA_BOOTSTRAP_H
 #define USDKATANA_BOOTSTRAP_H
 
+#include <string>
+
 #include <pxr/pxr.h>
 
 #include "usdKatana/api.h"
@@ -38,7 +40,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 /// \brief bootstrap Geolib.
 USDKATANA_API
-void UsdKatanaBootstrap();
+void UsdKatanaBootstrap(const std::string& katanaPath = "");
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

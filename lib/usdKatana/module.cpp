@@ -37,5 +37,5 @@ TF_WRAP_MODULE
     TF_WRAP(UsdKatanaBlindDataObject);
     TF_WRAP(UsdKatanaCache);
     TF_WRAP(UsdKatanaKatanaLightAPI);
-    TF_WRAP(UsdKatanaLookAPI);
+    TF_WRAP(UsdKatanaChildMaterialAPI);
 }

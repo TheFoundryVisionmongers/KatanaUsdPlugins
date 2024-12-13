@@ -82,9 +82,9 @@
 #include "vtKatana/array.h"
 #include "vtKatana/value.h"
 
-#include "usdKatana/blindDataObject.h"
-#include "usdKatana/lookAPI.h"
 #include "usdKatana/baseMaterialHelpers.h"
+#include "usdKatana/blindDataObject.h"
+#include "usdKatana/childMaterialAPI.h"
 
 FnLogSetup("UsdKatanaUtils");
 
@@ -113,6 +113,18 @@ TF_DEFINE_ENV_SETTING(
 
 namespace
 {
+
+// ChildMaterialAPI has replaced LookAPI for child materials. Because that API is not registered
+// anymore we can't use HasAPI(TfToken("LookAPI")) to check if a material is a child material. We
+// want old usda files with the LookAPI schema to still import correctly with UsdIn, so we gather
+// values from the apiSchemas metadata field.
+inline bool hasDeprecatedLookAPI(const UsdPrim& prim)
+{
+    SdfTokenListOp schemas;
+    prim.GetMetadata(UsdTokens->apiSchemas, &schemas);
+    return schemas.HasItem(TfToken("LookAPI"));
+}
+
 void ApplyBlendShapeAnimation(const UsdSkelSkinningQuery& skinningQuery,
                               const UsdSkelSkeletonQuery& skelQuery,
                               const double time,
@@ -1232,7 +1244,7 @@ std::string UsdKatanaUtils::_GetDisplayName(const UsdPrim& prim)
     }
     else
     {
-        UsdAttribute primNameAttr = UsdKatanaLookAPI(prim).GetPrimNameAttr();
+        UsdAttribute primNameAttr = UsdKatanaChildMaterialAPI(prim).GetPrimNameAttr();
         if (primNameAttr.IsValid() && !UsdKatana_IsAttrValFromBaseMaterial(primNameAttr) &&
             !UsdKatana_IsAttrValFromDirectReference(primNameAttr))
         {
@@ -1267,7 +1279,12 @@ std::string UsdKatanaUtils::_GetDisplayGroup(const UsdPrim& prim, const SdfPath&
         SdfPath parentPath;
 
         UsdShadeMaterial materialSchema = UsdShadeMaterial(prim);
-        if (materialSchema.HasBaseMaterial()) {
+        // Enforce checking that material is a child material with attribute katana:primName from
+        // ChildMaterialAPI schema (or old LookAPI schema), as a material override might also have
+        // a specialize arc.
+        if (materialSchema.HasBaseMaterial() &&
+            (prim.HasAPI(UsdKatanaTokens->ChildMaterialAPI) || hasDeprecatedLookAPI(prim)))
+        {
             // This base material is defined as a derivesFrom relationship
             parentPath = materialSchema.GetBaseMaterialPath();
         }
@@ -1278,6 +1295,7 @@ std::string UsdKatanaUtils::_GetDisplayGroup(const UsdPrim& prim, const SdfPath&
         // Asset sanity check. It is possible the derivesFrom relationship
         // for a Look exists but references a non-existent location. If so,
         // simply return the base path.
+        // Also if the material is an override material it won't have a parentPrim.
         if (!parentPrim) {
             return "";
         }
