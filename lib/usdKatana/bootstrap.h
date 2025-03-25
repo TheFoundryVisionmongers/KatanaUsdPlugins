@@ -38,7 +38,11 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-/// \brief bootstrap Geolib.
+/// \brief Bootstraps Geolib.
+///
+/// @param katanaPath The path to the Katana installation. If not provided, the path set in the
+///     \c KATANA_ROOT environment variable is used. If not provided either, the path of the
+///     directory containing the running executable is used.
 USDKATANA_API
 void UsdKatanaBootstrap(const std::string& katanaPath = "");
 

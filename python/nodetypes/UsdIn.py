@@ -53,6 +53,14 @@ nb.setHintsForParameter('fileName', {
     'fileTypes':'usd|usda|usdc|usdz',
 })
 
+gb.set('assetResolverContext', '')
+nb.setHintsForParameter('assetResolverContext', {
+    'help': """
+        Sets the Asset Resolver Context which will be bound when opening the stage. If this is not
+        specified, a default context is used based on the Asset Resolver for the fileName parameter.
+    """,
+})
+
 gb.set('location', '/root/world/geo')
 nb.setHintsForParameter('location', {
     'widget' : 'scenegraphLocation',
@@ -82,9 +90,9 @@ nb.setHintsForParameter('variants', {
         ' Specify variant '\
         'selections. Variant selections are specified via whitespace-separated'\
         ' variant selection paths. Example: /Foo{X=Y} /Bar{Z=w}',
-        
+
     'conditionalVisOps' : _offForArchiveCondVis,
-    
+
 })
 
 gb.set('ignoreLayerRegex', '')
@@ -144,7 +152,7 @@ nb.setHintsForParameter('prePopulate', {
     """,
     'conditionalVisOps' : _offForArchiveCondVis,
     'constant' : True,
-    
+
 })
 
 gb.set('verbose', 0)
@@ -174,7 +182,7 @@ nb.setHintsForParameter('includeProxyForArchive', {
         If enabled, the specified location will be of type "usd archive" rather
         than loaded directly into the katana scene -- optionally with a proxy.
     """,
-    
+
     'conditionalVisOp' : 'notEqualTo',
     'conditionalVisPath' : '../asArchive',
     'conditionalVisValue' : '0',
@@ -200,11 +208,13 @@ nb.setParametersTemplateAttr(gb.build())
 # refactored to be callable directly -- initially in service of flushStage
 def buildUsdInOpArgsAtGraphState(self, graphState):
     gb = FnAttribute.GroupBuilder()
-    
+
     frameTime = graphState.getTime()
-    
+
     gb.set('fileName',
             self.getParameter('fileName').getValue(frameTime))
+    gb.set('assetResolverContext',
+            self.getParameter('assetResolverContext').getValue(frameTime))
     gb.set('location',
             self.getParameter('location').getValue(frameTime))
 
@@ -222,10 +232,10 @@ def buildUsdInOpArgsAtGraphState(self, graphState):
 
     gb.set('verbose',
             int(self.getParameter('verbose').getValue(frameTime)))
-    
+
     gb.set('instanceMode',
             self.getParameter('instanceMode').getValue(frameTime))
-    
+
     gb.set('prePopulate',
             int(self.getParameter('prePopulate').getValue(frameTime)))
 
@@ -250,12 +260,12 @@ def buildUsdInOpArgsAtGraphState(self, graphState):
     if isinstance(sessionValues, FnAttribute.GroupAttribute):
         gb.set('session', sessionValues)
 
-    
+
     gb.set('system', graphState.getOpSystemArgs())
     gb.set('processStageWideQueries', FnAttribute.IntAttribute(1))
-    
+
     gb.set('setOpArgsToInfo', FnAttribute.IntAttribute(1))
-    
+
 
     # check for any extra attributes or namespaces set downstream
     # via graph state
@@ -271,7 +281,7 @@ def buildUsdInOpArgsAtGraphState(self, graphState):
         gb.update(argsOverride)
 
     usdInArgs = gb.build()
-    
+
     return usdInArgs
 
 nb.setCustomMethod('buildUsdInOpArgsAtGraphState', buildUsdInOpArgsAtGraphState)
@@ -294,23 +304,23 @@ def buildUsdInOpArgsFromDownstreamNode(
         self, downstreamNode, graphState, portIndex=0):
     if not hasattr(self, '_argsCookTmp'):
         self._argsCookTmp = {}
-    
+
     key = (FnAttribute.GroupBuilder()
             .set('graphState', graphState.getOpSystemArgs())
             .set('node', hash(downstreamNode))
             .set('portIndex', portIndex)
             .build().getHash())
-    
+
     # Set a dynamic entry that's not prefixed with "var:" so it won't show up
     # in op system args (or other graph state comparisons other than hash
     # uniqueness)
     useGraphState = graphState.edit().setDynamicEntry(kArgsCookTmpKeyToken,
             FnAttribute.StringAttribute(key)).build()
-    
+
     # trigger a cook with this unique graph state
     Nodes3DAPI.CreateClient(downstreamNode,
             graphState=useGraphState, portIndex=portIndex)
-    
+
     if key in self._argsCookTmp:
         result = self._argsCookTmp[key]
         return result
@@ -325,7 +335,7 @@ nb.setCustomMethod('buildUsdInOpArgsFromDownstreamNode', buildUsdInOpArgsFromDow
 def flushStage(self, viewNode, graphState, portIndex=0):
     opArgs = self.buildUsdInOpArgsFromDownstreamNode(viewNode, graphState,
             portIndex=portIndex)
-    
+
     if isinstance(opArgs, FnAttribute.GroupAttribute):
         FnGeolibServices.AttributeFunctionUtil.Run("UsdIn.FlushStage",
                 opArgs)
@@ -336,40 +346,40 @@ nb.setCustomMethod('flushStage', flushStage)
 
 def buildOpChain(self, interface):
     interface.setMinRequiredInputs(0)
-    
+
     frameTime = interface.getGraphState().getTime()
-    
-    
+
+
     # simpler case for the archive
     if self.getParameter('asArchive').getValue(frameTime):
         sscb = FnGeolibServices.OpArgsBuilders.StaticSceneCreate(True)
         location = self.getScenegraphLocation(frameTime)
         sscb.createEmptyLocation(location, 'usd archive')
-        
-        
+
+
         gb = FnAttribute.GroupBuilder()
-        
-        
-        for name in ('fileName', 'isolatePath'):
+
+
+        for name in ('fileName', 'isolatePath', 'assetResolverContext'):
             gb.set(name, interface.buildAttrFromParam(
                     self.getParameter(name)))
-        
+
         gb.set('currentTime', FnAttribute.DoubleAttribute(frameTime))
-        
+
         attrs = gb.build()
-        
+
         sscb.setAttrAtLocation(location, 'geometry', attrs)
-        
+
         if self.getParameter('includeProxyForArchive').getValue(frameTime):
             sscb.addSubOpAtLocation(location,
                     'UsdIn.AddViewerProxy', attrs)
 
         interface.appendOp('StaticSceneCreate', sscb.build())
         return
-    
+
     graphState = interface.getGraphState()
     usdInArgs = self.buildUsdInOpArgsAtGraphState(graphState)
-    
+
     # When buildOpChain is reached as result of a call to
     # buildUsdInOpArgsFromDownstreamNode, an additional entry will be
     # present in the graphState (otherwise not meaningful to the cooked scene).
@@ -378,8 +388,8 @@ def buildOpChain(self, interface):
     argsCookTmpKey = graphState.getDynamicEntry(kArgsCookTmpKeyToken)
     if isinstance(argsCookTmpKey, FnAttribute.StringAttribute):
         self._argsCookTmp[argsCookTmpKey.getValue('', False)] = usdInArgs
-    
-    
+
+
     # our primary op in the chain that will create the root location
     sscb = FnGeolibServices.OpArgsBuilders.StaticSceneCreate(True)
 
@@ -443,27 +453,27 @@ nb.setGenericAssignRoots('args', '__variantUI')
 
 def getInputPortAndGraphState(self, outputPort, graphState):
     frameTime = graphState.getTime()
-    
+
     location = self.getParameter("location").getValue(frameTime)
-    
+
     variantSetName = ''
     if self.getParameter("args.variantSetName.enable").getValue(frameTime):
         variantSetName = str(self.getParameter("args.variantSetName.value")
                              .getValue(frameTime))
-    
+
     variantSelection = None
     if self.getParameter("args.variantSelection.enable").getValue(frameTime):
          variantSelection = self.getParameter(
                 "args.variantSelection.value").getValue(frameTime)
-    
+
     if location and variantSetName and variantSelection is not None:
         entryName = FnAttribute.DelimiterEncode(str(location))
         entryPath = "variants." + entryName + "." + str(variantSetName)
-        
+
         valueAttr = FnAttribute.StringAttribute(variantSelection)
         gb = FnAttribute.GroupBuilder()
         gb.set(entryPath, valueAttr)
-        
+
         for addLocParam in self.getParameter(
                 'additionalLocations').getChildren():
             location = addLocParam.getValue(frameTime)
@@ -471,14 +481,14 @@ def getInputPortAndGraphState(self, outputPort, graphState):
                 entryName = FnAttribute.DelimiterEncode(str(location))
                 entryPath = "variants." + entryName + "." + variantSetName
                 gb.set(entryPath, valueAttr)
-        
-        
+
+
         existingValue = (
             graphState.getDynamicEntry("var:pxrUsdInSession"))
-        
+
         if isinstance(existingValue, FnAttribute.GroupAttribute):
             gb.deepUpdate(existingValue)
-        
+
         graphState = (graphState.edit()
                 .setDynamicEntry("var:pxrUsdInSession", gb.build())
                 .build())
@@ -499,26 +509,26 @@ nb.setGetScenegraphLocationFnc(getScenegraphLocation)
 
 def appendToParametersOpChain(self, interface):    
     frameTime = interface.getFrameTime()
-    
+
     location = self.getScenegraphLocation(frameTime)
     variantSetName = ''
     if self.getParameter('args.variantSetName.enable').getValue(frameTime):
         variantSetName = self.getParameter(
                 'args.variantSetName.value').getValue(frameTime)
-    
+
     # This makes use of the attrs recognized by UsdInUtilExtraHintsDap
     # to provide the hinting from incoming attr values.
     uiscript = '''
         local variantSetName = Interface.GetOpArg('user.variantSetName'):getValue()
-        
+
         local variantsGroup = (Interface.GetAttr('info.usd.variants') or
                 GroupAttribute())
-        
+
         local variantSetNames = {}
         for i = 0, variantsGroup:getNumberOfChildren() - 1 do
             variantSetNames[#variantSetNames + 1] = variantsGroup:getChildName(i)
         end
-        
+
         Interface.SetAttr("__usdInExtraHints." ..
                 Attribute.DelimiterEncode("__variantUI.variantSetName"),
                         GroupBuilder()
@@ -526,9 +536,9 @@ def appendToParametersOpChain(self, interface):
                             :set('options', StringAttribute(variantSetNames))
                             :set('editable', IntAttribute(1))
                             :build())
-        
+
         local variantOptions = {}
-            
+
         if variantSetName ~= '' then
             local variantOptionsAttr =
                     variantsGroup:getChildByName(variantSetName)
@@ -536,7 +546,7 @@ def appendToParametersOpChain(self, interface):
                 variantOptions = variantOptionsAttr:getNearestSample(0.0)
             end
         end
-        
+
         Interface.SetAttr("__usdInExtraHints." ..
                 Attribute.DelimiterEncode("__variantUI.variantSelection"),
                         GroupBuilder()
@@ -545,15 +555,15 @@ def appendToParametersOpChain(self, interface):
                             :set('editable', IntAttribute(1))
                             :build())
     '''
-    
+
     sscb = FnGeolibServices.OpArgsBuilders.StaticSceneCreate(True)
-    
+
     sscb.addSubOpAtLocation(location, 'OpScript.Lua',
             FnAttribute.GroupBuilder()
                 .set('script', uiscript)
                 .set('user.variantSetName', variantSetName)
                 .build())
-    
+
     interface.appendOp('StaticSceneCreate', sscb.build())
 
 
@@ -590,10 +600,10 @@ def getInputPortAndGraphState(self, outputPort, graphState):
 
         existingValue = (
             graphState.getDynamicEntry("var:pxrUsdInSession"))
-        
+
         if isinstance(existingValue, FnAttribute.GroupAttribute):
             gb.deepUpdate(existingValue)
-        
+
         graphState = (graphState.edit()
                 .setDynamicEntry("var:pxrUsdInSession", gb.build())
                 .build())
@@ -714,7 +724,7 @@ def getInputPortAndGraphState(self, outputPort, graphState):
     if locations:
         state = FnAttribute.IntAttribute(
             bool(self.getParameter("active").getValue(frameTime)))
-        
+
         gb = FnAttribute.GroupBuilder()
 
         for loc in locations.getChildren():
@@ -723,10 +733,10 @@ def getInputPortAndGraphState(self, outputPort, graphState):
 
         existingValue = (
             graphState.getDynamicEntry("var:pxrUsdInSession"))
-        
+
         if isinstance(existingValue, FnAttribute.GroupAttribute):
             gb.deepUpdate(existingValue)
-        
+
         graphState = (graphState.edit()
                 .setDynamicEntry("var:pxrUsdInSession", gb.build())
                 .build())
@@ -749,10 +759,10 @@ nb.setParametersTemplateAttr(FnAttribute.GroupBuilder()
     .set('locations', '')
     .set('attrName', 'attr')
     .set('type', 'float')
-    
+
     .set('asMetadata', 0)
     .set('listOpType', 'explicit')
-    
+
     .set('numberValue', 1.0)
     .set('stringValue', '')
 
@@ -820,13 +830,13 @@ __numberAttrTypes = {
 def getInputPortAndGraphState(self, outputPort, graphState):
     frameTime = graphState.getTime()
     locationsParam = self.getParameter("locations")
-    
+
     attrName = self.getParameter('attrName').getValue(
             frameTime).replace('.', ':')
-    
+
     locations = [y for y in
         (x.getValue(frameTime) for x in locationsParam.getChildren()) if y]
-    
+
     if attrName and locations:
         typeValue = self.getParameter('type').getValue(frameTime)
         if typeValue == 'string':
@@ -845,36 +855,36 @@ def getInputPortAndGraphState(self, outputPort, graphState):
             entryGb.set('type', 'SdfInt64ListOp')
             entryGb.set('listOp.%s' % self.getParameter(
                     'listOpType').getValue(frameTime), valueAttr)
-            
+
             entryGroup = entryGb.build()
         else:
             entryGb = FnAttribute.GroupBuilder()
             entryGb.set('value', valueAttr)
-            
+
             if valueAttr.getNumberOfValues() == 1:
                 if self.getParameter('forceArrayForSingleValue'
                         ).getValue(frameTime):
                     entryGb.set('forceArray', 1)
 
             entryGroup = entryGb.build()
-            
+
         gb = FnAttribute.GroupBuilder()
 
         asMetadata = (typeValue == 'listOp'
                 or self.getParameter('asMetadata').getValue(frameTime) != 0)
 
         for loc in locations:
-            
+
             if asMetadata:
-                
+
                 if typeValue == 'listOp':
                     gb.set("metadata.%s.prim.%s" % (
                         FnAttribute.DelimiterEncode(str(loc)), attrName,),
                         entryGroup)
 
-                    
+
                 # TODO, only listOps are supported at the moment.
-                
+
             else:
                 gb.set("attrs.%s.%s" % (
                         FnAttribute.DelimiterEncode(str(loc)), attrName,),
@@ -882,14 +892,14 @@ def getInputPortAndGraphState(self, outputPort, graphState):
 
         existingValue = (
             graphState.getDynamicEntry("var:pxrUsdInSession"))
-        
+
         if isinstance(existingValue, FnAttribute.GroupAttribute):
             gb.deepUpdate(existingValue)
-        
+
         graphState = (graphState.edit()
                 .setDynamicEntry("var:pxrUsdInSession", gb.build())
                 .build())
-        
+
     return Nodes3DAPI.Node3D.getInputPortAndGraphState(
         self, outputPort, graphState)
 
@@ -925,25 +935,25 @@ def getInputPortAndGraphState(self, outputPort, graphState):
     frameTime = graphState.getTime()
 
     locationsParam = self.getParameter("locations")
-    
+
     locations = [y for y in
         (x.getValue(frameTime) for x in locationsParam.getChildren()) if y]
-    
+
     if locations:
         existingValue = (
             graphState.getDynamicEntry("var:pxrUsdInSession")
                     or FnAttribute.GroupAttribute())
-        
+
         # later nodes set to 'replace' win out
         maskIsFinal = existingValue.getChildByName('maskIsFinal')
         if not maskIsFinal:
-            
+
             gb = FnAttribute.GroupBuilder()
-            
+
             gb.update(existingValue)
-            
+
             mode = self.getParameter('mode').getValue(frameTime)
-            
+
             if mode == 'replace':
                 gb.set('mask', FnAttribute.StringAttribute(locations))
                 gb.set('maskIsFinal', 1)
@@ -951,9 +961,9 @@ def getInputPortAndGraphState(self, outputPort, graphState):
                 existingLocationsAttr = existingValue.getChildByName('mask')
                 if isinstance(existingLocationsAttr, FnAttribute.StringAttribute):
                     locations.extend(existingLocationsAttr.getNearestSample(0))
-                
+
                 gb.set('mask', FnAttribute.StringAttribute(locations))
-            
+
             graphState = (graphState.edit()
                 .setDynamicEntry("var:pxrUsdInSession", gb.build())
                 .build())

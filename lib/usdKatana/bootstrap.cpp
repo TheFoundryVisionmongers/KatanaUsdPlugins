@@ -46,12 +46,15 @@
 #include <FnAttribute/FnAttribute.h>
 
 
-typedef FnPluginManagerHostSuite_v1 const* (*GetFnPluginManagerHostSuite)(
-    char const* apiName, unsigned int apiVersion);
 
 PXR_NAMESPACE_OPEN_SCOPE
 
 FnLogSetup("UsdKatanaBootstrap");
+
+namespace
+{
+typedef FnPluginManagerHostSuite_v1 const* (*GetFnPluginManagerHostSuite)(char const* apiName,
+                                                                          unsigned int apiVersion);
 
 static void* findSymbol(void* const handle, const char* const name)
 {
@@ -62,76 +65,85 @@ static void* findSymbol(void* const handle, const char* const name)
 #endif
 }
 
+void BootstrapImpl(const std::string& katanaPath)
+{
+    // Path of the katana process (without filename).
+    const char* katanaRoot{getenv("KATANA_ROOT")};
+    std::string path{};
+    if (!katanaPath.empty())
+    {
+        path = katanaPath;
+        path += "/";
+    }
+    else if (katanaRoot)
+    {
+        path = katanaRoot;
+        path += "/";
+    }
+    else
+    {
+        path = TfGetPathName(ArchGetExecutablePath());
+    }
+
+    // FnAttribute::Bootstrap() appends 'bin', so remove it here.
+    std::string const binPrefix("bin" ARCH_PATH_SEP);
+    if (TfStringEndsWith(path, binPrefix))
+    {
+        path.erase(path.length() - binPrefix.length());
+    }
+
+    // Boostrap FnAttribute.
+    if (!FnAttribute::Bootstrap(path))
+    {
+        FnLogError("Failed to bootstrap FnAttribute from Katana at " << path);
+        return;
+    }
+
+// Load Katana's Plugin Manager dynamic library.
+#if defined(ARCH_OS_WINDOWS)
+    path += binPrefix + "FnPluginSystem" ARCH_LIBRARY_SUFFIX;
+#else
+    path += binPrefix + "libFnPluginSystem" ARCH_LIBRARY_SUFFIX;
+#endif
+    std::string dlError;
+    void* handle = TfDlopen(path, ARCH_LIBRARY_NOW, &dlError);
+    if (!handle)
+    {
+        FnLogError("Failed to open " << path << " to bootstrap Katana");
+        return;
+    }
+
+    // Find the symbol.
+    void* symbol = findSymbol(handle, "FnPluginSystemGetHostSuite");
+    if (!symbol)
+    {
+        FnLogError("Failed to symbol " << path << " to bootstrap Katana");
+        return;
+    }
+
+    GetFnPluginManagerHostSuite pfnGetFnPluginManagerHostSuite =
+        reinterpret_cast<GetFnPluginManagerHostSuite>(symbol);
+
+    // Get the Host Suite.
+    FnPluginManagerHostSuite_v1 const* hostSuite =
+        pfnGetFnPluginManagerHostSuite("PluginManager", 1);
+
+    if (hostSuite)
+    {
+        FnPluginHost* host = hostSuite->getHost();
+        FnConfig::Config::setHost(host);
+
+        Foundry::Katana::PluginManager::setHost(host);
+    }
+
+    TfDlclose(handle);
+}
+}  // namespace
+
 void UsdKatanaBootstrap(const std::string& katanaPath)
 {
     static std::once_flag once;
-    std::call_once(once, [katanaPath]()
-    {
-        // Path of the katana process (without filename).
-        
-        std::string path; 
-        if (katanaPath.empty())
-        {
-            path = TfGetPathName(ArchGetExecutablePath());
-        }
-        else
-        {
-            path = katanaPath + "/";
-        }
-
-        // FnAttribute::Bootstrap() appends 'bin', so remove it here.
-        std::string const binPrefix("bin" ARCH_PATH_SEP);
-        if (TfStringEndsWith(path, binPrefix))
-        {
-            path.erase(path.length() - binPrefix.length());
-        }
-
-        // Boostrap FnAttribute.
-        if (!FnAttribute::Bootstrap(path))
-        {
-            FnLogError("Failed to bootstrap FnAttribute from Katana at " << path);
-            return;
-        }
-
-        // Load Katana's Plugin Manager dynamic library.
-        #if defined(ARCH_OS_WINDOWS)
-        path += binPrefix + "FnPluginSystem" ARCH_LIBRARY_SUFFIX;
-        #else
-        path += binPrefix + "libFnPluginSystem" ARCH_LIBRARY_SUFFIX;
-        #endif 
-        std::string dlError;
-        void* handle = TfDlopen(path, ARCH_LIBRARY_NOW, &dlError);
-        if (!handle)
-        {
-            FnLogError("Failed to open " << path << " to bootstrap Katana");
-            return;
-        }
-
-        // Find the symbol.
-        void* symbol = findSymbol(handle, "FnPluginSystemGetHostSuite");
-        if (!symbol)
-        {
-            FnLogError("Failed to symbol " << path << " to bootstrap Katana");
-            return;
-        }
-
-        GetFnPluginManagerHostSuite pfnGetFnPluginManagerHostSuite =
-            reinterpret_cast<GetFnPluginManagerHostSuite>(symbol);
-
-        // Get the Host Suite.
-        FnPluginManagerHostSuite_v1 const * hostSuite =
-            pfnGetFnPluginManagerHostSuite("PluginManager", 1);
-
-        if (hostSuite)
-        {
-            FnPluginHost* host = hostSuite->getHost();
-            FnConfig::Config::setHost(host);
-
-            Foundry::Katana::PluginManager::setHost(host);
-        }
-
-        TfDlclose(handle);
-    });
+    std::call_once(once, BootstrapImpl, katanaPath);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

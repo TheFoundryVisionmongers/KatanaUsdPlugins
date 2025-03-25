@@ -97,6 +97,31 @@ class UsdExport(BaseOutputFormat):
             return False
         return True
 
+    @classmethod
+    def __getResolvedMaterialName(cls, attrDict, sdfLocationPath):
+        """
+        Returns the name which should be used for the resolved material. This can be customized
+        by setting the `info.usdExport.resolvedMaterialName` attribute. Otherwise it builds the
+        name by combining the sdfLocationPath's name (the name of that prim), the originally
+        assigned material name, and then "_resolved".
+        """
+        if not isinstance(attrDict, dict) or not sdfLocationPath or not sdfLocationPath.name:
+            return None
+
+        infoAttr = attrDict.get("info")
+        resolvedMaterialNameAttr = attrDict.get("info").getChildByName(
+            "usdExport.resolvedMaterialName"
+        )
+        resolvedMaterialName = None
+        if resolvedMaterialNameAttr:
+            resolvedMaterialName = resolvedMaterialNameAttr.getValue()
+        if not resolvedMaterialName or not isinstance(resolvedMaterialName, str):
+            materialAssignAttr = infoAttr.getChildByName("materialAssign") if infoAttr else None
+            assignedMaterialName = (
+                materialAssignAttr.getValue().split("/")[-1] if materialAssignAttr else ""
+            )
+            resolvedMaterialName = f"{sdfLocationPath.name}_{assignedMaterialName}_resolved"
+        return resolvedMaterialName
 
     @classmethod
     def WriteOverride(cls, stage, overrideDict, sharedOverridesDict,
@@ -193,6 +218,22 @@ class UsdExport(BaseOutputFormat):
             prim = WriteLight(stage, sdfLocationPath,
                                    materialAttribute)
             lightDict[location] = sdfLocationPath
+
+        elif materialAttribute:
+            # If we detect that there are material attributes on a non-material type location, we
+            # create a child material from that resolved material and its shaders.
+            resolvedMaterialName = cls.__getResolvedMaterialName(attrDict, sdfLocationPath)
+            if resolvedMaterialName:
+                sdfLocationPath = sdfLocationPath.AppendChild(resolvedMaterialName)
+                sdfLocationPath = cls.writeMaterialAttribute(
+                    stage, materialAttribute, location, sdfLocationPath, materialDict,
+                )
+                prim = stage.GetPrimAtPath(sdfLocationPath)
+                if prim:
+                    material = UsdShade.Material(prim)
+                    overridePrim = prim.GetParent()
+                    if material:
+                        WriteMaterialAssign(material, overridePrim)
 
         prmanStatementsAttributes = {
             key: value for key, value in attrDict.items()

@@ -30,26 +30,85 @@ except ImportError as e:
     log.warning('Error while importing pxr module (%s). Is '
                 '"[USD install]/lib/python" in PYTHONPATH?', e.message)
 
-def GetShaderNodeFromRegistry(shaderType):
+
+def getShaderSourceTypesFromTarget(target):
+    """
+    Returns the possible known shader types for a given target.
+
+    @param target: The Katana `target` attribute value for the current shader.
+    @type target: C{str}
+    @return: A list of "sourceTypes" matching thee render delegate associated with that renderer.
+    Empty list if not.
+    @rtype: C{list} of C{str}
+    """
+    # Unfortunately there isn't a nice way to grab the RenderDelegates from Python in order to get
+    # the sourceTypes they return. However, we'd still require some kind of map from "target" to
+    # the name of the render delegate we should be querying.
+    if target ==  "usd":
+        return ["glslfx"]
+    if target ==  "prman":
+        return ["RManCPP", "OSL", "mtlx"]
+    if target ==  "arnold":
+        return ["arnold", "mtlx"]
+    if target ==  "dl":
+        return ["OSL"]
+    return []
+
+
+def GetShaderNodeFromRegistry(shaderIdentifier, sourceType=None):
     """
     Method required to get the SdrShadingNode from the SdrRegistry in different
     ways, depending on the usdPlugin.
 
-    @type shaderType: C{str}
-    @rtype: C{Sdr.ShaderNode}
-    @param shaderType: The type of the shader to search for in the shading
+    @type shaderIdentifier: C{str}
+    @type sourceType: C{str} or C{None}
+    @rtype: C{Sdr.ShaderNode} or C{None}
+    @param shaderIdentifier: The name of the shader to search for in the shading
+        registry.
+    @param sourceType: The source type of the shader to search for in the shading
         registry.
     @return: The shader from the shader registry which matches the provided
-        type.
+        name and type.
     """
     sdrRegistry = Sdr.Registry()
-    shader = sdrRegistry.GetNodeByName(shaderType)
-    if not shader:
-        # try arnold, that uses identifiers instead of node names
-        shader = sdrRegistry.GetShaderNodeByIdentifier(
-            "arnold:{}".format(shaderType))
+    # Try and find the shader given the current source type, if that fails, search
+    # for a given sourceType given a target we try to convert into the known sourceTypes as
+    # per their hydra plug-ins.
+    return (
+        sdrRegistry.GetNodeByIdentifierAndType(shaderIdentifier, sourceType)
+        if sourceType
+        else sdrRegistry.GetNodeByIdentifier(shaderIdentifier)
+    )
 
+
+def GetSdrShaderFromShaderTypeAndTarget(katShaderType, target=None):
+    """
+    Retrieves an SdrShader given a katShaderType and a Katana shader target.
+    Will automatically try with the target prefixed to the katShaderType.
+    Returns None if we can't find the SdrShader.
+
+    @return: Returns the SdrShader matching the katShaderType and target.
+    @rtype: C{Sdr.ShaderNode} or C{None}
+    """
+    prefixedkatShaderType = None
+    if target is not None:
+        prefixedkatShaderType = target + ":" + katShaderType
+    sourceTypes = getShaderSourceTypesFromTarget(target)
+    shader = None
+    if sourceTypes:
+        for sourceType in sourceTypes:
+            shader = GetShaderNodeFromRegistry(katShaderType, sourceType)
+            if not shader and prefixedkatShaderType is not None:
+                shader = GetShaderNodeFromRegistry(prefixedkatShaderType, sourceType)
+            if shader:
+                break
+    if not shader:
+        sdrRegistry = Sdr.Registry()
+        sdrNodes = sdrRegistry.GetNodesByIdentifier(katShaderType)
+        if sdrNodes:
+            return sdrNodes[0]
     return shader
+
 
 def LocationPathToSdfPath(locationPath, rootPrimName):
     """

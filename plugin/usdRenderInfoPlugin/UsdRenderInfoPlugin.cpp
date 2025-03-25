@@ -43,24 +43,6 @@
 namespace
 {
 
-bool startsWith(const std::string& str, const std::string& startsWithStr)
-{
-    const size_t startsWithLength = startsWithStr.length();
-    const size_t strLength = str.length();
-    if (startsWithLength > strLength)
-    {
-        return false;
-    }
-    else if (startsWithLength == strLength)
-    {
-        return startsWithStr == str;
-    }
-    else
-    {
-        return str.compare(0, startsWithLength, startsWithStr) == 0;
-    }
-}
-
 static inline constexpr auto hash(char const* s, uint64_t h = 0) -> uint64_t
 {
     return !*s ? h : hash(s + 1, 1ULL * (h ^ *s) * 33ULL);
@@ -275,17 +257,22 @@ void UsdRenderInfoPlugin::fillRendererObjectNames(
             rendererObjectNames.push_back(luxLight.first);
         }
     };
-
-    std::vector<std::string> nodeNames = m_sdrRegistry.GetNodeNames();
+    std::array<const char*, 13> nodeNames = {"UsdPreviewSurface",
+                                             "UsdUVTexture",
+                                             "UsdPrimvarReader_float",
+                                             "UsdPrimvarReader_float2",
+                                             "UsdPrimvarReader_float3",
+                                             "UsdPrimvarReader_float4",
+                                             "UsdPrimvarReader_int",
+                                             "UsdPrimvarReader_string",
+                                             "UsdPrimvarReader_normal",
+                                             "UsdPrimvarReader_point",
+                                             "UsdPrimvarReader_vector",
+                                             "UsdPrimvarReader_matrix",
+                                             "UsdTransform2d"};
     // A lambda to fill rendererObjectNames with surface shaders
     auto fillWithSurface = [&]() {
-        for (const auto& name : nodeNames)
-        {
-            if (startsWith(name, "Usd"))
-            {
-                rendererObjectNames.push_back(name);
-            }
-        }
+        rendererObjectNames.insert(rendererObjectNames.end(), nodeNames.begin(), nodeNames.end());
     };
 
     if (typeTags.empty())

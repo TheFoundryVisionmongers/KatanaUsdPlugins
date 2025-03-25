@@ -8,14 +8,8 @@
 
 int main(int argc, char* argv[])
 {
-    char* katanaRoot = getenv("KATANA_ROOT");
-    if (katanaRoot == nullptr)
-    {
-        std::cerr << "KATANA_ROOT is not set!" << std::endl;
-        return 0;
-    }
-
-    if (!FnAttribute::Bootstrap(getenv("KATANA_ROOT")))
+    const char* katanaRoot{getenv("KATANA_ROOT")};
+    if (!katanaRoot || !FnAttribute::Bootstrap(katanaRoot))
     {
         std::cerr << "Failed to bootstrap FnAttribute" << std::endl;
         return 0;

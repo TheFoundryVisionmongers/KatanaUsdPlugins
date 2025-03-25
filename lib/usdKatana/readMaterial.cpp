@@ -99,13 +99,12 @@ FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
                                   const bool prmanOutputTarget,
                                   bool flatten);
 
-void
-_UnrollInterfaceFromPrim(
-        const UsdPrim& prim,
-        double currentTime,
-        const std::string& paramPrefix,
-        FnKat::GroupBuilder& materialBuilder,
-        FnKat::GroupBuilder& interfaceBuilder);
+void _UnrollInterfaceFromPrim(const UsdPrim& prim,
+                              double currentTime,
+                              const std::string& paramPrefix,
+                              FnKat::GroupBuilder& materialBuilder,
+                              FnKat::GroupBuilder& layoutBuilder,
+                              FnKat::GroupBuilder& interfaceBuilder);
 
 void UsdKatanaReadMaterial(const UsdShadeMaterial& material,
                            bool flatten,
@@ -550,7 +549,7 @@ static void _ProcessShaderConnections(const UsdPrim& prim,
 
     // If the attribute value comes from a base material, leave it
     // empty -- we will inherit it from the parent katana material.
-    if (flatten || !UsdKatana_IsAttrValFromBaseMaterial(attr))
+    if (flatten || !UsdKatana_IsAttrValFromSiblingBaseMaterial(attr))
     {
         bool isUdim = false;
         if (vtValue.IsHolding<SdfAssetPath>())
@@ -933,7 +932,7 @@ std::string _CreateShadingNode(UsdPrim shadingNode,
         }
         shdNodeBuilder.set("type", FnKat::StringAttribute(shaderType));
 
-        if (flatten || !UsdKatana_IsPrimDefFromBaseMaterial(shadingNode))
+        if (flatten || !UsdKatana_IsPrimDefFromSiblingBaseMaterial(shadingNode))
         {
             shdNodeBuilder.set("name", FnKat::StringAttribute(handle));
             shdNodeBuilder.set("srcName", FnKat::StringAttribute(handle));
@@ -1065,6 +1064,7 @@ FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
                                   const bool prmanOutputTarget,
                                   bool flatten)
 {
+    flatten |= !UsdKatana_IsPrimDefFromSiblingBaseMaterial(materialSchema.GetPrim());
     UsdPrim materialPrim = materialSchema.GetPrim();
 
     // TODO: we need a hasA schema
@@ -1084,8 +1084,7 @@ FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
 
     ShadingNodeTraversalData prmanData{"prman"};
     // look for surface
-    UsdShadeShader surfaceShader = riMaterialAPI.GetSurface(
-            /*ignoreBaseMaterial*/ not flatten);
+    UsdShadeShader surfaceShader = riMaterialAPI.GetSurface(/*ignoreBaseMaterial*/ !flatten);
     if (surfaceShader.GetPrim()) {
         std::string handle = _CreateShadingNode(surfaceShader.GetPrim(),
                                                 currentTime,
@@ -1103,7 +1102,7 @@ FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
 
     // look for displacement
     UsdShadeShader displacementShader = riMaterialAPI.GetDisplacement(
-            /*ignoreBaseMaterial*/ not flatten);
+        /*ignoreBaseMaterial*/ !flatten);
     if (displacementShader.GetPrim()) {
         std::string handle = _CreateShadingNode(displacementShader.GetPrim(),
                                                 currentTime,
@@ -1226,12 +1225,12 @@ FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
             UsdShadeAttributeType sourceType;
             materialOutput.GetConnectedSource(&materialOutSource, &sourceName,
                                               &sourceType);
-            const SdfPath& connectedShaderPath = materialOutSource.GetPath();
+            // Get nested name of connected shader with optional delimiter.
+            const std::string shaderName =
+                UsdKatanaUtils::GenerateShadingNodeHandle(materialOutSource.GetPrim());
             const std::string katanaTerminalPortName =
                 katanaTerminalName + "Port";
-            terminalsBuilder.set(
-                katanaTerminalName.c_str(),
-                FnKat::StringAttribute(connectedShaderPath.GetName()));
+            terminalsBuilder.set(katanaTerminalName.c_str(), FnKat::StringAttribute(shaderName));
             terminalsBuilder.set(
                 katanaTerminalPortName.c_str(),
                 FnKat::StringAttribute(sourceName.GetString()));
@@ -1278,11 +1277,8 @@ FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
             paramPrefix = UsdKatanaUtils::GenerateShadingNodeHandle(curr);
         }
 
-        _UnrollInterfaceFromPrim(curr,
-                currentTime,
-                paramPrefix,
-                materialBuilder,
-                interfaceBuilder);
+        _UnrollInterfaceFromPrim(
+            curr, currentTime, paramPrefix, materialBuilder, layoutBuilder, interfaceBuilder);
 
         TF_FOR_ALL(childIter, curr.GetChildren()) {
             dfs.push(*childIter);
@@ -1362,12 +1358,12 @@ SdfLayerHandle _FindLayerHandle(const UsdAttribute& attr, const UsdTimeCode& tim
 }
 
 /* static */
-void
-_UnrollInterfaceFromPrim(const UsdPrim& prim,
-        double currentTime,
-        const std::string& paramPrefix,
-        FnKat::GroupBuilder& materialBuilder,
-        FnKat::GroupBuilder& interfaceBuilder)
+void _UnrollInterfaceFromPrim(const UsdPrim& prim,
+                              double currentTime,
+                              const std::string& paramPrefix,
+                              FnKat::GroupBuilder& materialBuilder,
+                              FnKat::GroupBuilder& layoutBuilder,
+                              FnKat::GroupBuilder& interfaceBuilder)
 {
     UsdStageRefPtr stage = prim.GetStage();
 
@@ -1441,7 +1437,8 @@ _UnrollInterfaceFromPrim(const UsdPrim& prim,
         const std::vector<UsdShadeInput> &consumers =
             interfaceInputConsumers.at(interfaceInput);
 
-        for (const UsdShadeInput &consumer : consumers) {
+        for (const UsdShadeInput& consumer : consumers)
+        {
             UsdPrim consumerPrim = consumer.GetPrim();
 
             TfToken inputName = consumer.GetBaseName();
@@ -1459,6 +1456,18 @@ _UnrollInterfaceFromPrim(const UsdPrim& prim,
                     srcKey.c_str(),
                     FnKat::StringAttribute(srcVal),
                     true);
+
+            // Add hints on the interface parameters that the NME needs to set the interface's
+            // 'appear as' name.
+            const std::string hintsStr = "{'dstName':'" + renamedParam + "'}";
+            layoutBuilder.set(
+                TfStringPrintf(
+                    "%s.parameterVars.%s.hints", handle.c_str(), inputName.GetString().c_str()),
+                FnKat::StringAttribute(hintsStr));
+            layoutBuilder.set(
+                TfStringPrintf(
+                    "%s.parameterVars.%s.enable", handle.c_str(), inputName.GetString().c_str()),
+                FnKat::IntAttribute(0));
         }
 
         // USD's group delimiter is :, whereas Katana's is .

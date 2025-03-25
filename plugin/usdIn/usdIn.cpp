@@ -36,6 +36,8 @@
 
 #include <pxr/base/tf/pathUtils.h>
 #include <pxr/pxr.h>
+#include <pxr/usd/ar/resolver.h>
+#include <pxr/usd/ar/resolverContextBinder.h>
 #include <pxr/usd/usd/modelAPI.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/stage.h>
@@ -212,12 +214,22 @@ static UsdKatanaUsdInArgsRefPtr InitUsdInArgs(const FnKat::GroupAttribute& opArg
     ab.isolatePath = FnKat::StringAttribute(
         opArgs.getChildByName("isolatePath")).getValue("", false);
 
-    ab.stage =  UsdKatanaCache::GetInstance().GetStage(
-        fileName, 
-        sessionAttr, sessionLocation,
-        ab.isolatePath,
-        ab.ignoreLayerRegex, 
-        ab.prePopulate);
+    {
+        const std::string assetResolverContextStr =
+            FnKat::StringAttribute(opArgs.getChildByName("assetResolverContext"))
+                .getValue("", false);
+        const ArResolverContext context =
+            assetResolverContextStr.empty()
+                ? ArGetResolver().CreateDefaultContextForAsset(fileName)
+                : ArGetResolver().CreateContextFromString(assetResolverContextStr);
+        const ArResolverContextBinder bind(context);
+        ab.stage = UsdKatanaCache::GetInstance().GetStage(fileName,
+                                                          sessionAttr,
+                                                          sessionLocation,
+                                                          ab.isolatePath,
+                                                          ab.ignoreLayerRegex,
+                                                          ab.prePopulate);
+    }
 
     if (!ab.stage) {
         return ab.buildWithError("UsdIn: USD Stage cannot be loaded.");
