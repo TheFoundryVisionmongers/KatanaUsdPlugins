@@ -42,28 +42,42 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 FnLogSetup("VtKatanaBootstrap");
 
+namespace
+{
+void BootstrapImpl()
+{
+    const char* katanaRoot{getenv("KATANA_ROOT")};
+    std::string path{};
+    if (katanaRoot)
+    {
+        path = katanaRoot;
+        path += "/";
+    }
+    else
+    {
+        path = TfGetPathName(ArchGetExecutablePath());
+    }
+
+    // FnAttribute::Bootstrap() appends 'bin', so remove it here.
+    std::string const binPrefix("bin" ARCH_PATH_SEP);
+    if (TfStringEndsWith(path, binPrefix))
+    {
+        path.erase(path.length() - binPrefix.length());
+    }
+
+    // Boostrap FnAttribute.
+    if (!FnAttribute::Bootstrap(path))
+    {
+        FnLogError("Failed to bootstrap FnAttribute from Katana at " << path);
+        return;
+    }
+}
+}  // namespace
+
 void VtKatanaBootstrap()
 {
     static std::once_flag once;
-    std::call_once(once, []()
-    {
-        // Path of the katana process (without filename).
-        std::string path = TfGetPathName(ArchGetExecutablePath());
-
-        // FnAttribute::Bootstrap() appends 'bin', so remove it here.
-        std::string const binPrefix("bin" ARCH_PATH_SEP);
-        if (TfStringEndsWith(path, binPrefix))
-        {
-            path.erase(path.length() - binPrefix.length());
-        }
-
-        // Boostrap FnAttribute.
-        if (!FnAttribute::Bootstrap(path))
-        {
-            FnLogError("Failed to bootstrap FnAttribute from Katana at " << path);
-            return;
-        }
-    });
+    std::call_once(once, BootstrapImpl);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

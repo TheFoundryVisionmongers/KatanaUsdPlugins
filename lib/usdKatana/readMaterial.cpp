@@ -550,7 +550,7 @@ static void _ProcessShaderConnections(const UsdPrim& prim,
 
     // If the attribute value comes from a base material, leave it
     // empty -- we will inherit it from the parent katana material.
-    if (flatten || !UsdKatana_IsAttrValFromBaseMaterial(attr))
+    if (flatten || !UsdKatana_IsAttrValFromSiblingBaseMaterial(attr))
     {
         bool isUdim = false;
         if (vtValue.IsHolding<SdfAssetPath>())
@@ -933,7 +933,7 @@ std::string _CreateShadingNode(UsdPrim shadingNode,
         }
         shdNodeBuilder.set("type", FnKat::StringAttribute(shaderType));
 
-        if (flatten || !UsdKatana_IsPrimDefFromBaseMaterial(shadingNode))
+        if (flatten || !UsdKatana_IsPrimDefFromSiblingBaseMaterial(shadingNode))
         {
             shdNodeBuilder.set("name", FnKat::StringAttribute(handle));
             shdNodeBuilder.set("srcName", FnKat::StringAttribute(handle));
@@ -1065,6 +1065,7 @@ FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
                                   const bool prmanOutputTarget,
                                   bool flatten)
 {
+    flatten |= !UsdKatana_IsPrimDefFromSiblingBaseMaterial(materialSchema.GetPrim());
     UsdPrim materialPrim = materialSchema.GetPrim();
 
     // TODO: we need a hasA schema
@@ -1084,8 +1085,7 @@ FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
 
     ShadingNodeTraversalData prmanData{"prman"};
     // look for surface
-    UsdShadeShader surfaceShader = riMaterialAPI.GetSurface(
-            /*ignoreBaseMaterial*/ not flatten);
+    UsdShadeShader surfaceShader = riMaterialAPI.GetSurface(/*ignoreBaseMaterial*/ !flatten);
     if (surfaceShader.GetPrim()) {
         std::string handle = _CreateShadingNode(surfaceShader.GetPrim(),
                                                 currentTime,
@@ -1103,7 +1103,7 @@ FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
 
     // look for displacement
     UsdShadeShader displacementShader = riMaterialAPI.GetDisplacement(
-            /*ignoreBaseMaterial*/ not flatten);
+        /*ignoreBaseMaterial*/ !flatten);
     if (displacementShader.GetPrim()) {
         std::string handle = _CreateShadingNode(displacementShader.GetPrim(),
                                                 currentTime,
@@ -1227,11 +1227,12 @@ FnKat::Attribute _GetMaterialAttr(const UsdShadeMaterial& materialSchema,
             materialOutput.GetConnectedSource(&materialOutSource, &sourceName,
                                               &sourceType);
             const SdfPath& connectedShaderPath = materialOutSource.GetPath();
+            // Get nested name of connected shader with optional delimiter.
+            const std::string shaderName =
+                UsdKatanaUtils::GetConnectedShaderNestedName(materialPrim, connectedShaderPath);
             const std::string katanaTerminalPortName =
                 katanaTerminalName + "Port";
-            terminalsBuilder.set(
-                katanaTerminalName.c_str(),
-                FnKat::StringAttribute(connectedShaderPath.GetName()));
+            terminalsBuilder.set(katanaTerminalName.c_str(), FnKat::StringAttribute(shaderName));
             terminalsBuilder.set(
                 katanaTerminalPortName.c_str(),
                 FnKat::StringAttribute(sourceName.GetString()));

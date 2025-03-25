@@ -105,6 +105,11 @@ struct UsdKatanaUtils
     USDKATANA_API static std::string GenerateShadingNodeHandle(
         const UsdPrim& shadingNode);
 
+    // Get nested name of connected shader with optional delimiter.
+    USDKATANA_API static std::string GetConnectedShaderNestedName(
+        const UsdPrim& materialPrim,
+        const SdfPath& connectedShaderPath);
+
     // Scan the model hierarchy for models with kind=camera.
     USDKATANA_API static SdfPathVector FindCameraPaths( const UsdStageRefPtr& stage );
 

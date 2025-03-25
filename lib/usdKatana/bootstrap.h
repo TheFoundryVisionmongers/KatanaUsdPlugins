@@ -30,6 +30,8 @@
 #ifndef USDKATANA_BOOTSTRAP_H
 #define USDKATANA_BOOTSTRAP_H
 
+#include <string>
+
 #include <pxr/pxr.h>
 
 #include "usdKatana/api.h"

@@ -38,6 +38,7 @@
 #include <pxr/usd/usd/attribute.h>
 #include <pxr/usd/usd/prim.h>
 #include <pxr/usd/usd/relationship.h>
+#include <pxr/usd/usdShade/material.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -103,12 +104,65 @@ bool UsdKatana_IsAttrValFromBaseMaterial(const UsdAttribute& attr)
     return _NodeRepresentsLiveBaseMaterial( attr.GetResolveInfo().GetNode() );
 }
 
+static UsdPrim _GetParentMaterialPrim(const UsdPrim& prim)
+{
+    for (UsdPrim p{prim}; p.IsValid() && !p.IsPseudoRoot(); p = prim.GetParent())
+    {
+        if (p.IsA<UsdShadeMaterial>())
+            return p;
+    }
+    return {};
+}
+
+bool UsdKatana_IsAttrValFromSiblingBaseMaterial(const UsdAttribute& attr)
+{
+    const PcpNodeRef sourceNode = attr.GetResolveInfo().GetNode();
+    if (_NodeRepresentsLiveBaseMaterial(sourceNode))
+    {
+        // Get the material prims for both the material containing the attr and the source material
+        // from the specialization arc. Ensure they are siblings of each other.
+        const UsdPrim sourceMaterialPrim =
+            _GetParentMaterialPrim(attr.GetPrim().GetStage()->GetPrimAtPath(sourceNode.GetPath()));
+        const UsdPrim materialPrim = _GetParentMaterialPrim(attr.GetPrim());
+        if (sourceMaterialPrim.IsA<UsdShadeMaterial>() && materialPrim.IsA<UsdShadeMaterial>())
+        {
+            if (sourceMaterialPrim.GetPath().GetParentPath() ==
+                materialPrim.GetPath().GetParentPath())
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 bool UsdKatana_IsPrimDefFromBaseMaterial(const UsdPrim& prim)
 {
     for(const PcpNodeRef &n: prim.GetPrimIndex().GetNodeRange()) {
         for (const SdfLayerRefPtr &l: n.GetLayerStack()->GetLayers()) {
             if (SdfPrimSpecHandle p = l->GetPrimAtPath(n.GetPath())) {
                 if (SdfIsDefiningSpecifier(p->GetSpecifier())) {
+                    return _NodeRepresentsLiveBaseMaterial(n);
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool UsdKatana_IsPrimDefFromSiblingBaseMaterial(const UsdPrim& prim)
+{
+    const SdfPath primParentPath = prim.GetPath().GetParentPath();
+    for (const PcpNodeRef& n : prim.GetPrimIndex().GetNodeRange())
+    {
+        for (const SdfLayerRefPtr& l : n.GetLayerStack()->GetLayers())
+        {
+            if (SdfPrimSpecHandle p = l->GetPrimAtPath(n.GetPath()))
+            {
+                if (SdfIsDefiningSpecifier(p->GetSpecifier()) &&
+                    primParentPath == p->GetPath().GetParentPath())
+                {
                     return _NodeRepresentsLiveBaseMaterial(n);
                 }
             }

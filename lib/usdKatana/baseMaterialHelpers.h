@@ -60,8 +60,14 @@ bool UsdKatana_IsAttrValFromDirectReference(const UsdAttribute& attr);
 // Check if this attribute resolves from across a specializes arc.
 bool UsdKatana_IsAttrValFromBaseMaterial(const UsdAttribute& attr);
 
+// Check if this attribute resolves from across a specializes arc at a sibling level.
+bool UsdKatana_IsAttrValFromSiblingBaseMaterial(const UsdAttribute& attr);
+
 // Check if this prim is defined across a specializes arc.
 bool UsdKatana_IsPrimDefFromBaseMaterial(const UsdPrim& prim);
+
+// Check if this prim is defined across a specializes arc at a sibling namespace.
+bool UsdKatana_IsPrimDefFromSiblingBaseMaterial(const UsdPrim& prim);
 
 // Check if this relationship has targets provided across a specializes arc.
 // (Usd doesn't provide a UsdResolveInfo style API for asking where

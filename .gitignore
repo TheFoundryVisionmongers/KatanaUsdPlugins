@@ -701,3 +701,4 @@ ASALocalRun/
 
 # End of https://www.gitignore.io/api/vim,c++,clion,python,eclipse,sublimetext,visualstudio,visualstudiocode
 
+.vscode/

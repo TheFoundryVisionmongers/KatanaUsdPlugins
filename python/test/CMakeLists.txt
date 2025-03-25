@@ -1,0 +1,1 @@
+add_python_integration_test(usdKatana.internal.Export)

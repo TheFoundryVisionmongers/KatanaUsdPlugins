@@ -1,9 +1,15 @@
 # Change List
 
+# 23.05_fn6
+
+- ID-545898 - Parameters that are in the public interface from a USD material are now imported via UsdIn with the correct name. UsdIn creates a layout.{shaderNodeName}.parameterVars.{parameterName}.hints attribute to give Katana the name, label and page that should be used for any parameter in the public interface.
+- ID-577631 - When importing a USD file through UsdIn node that has unresolved <UDIM> texture file paths, warning messages were thrown during rendering and the relevant file path attributes were not populated.
+- ID-553366 - Material locations imported via the UsdIn node would not be created correctly if they were composed through a Specializes composition arc at an ancestor level above the Material Group location.
+- ID-550113 - When baking a Material through the UsdMaterialBake node, shader parameters promoted to the material interface while also having a shader input connection would cause an error to occur in the terminal. In this scenario, Katana will author the shader connection, and write the material interface with a default value on the exported USD Layer.
+
 # 23.05_fn5 - 22.05_fn4 
 
 - ID-565975 - Target renderers explicitly or implicitly specified in USD shader nodes were not always respected when importing the shader nodes through a UsdIn node.
-- ID-580075 - perhaps not?
 - ID-569853 - Some attributes from Arnold's ramp_rbg shaders were not exported correctly from the UsdMaterialBake node.
 - ID-574279 - Attributes of type `uint` were not imported into Katana via KatanaUsdPlugins. Lossy conversion has been added to import `uint` Attributes as IntAttributes via static casting.
 

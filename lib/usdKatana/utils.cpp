@@ -82,7 +82,9 @@
 #include "vtKatana/array.h"
 #include "vtKatana/value.h"
 
+#include "usdKatana/baseMaterialHelpers.h"
 #include "usdKatana/blindDataObject.h"
+#include "usdKatana/debugCodes.h"
 #include "usdKatana/lookAPI.h"
 #include "usdKatana/baseMaterialHelpers.h"
 
@@ -246,18 +248,16 @@ static const std::string _ResolveAssetPath(const SdfAssetPath& assetPath)
             }
         }
 
-        // TP 485194: As of 21.05, HdStorm will attempt to bind missing textures, causing a crash
-        // when it tries to dereference the texture to get its GLuint handle.  If we couldn't
-        // resolve the path, return an empty string; unfortunately this means we don't show the
-        // original path in Katana attributes.
-        TF_WARN("No resolved path for UDIM texture @%s@", rawPath.c_str());
-        return std::string();
+        // Unresolved paths are still shown in katana attributes.
+        TF_DEBUG(USDKATANA_FILE_RESOLVE_UDIM)
+            .Msg("No resolved path for UDIM texture @%s@", rawPath.c_str());
+        return rawPath;
     }
 
     // There's no resolved path and it's not a UDIM path.
     if (!rawPath.empty())
     {
-        TF_WARN("No resolved path for @%s@", rawPath.c_str());
+        TF_DEBUG(USDKATANA_FILE_RESOLVE_UDIM).Msg("No resolved path for @%s@", rawPath.c_str());
     }
 
     return rawPath;
@@ -1001,6 +1001,30 @@ std::string UsdKatanaUtils::GenerateShadingNodeHandle(const UsdPrim& shadingNode
     return name;
 }
 
+std::string UsdKatanaUtils::GetConnectedShaderNestedName(const UsdPrim& materialPrim,
+                                                         const SdfPath& connectedShaderPath)
+{
+    // Get nested name of connected shader with optional delimiter.
+    // For example /RootNode/material/war_hammer_001/UsdPreviewSurface/ShaderUsdPreviewSurface for
+    // materialPrim /RootNode/material/war_hammer_001 this method should return
+    // UsdPreviewSurfaceShaderUsdPreviewSurface if the delimited is "".
+    static const std::string delimiterStr = TfGetEnvSetting(USD_KATANA_NESTED_NODE_DELIMITER);
+    SdfPath matchingShaderPath = connectedShaderPath;
+    std::string shaderName = matchingShaderPath.GetName();
+    while (matchingShaderPath.GetParentPath() != materialPrim.GetPath() &&
+           !matchingShaderPath.IsAbsoluteRootPath())
+    {
+        shaderName = matchingShaderPath.GetParentPath().GetName() + delimiterStr + shaderName;
+        matchingShaderPath = matchingShaderPath.GetParentPath();
+    }
+    // If the path never matches the material prim path, revert to the previous behaviour.
+    if (matchingShaderPath.IsAbsoluteRootPath())
+    {
+        return connectedShaderPath.GetName();
+    }
+    return shaderName;
+}
+
 void
 _FindCameraPaths_Traversal( const UsdPrim &prim, SdfPathVector *result )
 {
@@ -1267,7 +1291,8 @@ std::string UsdKatanaUtils::_GetDisplayGroup(const UsdPrim& prim, const SdfPath&
         SdfPath parentPath;
 
         UsdShadeMaterial materialSchema = UsdShadeMaterial(prim);
-        if (materialSchema.HasBaseMaterial()) {
+        if (materialSchema.HasBaseMaterial() && prim.HasAPI<UsdKatanaLookAPI>())
+        {
             // This base material is defined as a derivesFrom relationship
             parentPath = materialSchema.GetBaseMaterialPath();
         }
