@@ -24,7 +24,7 @@ from functools import reduce
 import logging
 import time
 
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from Katana import NodegraphAPI
 import UI4

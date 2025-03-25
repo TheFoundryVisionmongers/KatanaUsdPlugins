@@ -1,5 +1,9 @@
 # Change List
 
+# 24.05_PySide_fn1
+
+- Added External KatanaUsdPlugins repository support for PySide and Katana 8.0.
+
 # 22.05_fn5 -  23.05_fn7 - 24.05_fn2
 
 - ID-562280 - UsdMaterialBake did not support Resolved Materials. A new documentation page has been added to the developer guide under the Resolved Materials heading within the Plugins > KatanaUSDPlugins > UsdExport page.

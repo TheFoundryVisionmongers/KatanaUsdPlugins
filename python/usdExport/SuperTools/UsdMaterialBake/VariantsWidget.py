@@ -79,8 +79,7 @@ class VariantsWidget(QtWidgets.QFrame):
             self.customContextMenu)
         self.listWidget.model().rowsMoved.connect(self.__onRowMoved)
 
-        self.deleteSelectedAction = QtWidgets.QAction('Delete',
-                                                      self.listWidget)
+        self.deleteSelectedAction = QtGui.QAction('Delete', self.listWidget)
         self.listWidget.addAction(self.deleteSelectedAction)
         self.deleteSelectedAction.triggered.connect(self.deleteSelectedVariant)
         self.deleteSelectedAction.setShortcut(QtCore.Qt.Key_Delete)

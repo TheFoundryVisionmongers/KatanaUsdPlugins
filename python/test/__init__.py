@@ -4,7 +4,7 @@ Global initialisation for this test package.
 """
 from __future__ import absolute_import
 
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 import TestUtils.Integration
 
