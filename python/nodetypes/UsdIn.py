@@ -53,6 +53,14 @@ nb.setHintsForParameter('fileName', {
     'fileTypes':'usd|usda|usdc|usdz',
 })
 
+gb.set('assetResolverContext', '')
+nb.setHintsForParameter('assetResolverContext', {
+    'help': """
+        Sets the Asset Resolver Context which will be bound when opening the stage. If this is not
+        specified, a default context is used based on the Asset Resolver for the fileName parameter.
+    """,
+})
+
 gb.set('location', '/root/world/geo')
 nb.setHintsForParameter('location', {
     'widget' : 'scenegraphLocation',
@@ -205,6 +213,8 @@ def buildUsdInOpArgsAtGraphState(self, graphState):
 
     gb.set('fileName',
             self.getParameter('fileName').getValue(frameTime))
+    gb.set('assetResolverContext',
+            self.getParameter('assetResolverContext').getValue(frameTime))
     gb.set('location',
             self.getParameter('location').getValue(frameTime))
 
@@ -350,7 +360,7 @@ def buildOpChain(self, interface):
         gb = FnAttribute.GroupBuilder()
 
 
-        for name in ('fileName', 'isolatePath'):
+        for name in ('fileName', 'isolatePath', 'assetResolverContext'):
             gb.set(name, interface.buildAttrFromParam(
                     self.getParameter(name)))
 

@@ -193,7 +193,11 @@ void ApplyJointAnimation(const UsdSkelSkinningQuery& skinningQuery,
         [&](size_t start, size_t end) {
             for (size_t i = start; i < end; ++i)
             {
-                points[i] = skelToPrimLocal.Transform(points[i]);
+                GfVec3f& point{points[i]};
+                const GfVec3d transformPoint{skelToPrimLocal.Transform(point)};
+                point.Set(static_cast<float>(transformPoint[0]),
+                          static_cast<float>(transformPoint[1]),
+                          static_cast<float>(transformPoint[2]));
             }
         },
         /*grainSize*/ 1000);

@@ -1,5 +1,10 @@
 # Change List
 
+# 22.05_fn5 -  23.05_fn7
+
+- ID-562280 - UsdMaterialBake did not support Resolved Materials. A new documentation page has been added to the developer guide under the Resolved Materials heading within the Plugins > KatanaUSDPlugins > UsdExport page.
+- ID-577960 - When loading a USD stage through the UsdIn node, an Asset Resolver Context can be specified by setting the assetResolverContext parameter. If no assetResolverContext is specified, a default Asset Resolver Context is used based on the Asset Resolver type which is used to handle the asset specified in the fileName parameter.
+
 # 23.05_fn6
 
 - ID-545898 - Parameters that are in the public interface from a USD material are now imported via UsdIn with the correct name. UsdIn creates a layout.{shaderNodeName}.parameterVars.{parameterName}.hints attribute to give Katana the name, label and page that should be used for any parameter in the public interface.
