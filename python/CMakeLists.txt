@@ -22,5 +22,8 @@
 
 add_subdirectory(nodetypes)
 if (ENABLE_USD_EXPORT)
+    if (BUILD_KATANA_INTERNAL_USD_PLUGINS)
+        add_subdirectory(test)
+    endif()
     add_subdirectory(usdExport)
 endif()

@@ -709,7 +709,9 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
             materialPort = material.CreateInput(interfaceName, sdfType)
 
             sourceShaderPort = sourceShader.GetInput(sourceParamName)
-            if sourceShaderPort:
+            # If the source shader port has an incoming connection, write a default value to the
+            # material port.
+            if sourceShaderPort and not sourceShaderPort.HasConnectedSource():
                 value = sourceShaderPort.Get()
                 materialPort.Set(value)
             else:
@@ -728,10 +730,15 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, material):
         sourceShaderPort = sourceShader.CreateInput(sourceParamName,
                                                     sourceSdfType)
 
-        materialConnectableApi = UsdShade.ConnectableAPI(material)
-        sourceShaderPort.ConnectToSource(
-            materialConnectableApi, interfaceName,
-            UsdShade.AttributeType.Input, sourceSdfType)
+        # If the input does not already have a source, connect it to the material port. An input
+        # could already have a source in situations where an input has been added to the material
+        # interface, and then connected to a source. In this case, we don't want to override the
+        # connection.
+        if not sourceShaderPort.HasConnectedSource():
+            materialConnectableApi = UsdShade.ConnectableAPI(material)
+            sourceShaderPort.ConnectToSource(
+                materialConnectableApi, interfaceName,
+                UsdShade.AttributeType.Input, sourceSdfType)
 
 
 def GetShaderAttrSdfType(shaderType, shaderAttr, isOutput=False):

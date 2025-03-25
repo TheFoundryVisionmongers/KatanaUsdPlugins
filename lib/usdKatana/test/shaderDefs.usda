@@ -1,0 +1,24 @@
+#usda 1.0
+
+def Shader "FnTestRectLight" (
+    doc = "A shader which is used for testing light import/export."
+    sdrMetadata = {
+        token role = "FnTestRectLight"
+        token schemaName = "FnTestRectLightAPI"
+        token apiSchemasForAttrPruning = "LightAPI"
+        token typedSchemaForAttrPruning = "RectLight"
+        token schemaKind = "singleApply"
+        token schemaBase = "APISchemaBase"
+        token apiSchemaAutoApplyTo = "RectLight"
+    }
+)
+{
+    uniform token info:id = "FnTestRectLight"
+    uniform token info:implementationSource = "sourceAsset"
+    uniform asset info:glslfx:sourceAsset = @./empty.glslfx@
+
+    float inputs:intensity = 0.0 (
+        doc = """An intensity attribute."""
+    )
+    color3f inputs:color = (1.0, 1.0, 1.0)
+}

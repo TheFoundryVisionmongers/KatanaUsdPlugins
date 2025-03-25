@@ -4,6 +4,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
                       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules
                       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/macros)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/build-utils.cmake)
+
 # Language standard is C++17.
 set(CMAKE_CXX_STANDARD 17)
 

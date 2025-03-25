@@ -38,6 +38,8 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 TF_REGISTRY_FUNCTION(TfDebug)
 {
+    TF_DEBUG_ENVIRONMENT_SYMBOL(USDKATANA_FILE_RESOLVE_UDIM,
+                                "Log messages related to resolving UDIM file paths");
     TF_DEBUG_ENVIRONMENT_SYMBOL(USDKATANA_CACHE_RENDERER,
                 "Log messages related to cached renderer objects");
     TF_DEBUG_ENVIRONMENT_SYMBOL(USDKATANA_CACHE_STAGE,

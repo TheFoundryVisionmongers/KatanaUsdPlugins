@@ -1,5 +1,12 @@
 # Change List
 
+# 22.05_fn5
+
+- ID-562280 - UsdMaterialBake did not support Resolved Materials. A new documentation page has been added to the developer guide under the Resolved Materials heading within the Plugins > KatanaUSDPlugins > UsdExport page.
+- ID-577960 - When loading a USD stage through the UsdIn node, an Asset Resolver Context can be specified by setting the assetResolverContext parameter. If no assetResolverContext is specified, a default Asset Resolver Context is used based on the Asset Resolver type which is used to handle the asset specified in the fileName parameter.
+- ID-577631 - When importing a USD file through a UsdIn node that has unresolved <UDIM> texture file paths, warning messages were thrown during rendering and the relevant file path attributes were not populated.
+- ID-553366 - Material locations imported via the UsdIn node would not be created correctly if they were composed through a Specializes composition arc at an ancestor level above the Material Group location.
+- ID-550113 - When baking a Material through the UsdMaterialBake node, shader parameters promoted to the material interface while also having a shader input connection would cause an error to occur in the terminal. In this scenario, Katana will author the shader connection, and write the material interface with a default value on the exported USD Layer.
 
 # 22.05_fn4
 

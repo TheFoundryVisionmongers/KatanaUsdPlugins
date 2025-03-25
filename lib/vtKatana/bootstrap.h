@@ -30,6 +30,8 @@
 #ifndef VTKATANA_BOOTSTRAP_H
 #define VTKATANA_BOOTSTRAP_H
 
+#include <string>
+
 #include "vtKatana/api.h"
 
 #include "pxr/pxr.h"

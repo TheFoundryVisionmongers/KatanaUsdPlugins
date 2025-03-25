@@ -80,3 +80,58 @@ pxr_shared_library(${PXR_PACKAGE}
 if(CMAKE_SYSTEM_NAME MATCHES Windows)
 set_source_files_properties(cache.cpp PROPERTIES COMPILE_FLAGS "/Od")
 endif()
+
+# === Tests ===
+if (BUILD_KATANA_INTERNAL_USD_PLUGINS AND UNIX)
+
+    set(PACKAGE_TESTS usdKatana.internal.Import)
+
+    usdKatana_add_test_executable(${PACKAGE_TESTS}
+        test/main.cpp
+        test/readLightTest.cpp
+        test/readLightFilterTest.cpp
+    )
+
+    target_compile_definitions(${PACKAGE_TESTS}
+        PRIVATE
+        -D_GLIBCXX_PERMIT_BACKWARD_HASH=1
+    )
+
+    file(COPY
+        test/light1.usda
+        test/light2.usda
+        test/light3.usda
+        test/light4.usda
+        test/lightfilter1.usda
+        DESTINATION
+        ${CMAKE_CURRENT_BINARY_DIR}/test)
+    file(COPY
+        test/shaderDefs.usda
+        test/empty.glslfx
+        DESTINATION
+        ${CMAKE_CURRENT_BINARY_DIR}/test/shaders)
+
+    target_include_directories(${PACKAGE_TESTS}
+        PRIVATE
+        ${KATANA_API_INCLUDE_DIR}
+        ${KATANA_USD_PLUGINS_SRC_ROOT}/lib
+        ${KATANA_USD_PLUGINS_SRC_ROOT}/plugin
+    )
+
+    target_link_libraries(${PACKAGE_TESTS}
+        PUBLIC
+        usd
+        sdf
+        sdr
+        tf
+        usdShade
+
+        PRIVATE
+        ${PXR_PACKAGE}
+        vtKatana
+        katanaPluginApi
+        katanaOpApi
+
+        GTest::gtest
+    )
+endif()

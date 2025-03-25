@@ -69,10 +69,11 @@
 #include "vtKatana/array.h"
 #include "vtKatana/value.h"
 
-#include "usdKatana/utils.h"
-#include "usdKatana/blindDataObject.h"
-#include "usdKatana/lookAPI.h"
 #include "usdKatana/baseMaterialHelpers.h"
+#include "usdKatana/blindDataObject.h"
+#include "usdKatana/debugCodes.h"
+#include "usdKatana/lookAPI.h"
+#include "usdKatana/utils.h"
 
 #include <FnLogging/FnLogging.h>
 
@@ -181,7 +182,11 @@ void ApplyJointAnimation(const UsdSkelSkinningQuery& skinningQuery,
         [&](size_t start, size_t end) {
             for (size_t i = start; i < end; ++i)
             {
-                points[i] = skelToPrimLocal.Transform(points[i]);
+                GfVec3f& point{points[i]};
+                const GfVec3d transformPoint{skelToPrimLocal.Transform(point)};
+                point.Set(static_cast<float>(transformPoint[0]),
+                          static_cast<float>(transformPoint[1]),
+                          static_cast<float>(transformPoint[2]));
             }
         },
         /*grainSize*/ 1000);
@@ -236,18 +241,16 @@ static const std::string _ResolveAssetPath(const SdfAssetPath& assetPath)
             }
         }
 
-        // TP 485194: As of 21.05, HdStorm will attempt to bind missing textures, causing a crash
-        // when it tries to dereference the texture to get its GLuint handle.  If we couldn't
-        // resolve the path, return an empty string; unfortunately this means we don't show the
-        // original path in Katana attributes.
-        TF_WARN("No resolved path for UDIM texture @%s@", rawPath.c_str());
-        return std::string();
+        // Unresolved paths are still shown in katana attributes.
+        TF_DEBUG(USDKATANA_FILE_RESOLVE_UDIM)
+            .Msg("No resolved path for UDIM texture @%s@", rawPath.c_str());
+        return rawPath;
     }
 
     // There's no resolved path and it's not a UDIM path.
     if (!rawPath.empty())
     {
-        TF_WARN("No resolved path for @%s@", rawPath.c_str());
+        TF_DEBUG(USDKATANA_FILE_RESOLVE_UDIM).Msg("No resolved path for @%s@", rawPath.c_str());
     }
 
     return rawPath;
@@ -1257,7 +1260,8 @@ std::string UsdKatanaUtils::_GetDisplayGroup(const UsdPrim& prim, const SdfPath&
         SdfPath parentPath;
 
         UsdShadeMaterial materialSchema = UsdShadeMaterial(prim);
-        if (materialSchema.HasBaseMaterial()) {
+        if (materialSchema.HasBaseMaterial() && prim.HasAPI<UsdKatanaLookAPI>())
+        {
             // This base material is defined as a derivesFrom relationship
             parentPath = materialSchema.GetBaseMaterialPath();
         }

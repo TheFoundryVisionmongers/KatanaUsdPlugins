@@ -1,0 +1,45 @@
+#usda 1.0
+(
+    defaultPrim = "root"
+)
+
+def "root" (
+    prepend apiSchemas = ["ListAPI"]
+    kind = "component"
+)
+{
+    rel lightList = [
+        </root/lgt/gaffer/UsdRectLight>,
+    ]
+    token lightList:cacheBehavior = "consumeAndHalt"
+
+    def "lgt"
+    {
+        def "gaffer"
+        {
+            def RectLight "UsdRectLight" (
+                prepend apiSchemas = ["LightAPI", "ShadowAPI", "ShapingAPI", "KatanaLightAPI"]
+            )
+            {
+                prepend rel collection:lightLink:excludes = </root/geo/primitive_sphere>
+                prepend rel collection:lightLink:includes = </root/geo/primitive_torus>
+                prepend rel collection:shadowLink:excludes = </root/geo/primitive_torus>
+                prepend rel collection:shadowLink:includes = </root/geo/primitive_sphere>
+                uniform double geometry:centerOfInterest = 9.340992464287838
+                float inputs:width = 2.1
+                color3f inputs:color = (0.1, 0.2, 0.3)
+                float inputs:exposure = -0.4
+                float inputs:intensity = 40
+                bool inputs:shadow:enable = 0
+                float inputs:shadow:falloffGamma = 223.0
+                asset inputs:texture:file = @C:/path/to/image/image_plane.tex@
+                uniform string[] katana:id = ["usd:UsdLuxRectLight"]
+                uniform token usd:light:shaderId = "RectLight"
+                float3 xformOp:rotateXYZ = (90, 71.91229, -180)
+                float3 xformOp:scale = (1, 1, 1)
+                double3 xformOp:translate = (0.218551695346833, 6.606712399772658, 0.09504915773868323)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+            }
+        }
+    }
+}
