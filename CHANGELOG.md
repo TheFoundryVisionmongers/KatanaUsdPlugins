@@ -1,6 +1,6 @@
 # Change List
 
-# 24.05_fn3
+# 24.05_fn3 - 24.05_PySide_fn2
 
 - ID-596491 - When exporting materials and shaders via the UsdMaterialBake node, warnings could appear for certain shaders in the terminal and the shaders were not exported.
 
