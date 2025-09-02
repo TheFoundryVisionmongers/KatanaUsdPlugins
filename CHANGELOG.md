@@ -1,5 +1,9 @@
 # Change List
 
+# 23.05_fn8 - 24.05_fn4
+
+- ID-599908 - When converting from USD to Katana, material binding information on USD volumes was lost.
+
 # 24.05_fn3
 
 - ID-596491 - When exporting materials and shaders via the UsdMaterialBake node, warnings could appear for certain shaders in the terminal and the shaders were not exported.

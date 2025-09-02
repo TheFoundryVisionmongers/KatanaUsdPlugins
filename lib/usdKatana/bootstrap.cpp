@@ -92,7 +92,6 @@ void BootstrapImpl(const std::string& katanaPath)
         path.erase(path.length() - binPrefix.length());
     }
 
-    // Boostrap FnAttribute.
     if (!FnAttribute::Bootstrap(path))
     {
         FnLogError("Failed to bootstrap FnAttribute from Katana at " << path);

@@ -28,6 +28,7 @@
 #include <FnLogging/FnLogging.h>
 
 #include "usdKatana/attrMap.h"
+#include "usdKatana/readXformable.h"
 #include "usdKatana/usdInPrivateData.h"
 #include "vtKatana/array.h"
 
@@ -39,6 +40,7 @@ void UsdKatanaReadOpenVDBAsset(const UsdVolOpenVDBAsset& field,
                                const UsdKatanaUsdInPrivateData& data,
                                UsdKatanaAttrMap& attrs)
 {
+    UsdKatanaReadXformable(field, data, attrs);
     attrs.set("type", FnKat::StringAttribute("openvdbasset"));
     attrs.set("tabs.scenegraph.stopExpand", FnKat::IntAttribute(1));
 
