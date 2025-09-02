@@ -32,6 +32,7 @@
 #include <FnLogging/FnLogging.h>
 
 #include "usdKatana/attrMap.h"
+#include "usdKatana/readGprim.h"
 #include "usdKatana/usdInPrivateData.h"
 #include "usdKatana/utils.h"
 
@@ -45,8 +46,9 @@ void UsdKatanaReadVolume(const UsdVolVolume& volume,
                          const UsdKatanaUsdInPrivateData& data,
                          UsdKatanaAttrMap& attrs)
 {
-    attrs.set("type", FnKat::StringAttribute("volume"));
+    UsdKatanaReadGprim(volume, data, attrs);
 
+    attrs.set("type", FnKat::StringAttribute("volume"));
     // Set all attributes for fields
     FieldMap map = volume.GetFieldPaths();
     for (const auto& pair : map)
