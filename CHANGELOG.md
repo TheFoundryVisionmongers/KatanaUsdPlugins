@@ -1,5 +1,10 @@
 # Change List
 
+# 23.05_fn8
+
+- ID-599908 - When converting from USD to Katana, material binding information on USD volumes was lost.
+- ID-596491 - When exporting materials and shaders via the UsdMaterialBake node, warnings could appear for certain shaders in the terminal and the shaders were not exported.
+
 # 22.05_fn5 -  23.05_fn7
 
 - ID-562280 - UsdMaterialBake did not support Resolved Materials. A new documentation page has been added to the developer guide under the Resolved Materials heading within the Plugins > KatanaUSDPlugins > UsdExport page.

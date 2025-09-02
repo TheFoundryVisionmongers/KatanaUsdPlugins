@@ -508,8 +508,7 @@ class UsdExport(BaseOutputFormat):
         # Validate rootPrimName, must start with / and must not end with /
         if not rootPrimName.startswith("/"):
             rootPrimName = "/" + rootPrimName
-        if rootPrimName.endswith("/"):
-            rootPrimName = rootPrimName[:-1]
+        rootPrimName = rootPrimName.removesuffix("/")
         variantName = None
         if createVariantSet:
             # Write all material data to the same variant file

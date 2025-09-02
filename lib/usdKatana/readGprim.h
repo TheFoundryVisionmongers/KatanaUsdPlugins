@@ -30,6 +30,7 @@
 #ifndef USDKATANA_READGPRIM_H
 #define USDKATANA_READGPRIM_H
 
+#include <FnAttribute/FnAttribute.h>
 #include <pxr/pxr.h>
 
 PXR_NAMESPACE_OPEN_SCOPE

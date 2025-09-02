@@ -254,7 +254,7 @@ def CreateEmptyShaders(stage, materialNodes, materialPath):
         shaderId = str(materialNodeAttrs.getChildByName("type").getValue())
         target = str(materialNodeAttrs.getChildByName("target").getValue())
         sdrShader = GetSdrShaderFromShaderTypeAndTarget(shaderId, target)
-        if shader:
+        if shader and sdrShader:
             shader.SetShaderId(sdrShader.GetIdentifier())
         else:
             log.warning(
@@ -443,12 +443,6 @@ def AddParameterToShader(shaderParamName, paramAttr, shader, shaderId=None,
         return shaderInput
     return None
 
-def _ShaderIdToShaderType(shaderId):
-    idTokens = Sdf.Path.TokenizeIdentifier(shaderId)
-    # Only Arnold uses namespaced ShaderID now
-    if len(idTokens) == 2:
-        return idTokens[1]
-    return shaderId
 
 def _EncodePortName(name):
     """
@@ -563,7 +557,7 @@ def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shader, target,
             shaderId = shader.GetShaderId()
             sdrShader = GetSdrShaderFromShaderTypeAndTarget(shaderId, target)
             portConnectionSdfType = GetShaderAttrSdfType(
-                _ShaderIdToShaderType(shaderId),
+                shaderId,
                 connectionName,
                 sdrShader.GetSourceType(),
                 isOutput=False,
@@ -589,9 +583,11 @@ def _ReadConnectionsGroup(stage, connectionsAttr, materialPath, shader, target,
             if not sourceSdfType:
                 log.warning(
                     'Unable to map type for output on connection "%s", '
-                    'assuming "Token".',
-                    connection)
-                sourceSdfType = Sdf.ValueTypeNames.Token
+                    'assuming same as input "%s".',
+                    connection,
+                    portConnectionSdfType,
+                )
+                sourceSdfType = portConnectionSdfType
 
             outputShaderConnectableApi = UsdShade.ConnectableAPI(outputShader)
             inputPort.ConnectToSource(
@@ -710,7 +706,6 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, materialNodesAt
         sourceShaderPath = material.GetPath().AppendChild(sourceShaderName)
         sourceShader = UsdShade.Shader.Get(stage, sourceShaderPath)
         shaderId = sourceShader.GetShaderId()
-        shaderType = _ShaderIdToShaderType(shaderId)
         #Save the parameter name so we can find it in the parameters attribute.
         parameterName = interfaceName
 
@@ -727,9 +722,7 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, materialNodesAt
             target = materialNode.getChildByName("target").getValue()
             sdrShader = GetSdrShaderFromShaderTypeAndTarget(shaderId, target)
             sourceType = sdrShader.GetSourceType() if sdrShader is not None else None
-            sdfType = GetShaderAttrSdfType(
-                shaderType, sourceParamName, sourceType, isOutput=False
-            )
+            sdfType = GetShaderAttrSdfType(shaderId, sourceParamName, sourceType, isOutput=False)
             #Default to Token Type if not found.
             if sdfType is None:
                 log.debug('Unable to find input port "%s" on input '
@@ -768,7 +761,7 @@ def AddMaterialInterfaces(stage, parametersAttr, interfacesAttr, materialNodesAt
                 UsdShade.AttributeType.Input, sourceSdfType)
 
 
-def GetShaderAttrSdfType(shaderType, shaderAttr, sourceType=None, isOutput=False):
+def GetShaderAttrSdfType(shaderId, shaderAttr, sourceType=None, isOutput=False):
     """
     Retrieves the SdfType of the attribute of a given Shader.
     This is retrieved from the Usd Shader Registry C{Sdr.Registry}. The shaders
@@ -776,20 +769,20 @@ def GetShaderAttrSdfType(shaderType, shaderAttr, sourceType=None, isOutput=False
     correctly. If not found in the Shader Registry, try to do our best to
     find the type from the RenderInfoPlugin.
 
-    @type shaderType: C{str}
+    @type shaderId: C{str}
     @type shaderAttr: C{str}
     @type sourceType: C{str}
     @type isOutput: C{bool}
     @rtype: C{Sdf.ValueTypeNames}
-    @param shaderType: The name of the shader.
+    @param shaderId: The identifier of the shader.
     @param shaderAttr: The name of the attribute on the shader.
     @param isOutput: Whether the attribute is an input or output. C{False}
         by default. Set to True if the attribute is an output.
     @param sourceType: The sourceType of the shader.
     @return: The Usd Sdf Type for the attribute of the provided shader or None
-        if the shaderType cannot be found or the shaderAttr cannot be found.
+        if the shaderId cannot be found or the shaderAttr cannot be found.
     """
-    shader = GetShaderNodeFromRegistry(shaderType, sourceType)
+    shader = GetShaderNodeFromRegistry(shaderId, sourceType)
     if shader:
         # From the Docs: Two scenarios can result: an exact mapping from
         # property type to Sdf type, and an inexact mapping. In the first
@@ -804,11 +797,23 @@ def GetShaderAttrSdfType(shaderType, shaderAttr, sourceType=None, isOutput=False
             shaderOutput = shader.GetOutput(shaderAttr)
             if shaderOutput:
                 return shaderOutput.GetTypeAsSdfType()[0]
-        else:
-            shaderInput = shader.GetInput(shaderAttr)
-            if shaderInput:
-                return shaderInput.GetTypeAsSdfType()[0]
-    log.warning('Unable to read input shader %s in the Sdr.Registry.', shaderType)
+            log.warning(
+                "Unable to read output %s on shader %s in the Sdr.Registry.",
+                shaderAttr,
+                shaderId,
+            )
+            return None
+        shaderInput = shader.GetInput(shaderAttr)
+        if shaderInput:
+            return shaderInput.GetTypeAsSdfType()[0]
+        log.warning(
+            "Unable to read input %s on shader %s in the Sdr.Registry.",
+            shaderAttr,
+            shaderId,
+        )
+        return None
+
+    log.warning("Unable to read input shader %s in the Sdr.Registry.", shaderId)
     return None
 
 
