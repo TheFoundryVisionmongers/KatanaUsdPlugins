@@ -37,6 +37,65 @@
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
+namespace
+{
+// Shift the given StaticSceneCreateOpArgs to the given destination.
+//
+// For example, the following StaticSceneCreateOpArgs and /root/world/geo are specified:
+//
+// sscOpArgs
+// └── "c"
+//     └── "world"
+//         └── "c"
+//             └── "geo"
+//                 └── "c"
+//                     └── "scene"
+//                         └── ...
+//
+// The result set to sscOpArgs is:
+//
+// sscOpArgs ()
+// └── "c"
+//     └── "scene"
+//         └── ...
+void shiftStaticSceneCreateOpArgs(FnKat::GroupAttribute* sscOpArgs, std::string_view dest)
+{
+    if (dest.substr(0, 6) != "/root/")
+    {
+        return;
+    }
+    size_t cur = 6;
+    bool foundElement = true;
+
+    do
+    {
+        size_t next = dest.find('/', cur);
+        if (next == cur)
+        {
+            break;
+        }
+        if (next == std::string::npos)
+        {
+            next = dest.size();
+        }
+        const std::string_view seg = dest.substr(cur, next - cur);
+        cur = next + 1;
+
+        foundElement = false;
+        const FnKat::GroupAttribute childAttrs = sscOpArgs->getChildByName("c");
+        for (int i = 0; i < childAttrs.getNumberOfChildren(); ++i)
+        {
+            if (childAttrs.getChildName(i) == seg)
+            {
+                *sscOpArgs = childAttrs.getChildByIndex(i);
+                foundElement = true;
+                break;
+            }
+        }
+    } while (foundElement && cur < dest.size());
+}
+}  // namespace
+
 USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_PointInstancerOp, privateData, opArgs, interface)
 {
     UsdGeomPointInstancer instancer =
@@ -96,63 +155,15 @@ USDKATANA_USDIN_PLUGIN_DEFINE(UsdInCore_PointInstancerOp, privateData, opArgs, i
     // Create "instance source" children using BuildIntermediate.
     //
     UsdKatanaUsdInArgsRefPtr usdInArgs = privateData.GetUsdInArgs();
-    FnKat::GroupAttribute childAttrs = sourcesSSCAttrs.getChildByName("c");
-    for (int64_t i = 0; i < childAttrs.getNumberOfChildren(); ++i)
-    {
-        FnKat::GroupAttribute sourceAttrs = childAttrs.getChildByIndex(i);
-        // If this source contains ops (group under x) then we need to feed it 
-        // through the UsdIn op for it to be created properly.
-        if (sourceAttrs.getChildByName("x").isValid())
-        {
-            FnKat::GroupAttribute attrsGroup = sourceAttrs.getChildByName("a");
-            FnKat::StringAttribute primPathAttr =
-                attrsGroup.getChildByName("usdPrimPath");
-            if (primPathAttr.isValid())
-            {
-                auto usdPrimPathValues = primPathAttr.getNearestSample(0);
-                
-                for (size_t i = 0; i < usdPrimPathValues.size(); ++i)
-                {
-                    std::string primPath(usdPrimPathValues[i]);
-                    if (!SdfPath::IsValidPathString(primPath))
-                    {
-                        continue;
-                    }
-                    
-                    // Get the usd prim at the given source path.
-                    UsdPrim prim = usdInArgs->GetStage()->GetPrimAtPath(
-                            SdfPath(primPath));
-                    std::string nameToUse = prim.GetName();
-                    
-                    ArgsBuilder ab;
-                    ab.update(usdInArgs);
-                    ab.rootLocation =
-                        interface.getOutputLocationPath() + "/" + nameToUse;
-                    ab.isolatePath = primPath;
 
-                    interface.createChild(
-                        nameToUse, "UsdIn",
-                        FnKat::GroupBuilder()
-                            .update(interface.getOpArg())
-                            .set("childOfIntermediate", FnKat::IntAttribute(1))
-                            .set("staticScene", sourceAttrs)
-                            .build(),
-                        FnKat::GeolibCookInterface::ResetRootFalse,
-                        new UsdKatanaUsdInPrivateData(prim, ab.build(), &privateData),
-                        UsdKatanaUsdInPrivateData::Delete);
-                }
-            }
-        }
-        else
-        {
-            interface.createChild(
-                childAttrs.getChildName(i), "UsdIn.BuildIntermediate",
-                FnKat::GroupBuilder().update(opArgs).set("staticScene", sourceAttrs).build(),
-                FnKat::GeolibCookInterface::ResetRootFalse,
-                new UsdKatanaUsdInPrivateData(usdInArgs->GetRootPrim(), usdInArgs, &privateData),
-                UsdKatanaUsdInPrivateData::Delete);
-        }
-    }
+    // Prune the upper part of sourcesSSCAttrs from outputLocation.
+    shiftStaticSceneCreateOpArgs(&sourcesSSCAttrs, interface.getOutputLocationPath());
+
+    interface.execOp(
+        "UsdIn.BuildIntermediate",
+        FnKat::GroupBuilder().update(opArgs).set("staticScene", sourcesSSCAttrs).build(),
+        new UsdKatanaUsdInPrivateData(usdInArgs->GetRootPrim(), usdInArgs, &privateData),
+        UsdKatanaUsdInPrivateData::Delete);
 
     // Create "instance array" child using StaticSceneCreate.
     //

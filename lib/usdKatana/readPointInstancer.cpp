@@ -31,6 +31,7 @@
 
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/transform.h>
+#include <pxr/base/tf/envSetting.h>
 #include <pxr/usd/kind/registry.h>
 #include <pxr/usd/usd/modelAPI.h>
 #include <pxr/usd/usdGeom/pointInstancer.h>
@@ -61,6 +62,12 @@ FnLogSetup("UsdKatanaReadPointInstancer");
 
 namespace
 {
+    TF_DEFINE_ENV_SETTING(KATANA_USD_INSTANCER_ID_ALLOW_UNSAFE_CAST,
+                          false,
+                          "If set to true, reading the `ids` attribute from a `UsdGeomPointInstancer`"
+                          " allow the 64-bit integer array to be unsafely cast to the 32-bit integer"
+                          " values used in the `FnAttribute::IntAttribute`.");
+
     typedef std::map<SdfPath, UsdPrim> _PathToPrimMap;
     typedef std::map<SdfPath, GfRange3d> _PathToRangeMap;
     typedef std::map<TfToken, GfRange3d, TfTokenFastArbitraryLessThan>
@@ -336,7 +343,7 @@ void UsdKatanaReadPointInstancer(const UsdGeomPointInstancer& instancer,
     // Build sources (prototypes). Keep track of which instances use them.
     //
 
-    FnGeolibServices::StaticSceneCreateOpArgsBuilder sourcesBldr(false);
+    FnGeolibServices::StaticSceneCreateOpArgsBuilder sourcesBldr(true);
 
     std::vector<int> instanceIndices;
     instanceIndices.reserve(numInstances);
@@ -488,10 +495,6 @@ void UsdKatanaReadPointInstancer(const UsdGeomPointInstancer& instancer,
                         FnGeolibUtil::Path::GetLeafName(buildPath);
             }
 
-            // Start generating the Katana path to the prototype.
-            //
-            katProtoPath = katOutputPath + "/" + relBuildPath;
-
             // Tell the BuildIntermediate op to start building at the common
             // ancestor, but don't clobber the paths of any other prims that
             // need to be built out too.
@@ -513,20 +516,14 @@ void UsdKatanaReadPointInstancer(const UsdGeomPointInstancer& instancer,
                 }
             }
 
-            if (relBuildPathUpOne.empty())
-            {
-                // Where relBuildPathUpOne is empty, we want to essentially treat this location as
-                // its own `prototypes` location. Therefore we only need to set the prim path to
-                // itself as it will only ever contain itself.
-                sourcesBldr.setAttrAtLocation(
-                    relBuildPath, "usdPrimPath", FnKat::StringAttribute(buildPath));
-            }
-            else
-            {
-                sourcesBldr.setAttrAtLocation(relBuildPathUpOne,
-                        "usdPrimPath", FnKat::StringAttribute(
-                                usdPrimPathsTracker[relBuildPathUpOne]));
-            }
+            const std::string katBuildPathUpOne =
+                relBuildPathUpOne.empty()
+                    ? katOutputPath
+                    : katOutputPath + std::string{"/"}.append(relBuildPathUpOne);
+            sourcesBldr.setAttrAtLocation(
+                katBuildPathUpOne,
+                "usdPrimPath",
+                FnKat::StringAttribute(usdPrimPathsTracker[relBuildPathUpOne]));
 
             // Build an AttributeSet op that will delete the prototype's
             // transform, since we've already folded it into the instance
@@ -535,16 +532,13 @@ void UsdKatanaReadPointInstancer(const UsdGeomPointInstancer& instancer,
             FnGeolibServices::AttributeSetOpArgsBuilder delXformBldr;
             delXformBldr.deleteAttr("xform");
 
-            std::string relProtoPath = relBuildPath;
-            if (protoPath.GetString() != buildPath)
-            {
-                // Finish generating the Katana path to the prototype.
-                //
-                katProtoPath = katProtoPath + pystring::replace(
-                        protoPath.GetString(), buildPath, "");
-                relProtoPath = relProtoPath + pystring::replace(
-                        protoPath.GetString(), buildPath, "");
-            }
+            // Finish generating the Katana path to the prototype.
+            //
+            const std::string relProtoPath =
+                protoPath.GetString() == buildPath
+                    ? relBuildPath
+                    : relBuildPath + pystring::replace(protoPath.GetString(), buildPath, "");
+            katProtoPath = katOutputPath + std::string{"/"}.append(relProtoPath);
 
             // Dermine whether or not we can use the prototype prim itself as
             // the instance source or if we should insert an empty group into
@@ -564,17 +558,15 @@ void UsdKatanaReadPointInstancer(const UsdGeomPointInstancer& instancer,
             if (useProtoAsInstanceSource)
             {
                 delXformBldr.setLocationPaths(katProtoPath);
-                sourcesBldr.addSubOpAtLocation(
-                        relProtoPath,
-                        "AttributeSet", delXformBldr.build());
+                sourcesBldr.addSubOpAtLocation(katProtoPath, "AttributeSet", delXformBldr.build());
             }
             else
             {
                 // Tell UsdIn to create an empty group when it gets to the
                 // prototype's location.
                 //
-                sourcesBldr.setAttrAtLocation(relProtoPath,
-                        "insertEmptyGroup", FnKat::IntAttribute(1));
+                sourcesBldr.setAttrAtLocation(
+                    katProtoPath, "insertEmptyGroup", FnKat::IntAttribute(1));
 
                 // Since the empty group will have the same name as the
                 // prototype, we can add the prototype's name to its original
@@ -582,9 +574,9 @@ void UsdKatanaReadPointInstancer(const UsdGeomPointInstancer& instancer,
                 //
                 const std::string protoName = protoPrim.GetName();
                 delXformBldr.setLocationPaths(katProtoPath + "/" + protoName);
-                sourcesBldr.addSubOpAtLocation(
-                        relProtoPath + "/" + protoName,
-                        "AttributeSet", delXformBldr.build());
+                sourcesBldr.addSubOpAtLocation(katProtoPath + std::string{"/"}.append(protoName),
+                                               "AttributeSet",
+                                               delXformBldr.build());
             }
 
             // Build an AttributeSet op that will set the instance source type
@@ -594,8 +586,7 @@ void UsdKatanaReadPointInstancer(const UsdGeomPointInstancer& instancer,
             setTypeBldr.setAttr("type",
                     FnKat::StringAttribute("instance source"));
             setTypeBldr.setLocationPaths(katProtoPath);
-            sourcesBldr.addSubOpAtLocation(relProtoPath,
-                    "AttributeSet", setTypeBldr.build());
+            sourcesBldr.addSubOpAtLocation(katProtoPath, "AttributeSet", setTypeBldr.build());
 
             // Create a mapping that will link the instance's index to its
             // prototype's Katana path.
@@ -712,6 +703,57 @@ void UsdKatanaReadPointInstancer(const UsdGeomPointInstancer& instancer,
     instancerAttrMap.set("geometry.arbitrary", instancerPrimvarsBldr.build());
     instancesBldr.setAttrAtLocation("instances",
             "geometry.arbitrary", instancesPrimvarsBldr.build());
+
+    //
+    // IDs (optional)
+    //
+    const UsdAttribute idsAttr = instancer.GetIdsAttr();
+    if (idsAttr.HasValue())
+    {
+        VtArray<int64_t> idsArray{};
+        if (idsAttr.Get(&idsArray, currentTime))
+        {
+            bool allValues32Bit = true;
+            static const bool allowUnsafeCast =
+                TfGetEnvSetting(KATANA_USD_INSTANCER_ID_ALLOW_UNSAFE_CAST);
+            if (!allowUnsafeCast)
+            {
+                allValues32Bit =
+                    !std::any_of(idsArray.cbegin(),
+                                 idsArray.cend(),
+                                 [](const int64_t val)
+                                 {
+                                     return val < std::numeric_limits<int32_t>::min() ||
+                                            val > std::numeric_limits<int32_t>::max();
+                                 });
+
+                if (!allValues32Bit)
+                {
+                    _LogAndSetWarning(
+                        instancerAttrMap,
+                        "The IDs attribute contains values outside the 32-bit precision range "
+                        "and cannot be safely cast to IntAttribute. Values not converted.");
+                }
+            }
+            else
+            {
+                _LogAndSetWarning(instancerAttrMap,
+                                  "The IDs attribute is an array of 64-bit integers. The values "
+                                  "cannot be safely cast to IntAttribute. This may result in "
+                                  "integer wraparound.");
+            }
+            if (allowUnsafeCast || allValues32Bit)
+            {
+                instancerAttrMap.set("geometry.arbitrary.ids", VtKatanaMapOrCopy(idsArray));
+                if (idsArray.size() != protoIndices.size())
+                {
+                    _LogAndSetWarning(
+                        instancerAttrMap,
+                        "IDs attribute array does not match the index array in length.");
+                }
+            }
+        }
+    }
 
     //
     // Set the final aggregate bounds.

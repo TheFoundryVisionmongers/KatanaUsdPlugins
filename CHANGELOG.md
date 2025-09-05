@@ -1,5 +1,10 @@
 # Change List
 
+# 24.05_fn5 - 24.05_PySide_fn4
+
+- ID-600172 - When loading in point instancer scene locations through the UsdIn node, the **ids** attribute are now being converted and can be found in the **Attributes** tab.
+- ID-603323 - When a material was bound to a prim directly under a PointInstancer prim, UsdIn nodes failed to correctly construct the hierarchy of the PointInstancer.
+
 # 23.05_fn8 - 24.05_fn4 - 24.05_PySide_fn3
 
 - ID-599908 - When converting from USD to Katana, material binding information on USD volumes was lost.
