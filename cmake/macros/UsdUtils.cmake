@@ -170,7 +170,7 @@ function(_install_python LIBRARY_NAME)
                 set(pythonexe ${BIN_BUNDLE_PATH}/python.sh)
               endif()
             else()
-              set(pythonexe ${Python_EXECUTABLE})
+              set(pythonexe ${Python3_EXECUTABLE})
             endif()
             _replace_root_python_module(
                 ${CMAKE_CURRENT_SOURCE_DIR}/${file}

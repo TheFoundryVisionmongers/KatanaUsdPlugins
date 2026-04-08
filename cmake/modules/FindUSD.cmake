@@ -25,25 +25,32 @@
 set(USD_LIBRARIES
     ar
     arch
+    boost
     cameraUtil
+    geomUtil
     gf
     hd
+    hdar
     hf
     hio
     js
     kind
     pcp
+    pegtl
     plug
     pxOsd
+    python
     sdf
     sdr
     tf
+    ts
     trace
     usd
     usdGeom
     usdHydra
     usdImaging
     usdLux
+    usdRender
     usdRi
     usdShade
     usdSkel
@@ -68,34 +75,41 @@ set(USD_LIBRARIES
 # endforeach()
 # ------------------------------------------------------------------------------
 
-set(USD_ar_DEPENDENCIES arch;tf;plug;vt;Boost::${Boost_PYTHON_COMPONENT})
+set(USD_ar_DEPENDENCIES arch;js;tf;plug;vt;python;TBB::tbb;Python3::Python)
 set(USD_arch_DEPENDENCIES )
+set(USD_boost_DEPENDENCIES )
 set(USD_cameraUtil_DEPENDENCIES tf;gf)
-set(USD_gf_DEPENDENCIES arch;tf)
-set(USD_hd_DEPENDENCIES plug;tf;trace;vt;work;sdf;cameraUtil;hf;pxOsd;TBB::tbb)
+set(USD_gf_DEPENDENCIES arch;tf;python;Python3::Python)
+set(USD_geomUtil_DEPENDENCIES arch;gf;tf;vt;pxOsd)
+set(USD_hd_DEPENDENCIES plug;tf;trace;vt;work;sdf;cameraUtil;hf;pxOsd;sdr;TBB::tbb)
+set(USD_hdar_DEPENDENCIES hd;ar)
 set(USD_hf_DEPENDENCIES plug;tf;trace)
 set(USD_hio_DEPENDENCIES arch;js;plug;tf;vt;trace;ar;hf)
 set(USD_js_DEPENDENCIES tf)
 set(USD_kind_DEPENDENCIES tf;plug)
-set(USD_pcp_DEPENDENCIES tf;trace;vt;sdf;work;ar;Boost::${Boost_PYTHON_COMPONENT};TBB::tbb)
-set(USD_plug_DEPENDENCIES arch;tf;js;trace;work;Boost::${Boost_PYTHON_COMPONENT};TBB::tbb)
-set(USD_pxOsd_DEPENDENCIES tf;gf;vt;Boost::${Boost_PYTHON_COMPONENT})
-set(USD_sdf_DEPENDENCIES arch;tf;gf;trace;vt;work;ar;Boost::${Boost_PYTHON_COMPONENT})
-set(USD_sdr_DEPENDENCIES tf;vt;ar;sdf;Boost::${Boost_PYTHON_COMPONENT})
-set(USD_tf_DEPENDENCIES arch;Python::Python;Boost::${Boost_PYTHON_COMPONENT};TBB::tbb)
-set(USD_trace_DEPENDENCIES arch;js;tf;Boost::${Boost_PYTHON_COMPONENT};TBB::tbb)
-set(USD_usd_DEPENDENCIES arch;kind;pcp;sdf;ar;plug;tf;trace;vt;work;Boost::${Boost_PYTHON_COMPONENT};TBB::tbb)
-set(USD_usdGeom_DEPENDENCIES js;tf;plug;vt;sdf;trace;usd;work;Boost::${Boost_PYTHON_COMPONENT};TBB::tbb)
+set(USD_pcp_DEPENDENCIES tf;trace;vt;sdf;work;ar;python;TBB::tbb;Python3::Python)
+set(USD_pegtl_DEPENDENCIES arch)
+set(USD_plug_DEPENDENCIES arch;tf;js;trace;work;TBB::tbb)
+set(USD_pxOsd_DEPENDENCIES tf;gf;vt)
+set(USD_python_DEPENDENCIES boost;Python3::Python)
+set(USD_sdf_DEPENDENCIES arch;tf;gf;pegtl;trace;ts;vt;work;ar;python;TBB::tbb;Python3::Python)
+set(USD_sdr_DEPENDENCIES arch;plug;trace;tf;vt;work;ar;sdf)
+set(USD_tf_DEPENDENCIES arch;python;TBB::tbb;Python3::Python)
+set(USD_ts_DEPENDENCIES vt;gf;tf)
+set(USD_trace_DEPENDENCIES arch;js;tf;TBB::tbb)
+set(USD_usd_DEPENDENCIES arch;kind;pcp;sdf;ar;plug;tf;trace;ts;vt;work;python;TBB::tbb;Python3::Python)
+set(USD_usdGeom_DEPENDENCIES js;tf;plug;vt;sdf;trace;usd;work;TBB::tbb)
 set(USD_usdHydra_DEPENDENCIES tf;usd;usdShade)
-set(USD_usdImaging_DEPENDENCIES gf;tf;plug;trace;vt;work;hd;pxOsd;sdf;usd;usdGeom;usdLux;usdShade;usdVol;ar;TBB::tbb)
+set(USD_usdImaging_DEPENDENCIES gf;tf;plug;trace;vt;work;geomUtil;hd;hdar;hio;pxOsd;sdf;usd;usdGeom;usdLux;usdRender;usdShade;usdSkel;usdVol;ar;TBB::tbb)
 set(USD_usdLux_DEPENDENCIES tf;vt;sdf;usd;usdGeom;usdShade)
-set(USD_usdRi_DEPENDENCIES tf;vt;sdf;usd;usdShade;usdGeom;usdLux;Boost::${Boost_PYTHON_COMPONENT})
-set(USD_usdShade_DEPENDENCIES tf;vt;sdf;sdr;usd;usdGeom)
-set(USD_usdSkel_DEPENDENCIES arch;gf;tf;trace;vt;work;sdf;usd;usdGeom;Boost::${Boost_PYTHON_COMPONENT};TBB::tbb)
+set(USD_usdRender_DEPENDENCIES gf;tf;usd;usdGeom;usdShade)
+set(USD_usdRi_DEPENDENCIES tf;vt;sdf;usd;usdShade;usdGeom)
+set(USD_usdShade_DEPENDENCIES tf;vt;js;sdf;sdr;usd;usdGeom;TBB::tbb)
+set(USD_usdSkel_DEPENDENCIES arch;gf;tf;trace;vt;work;sdf;usd;usdGeom;TBB::tbb)
 set(USD_usdUI_DEPENDENCIES tf;vt;sdf;usd)
-set(USD_usdUtils_DEPENDENCIES arch;tf;gf;sdf;usd;usdGeom;Boost::${Boost_PYTHON_COMPONENT})
+set(USD_usdUtils_DEPENDENCIES arch;tf;gf;sdf;usd;usdGeom;usdShade;usdUI;TBB::tbb)
 set(USD_usdVol_DEPENDENCIES tf;usd;usdGeom)
-set(USD_vt_DEPENDENCIES arch;tf;gf;trace;Boost::${Boost_PYTHON_COMPONENT};TBB::tbb)
+set(USD_vt_DEPENDENCIES arch;tf;gf;trace;python;TBB::tbb;Python3::Python)
 set(USD_work_DEPENDENCIES tf;trace;TBB::tbb)
 
 if(NOT DEFINED USD_LIBRARY_DIR)
