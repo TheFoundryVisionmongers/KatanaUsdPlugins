@@ -1,5 +1,13 @@
 # Change List
 
+# 25.08_fn5
+
+- ID-614739 - Updated the BUILDING.md documentation, and multiple CMake issues whilst building against newer USD packages. Removed requirement for boost::Python from CMake.
+- ID-607997 - When importing a USD file that includes connections which do not adhere to USD standards, the UsdIn node would not print warnings.
+- ID-616579 - When using the UsdIn node, log messages were not being shown on Windows.
+- ID-613539 - When importing materials with identical leaf names at different USD paths via UsdIn, the materials were sharing cached attribute values.
+- ID-614903 - When converting Half types, UsdIn would ignore single values and treat arrays as Vec3.
+
 # 24.05_fn7 - 24.05_PySide_fn6 - 25.08_fn4
 
 - ID-611759 - When converting material connections via the KatanaToUsd node, component type port connections would not be retained.
