@@ -205,7 +205,7 @@ USDKATANA_USDIN_PLUGIN_DEFINE_WITH_FLUSH(UsdInCore_LookOp,
         key = FnAttribute::GroupAttribute(
                 "a", looksCacheKeyPrefixAttr,
                 "b", FnAttribute::StringAttribute(
-                            privateData.GetUsdPrim().GetName()),
+                            privateData.GetUsdPrim().GetPath().GetString()),
                 true).getHash().str();
         
         

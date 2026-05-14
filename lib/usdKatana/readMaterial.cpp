@@ -360,6 +360,21 @@ static void _ProcessShaderConnections(const UsdPrim& prim,
             TfToken sourcePathName = sourcePath.GetNameToken();
             std::tie(sourceName, sourceType) = UsdShadeUtils::GetBaseNameAndType(sourcePathName);
             UsdPrim sourcePrim = source.GetPrim();
+
+            const bool canConnect = sourceType == UsdShadeAttributeType::Input
+                                        ? connection.CanConnect(source.GetInput(sourceName))
+                                    : sourceType == UsdShadeAttributeType::Output
+                                        ? connection.CanConnect(source.GetOutput(sourceName))
+                                        : false;
+            if (!canConnect)
+            {
+                // Invalid connections are permitted, but the results may not be as expected
+                FnLogWarn("Invalid connection for "
+                          << prim.GetPath() << "." << connection.GetFullName()
+                          << ", source: " << sourcePrim.GetPath() << "."
+                          << UsdShadeUtils::GetFullName(sourceName, sourceType));
+            }
+
             if (sourceType != UsdShadeAttributeType::Output)
             {
                 if (sourcePrim.IsA<UsdShadeMaterial>())

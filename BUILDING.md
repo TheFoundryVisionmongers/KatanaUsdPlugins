@@ -52,24 +52,23 @@ There are further details if you do not wish to use Katana's thirdparty libs
 
 ### Linux Example
 ```
-cmake .. \
+cmake -B build -G Ninja \
     -DCMAKE_BUILD_TYPE="Release" \
     -DKATANA_API_LOCATION=<KATANA_ROOT> \
     -DUSE_KATANA_THIRDPARTY_LIBS=ON \
     -DCMAKE_INSTALL_PREFIX="/path/to/usd_for_katana/install"
-cmake --build . --target install --config Release --parallel 8
+cmake --build build --target install --config Release --parallel 8
 ```
 
 ### Windows Example
 
 ```
-cmake .. -G Ninja ^
+cmake  -B build -G Ninja ^
     -DCMAKE_BUILD_TYPE="Release" ^
     -DKATANA_API_LOCATION=<KATANA_ROOT> ^
     -DUSE_KATANA_THIRDPARTY_LIBS=ON ^
-    -DHAVE_SNPRINTF=True ^
     -DCMAKE_INSTALL_PREFIX="/path/to/usd_for_katana/install"
-cmake --build . --target install --config Release --parallel 8
+cmake --build build --target install --config Release --parallel 8
 ```
 
 ### USE_KATANA_THIRDPARTY_LIBS
@@ -146,29 +145,20 @@ Note: You may also need more dependencies than those we have mentioned
 depending on how you have built USD and whether you have made changes to how
 it builds.
 
-If you are using a non standard `pxrConfig.cmake` which uses CMake Targets
-instead of the full paths USD implaces by default in `pxrTargets.cmake`, then
-you may need to enable `USD_USING_CMAKE_THIRDPARTY_TARGET_DEPENDENCIES=ON` to
-allow for finding dependencies on some of these USD libraries. By default this
-means `OpenEXR`, and `OpenSubdiv` but other libraries such as `OpenImageIO`
-`JPEG`, `PNG`, `TIFF`, `PTex`, may also be needed.
-
 #### USD
-`USD_ROOT` must be provided, to the USD installation prefix. USD must be built
-with `PXR_ENABLE_PYTHON_SUPPORT` and `PXR_BUILD_IMAGING`.
+By default with no additional options, we will utilise the `pxrConfig.cmake`. For this to work, the
+`pxr_DIR` must be specified as a path to where the pxrConfig.cmake can be found; typically the root
+directory of the USD build.
 
 #### TBB
 `TBB_DIR` must be provided, to the cmake folder of the TBB installation.
 
-You may also specify `TBB_tbb_LIBRARY` and `TBB_INCLUDE_HEADERS`, or
-`TBB_ROOT_DIR` to specify use of the included findTBB.cmake.
-
 #### Python
-`Python_DIR` must be provided, to the folder containing a cmake config file for
+`Python3_DIR` must be provided, to the folder containing a cmake config file for
 the Python installation. In addition, specify:
-- `Python_EXECUTABLE` which is used to compile Python files on build
+- `Python3_EXECUTABLE` which is used to compile Python files on build
 
-You may also specify the Python_ROOT_DIR to use the default CMake
+You may also specify the Python3_ROOT_DIR to use the default CMake
 FindPython.cmake method.
 
 #### Boost
@@ -178,45 +168,36 @@ appropriately for your Boost build.
 
 #### Advanced Build Linux Example:
 ```bash
-cd /path/to/usd_for_katana
-mkdir build
-cd build
-cmake .. \
-    -DKATANA_API_LOCATION=/opt/Foundry/Katana3.2v1/ \
-    -DUSD_ROOT=/path/to/USD/ \
-    -DPXR_PY_PACKAGE_NAME=fnpxr \
-    -DTBB_DIR=/path/to/TBB/cmake \
-    -DPython_DIR=/path/to/Python/cmake \
-    -DPython_EXECUTABLE=/path/to/Python/bin/python \
-    -DBOOST_ROOT=/path/to/Boost \
-    -DUSE_BOOST_NAMESPACE_ENABLED=1 \
-    -DBoost_NAMESPACE=foundryboost \
-    -DBoost_USE_STATIC_LIBS=OFF \
-    -DCMAKE_INSTALL_PREFIX=/path/to/usd_for_katana/install
+cd /path/to/KatanaUsdPlugins
+cmake -B build -G Ninja\
+    -DCMAKE_BUILD_TYPE="Release"\
+    -DKATANA_API_LOCATION="$KATANA_ROOT"\
+    -Dpxr_DIR="/path/to/USD"\
+    -DTBB_DIR="/path/to/USD/lib/cmake/TBB"\
+    -DOpenSubdiv_DIR="/path/to/USD/lib/cmake/OpenSubdiv"\
+    -DPython3_DIR=/path/to/python/cmake\
+    -DUSE_KATANA_BOOST=ON\
+    -DCMAKE_INSTALL_PREFIX="/path/to/KatanaUsdPlugins/install"
+cmake --build build --config Release
 
-cmake --build . --target install -- -j 18
+cmake --build build --target install -- -j 18
 ```
 
 #### Advanced Build Windows Example:
 ```cmd.exe
-cd C:/path/to/usd_for_katana
-mkdir build\
-cd build
-cmake .. -G "Visual Studio 14 2015 Win64"^
+cd C:/path/to/KatanaUsdPlugins
+cmake -B build -G Ninja^
     -DCMAKE_BUILD_TYPE="Release"^
-    -DKATANA_API_LOCATION="C:/Program Files/Foundry/Katana3.2v1"^
-    -DUSD_ROOT="C:/path/to/USD/"^
-    -DPXR_PY_PACKAGE_NAME=fnpxr^
-    -DTBB_DIR="C:/path/to/TBB/cmake"^
-    -DPython_DIR="C:/path/to/Python/cmake"^
-    -DPython_EXECUTABLE="C:/path/to/Python/bin/python.exe"^
-    -DBOOST_ROOT="C:/path/to/Boost"^
-    -DUSE_BOOST_NAMESPACE_ENABLED=1^
-    -DBoost_NAMESPACE=foundryboost^
-    -DBoost_USE_STATIC_LIBS=OFF^
-    -DCMAKE_INSTALL_PREFIX="C:/path/to/usd_for_katana/install"
+    -DKATANA_API_LOCATION="%KATANA_ROOT%"^
+    -Dpxr_DIR="C:/path/to/USD/"^
+    -DTBB_DIR="C:/path/to/USD/lib/cmake"^
+    -DPython3_DIR=C:/path/to/python/cmake^
+    -DUSE_KATANA_BOOST=ON^
+    -DCMAKE_INSTALL_PREFIX="C:/path/to/KatanaUsdPlugins/install"
+cmake --build build --config Release
 
-cmake --build . --target install --config Release --parallel 18
+cmake --build build --target install --config Release --parallel 18
+
 ```
 
 It is possible to change the installation directory by setting the variable
@@ -250,30 +231,6 @@ it is assumed that these paths are `${USD_ROOT}/include` and `${USD_ROOT}/lib`
 respectively. If specifying both of these you do not have to specify `USD_ROOT`.
 As we do not support Katana on Apple, the findUSD cmake script
 will fail to find libraries on Apple systems.
-
-Below we have included examples of using this for Linux and Windows.
-
-
-Example Linux CMake:
-
-```
-cmake .. \
-    -DKATANA_API_LOCATION=<KATANA_ROOT> \
-    -DUSD_ROOT=/path/to/USD/ \
-    -DPXR_PY_PACKAGE_NAME=fnpxr \
-    -DUSD_LIBRARY_DIR=<KATANA_ROOT>/bin \
-    -DUSD_INCLUDE_DIR=<KATANA_ROOT>/external/FnUSD/include \
-    -DUSE_FOUNDRY_FIND_USD=1 \
-    -DPXR_LIB_PREFIX=libFn \
-    -DTBB_DIR=/path/to/TBB/cmake \
-    -DPython_DIR=/path/to/Python/cmake \
-    -DPython_EXECUTABLE=/path/to/Python/bin/python \
-    -DBOOST_ROOT=/path/to/Boost \
-    -DBoost_NAMESPACE=foundryboost \
-    -DUSE_BOOST_NAMESPACE_ENABLED=1 \
-    -DBoost_USE_STATIC_LIBS=OFF \
-    -DCMAKE_INSTALL_PREFIX="/path/to/usd_for_katana/install"
-```
 
 ## Setting up for Katana
 

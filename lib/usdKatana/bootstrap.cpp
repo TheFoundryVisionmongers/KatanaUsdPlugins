@@ -94,8 +94,7 @@ void BootstrapImpl(const std::string& katanaPath)
 
     if (!FnAttribute::Bootstrap(path))
     {
-        FnLogError("Failed to bootstrap FnAttribute from Katana at " << path);
-        return;
+        throw std::runtime_error("Failed to bootstrap FnAttribute from Katana at " + path);
     }
 
 // Load Katana's Plugin Manager dynamic library.
@@ -108,16 +107,15 @@ void BootstrapImpl(const std::string& katanaPath)
     void* handle = TfDlopen(path, ARCH_LIBRARY_NOW, &dlError);
     if (!handle)
     {
-        FnLogError("Failed to open " << path << " to bootstrap Katana");
-        return;
+        throw std::runtime_error("Failed to open " + path + " to bootstrap Katana");
     }
 
     // Find the symbol.
     void* symbol = findSymbol(handle, "FnPluginSystemGetHostSuite");
     if (!symbol)
     {
-        FnLogError("Failed to symbol " << path << " to bootstrap Katana");
-        return;
+        TfDlclose(handle);
+        throw std::runtime_error("Failed to find symbol for " + path + " to bootstrap Katana");
     }
 
     GetFnPluginManagerHostSuite pfnGetFnPluginManagerHostSuite =
@@ -133,6 +131,7 @@ void BootstrapImpl(const std::string& katanaPath)
         FnConfig::Config::setHost(host);
 
         Foundry::Katana::PluginManager::setHost(host);
+        Foundry::Katana::FnLogging::setHost(host);
     }
 
     TfDlclose(handle);
