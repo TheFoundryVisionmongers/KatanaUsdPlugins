@@ -24,4 +24,8 @@ def Cube "mesh"
     half[] primvars:halfArray = [1, 1, 1, 1, 1, 1, 1, 1] (
         interpolation = "constant"
     )
+
+    int64 primvars:unsupportedType = 42 (
+        interpolation = "constant"
+    )
 }

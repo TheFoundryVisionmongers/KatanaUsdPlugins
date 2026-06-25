@@ -689,9 +689,9 @@ _ReadLayoutAttrs(const UsdPrim& shadingNode, const std::string& handle,
         GfVec2f pos;
         if (posAttr.Get(&pos))
         {
-            double value[2] = { pos[0], pos[1] };
-            layoutBuilder.set(handle + ".position",
-                              FnKat::DoubleAttribute(value, 2, 1));
+            // Negate the Y position to convert from USD's coordinate system to Katana's.
+            std::array<double, 2> usdPos = {pos[0], -pos[1]};
+            layoutBuilder.set(handle + ".position", FnKat::DoubleAttribute(usdPos.data(), 2, 1));
         }
     }
 

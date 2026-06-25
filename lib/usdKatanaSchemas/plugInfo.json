@@ -40,6 +40,7 @@
                         "bases": [
                             "UsdAPISchemaBase"
                         ], 
+                        "schemaIdentifier": "KatanaAttributeEditorAPI", 
                         "schemaKind": "singleApplyAPI"
                     }, 
                     "UsdKatanaSchemasKatanaUsdCameraAPI": {
@@ -56,6 +57,7 @@
                         "bases": [
                             "UsdAPISchemaBase"
                         ], 
+                        "schemaIdentifier": "KatanaUsdCameraAPI", 
                         "schemaKind": "singleApplyAPI"
                     }, 
                     "UsdKatanaSchemasKatanaUsdLightAPI": {
@@ -72,6 +74,7 @@
                         "bases": [
                             "UsdAPISchemaBase"
                         ], 
+                        "schemaIdentifier": "KatanaUsdLightAPI", 
                         "schemaKind": "singleApplyAPI"
                     }
                 }

@@ -168,6 +168,15 @@ TEST_F(ReadUsdTypeTest, ReadHalfArrayType)
     const std::vector floatArr = valueAttr.getValuesAs<std::vector<float>, expectedNumValues>();
     ASSERT_EQ(floatArr, expectedValues);
 }
+
+TEST_F(ReadUsdTypeTest, UnsupportedPrimvarTypeNotCreated)
+{
+    // Verify that primvars with unsupported types (e.g. int64) do not produce
+    // an incomplete arbitrary attribute group.
+    const std::string attributePath = "geometry.arbitrary.unsupportedType";
+    const FnAttribute::GroupAttribute& attr = _attributes.getChildByName(attributePath);
+    ASSERT_FALSE(attr.isValid());
+}
 }  // namespace ReadUsdTypeTests
 
 PXR_NAMESPACE_CLOSE_SCOPE

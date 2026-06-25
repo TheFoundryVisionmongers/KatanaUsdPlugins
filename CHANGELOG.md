@@ -1,5 +1,11 @@
 # Change List
 
+# 25.08_fn6
+
+- ID-618732 - When importing USD primvars with unsupported value types (e.g. int64) via the UsdIn node, an incomplete arbitrary attribute group was incorrectly created. These primvars are now skipped and a warning including the full property path is logged.
+- ID-617702 - When converting node positions between Katana and USD via KatanaToUsd, UsdIn, or UsdMaterialBake, the y-axis coordinate was not negated to account for the flipped y-axis between Katana's Node Graph and USD/Qt, resulting in incorrect layout positions on round-trip.
+- ID-618584 - Updated usdGenSchema-produced files (plugInfo.json, generatedSchema.usda) to reflect changes introduced in USD 24.11 and USD 25.08, including the addition of schemaIdentifier and the replacement of doc with userDocBrief custom metadata.
+
 # 25.08_fn5
 
 - ID-614739 - Updated the BUILDING.md documentation, and multiple CMake issues whilst building against newer USD packages. Removed requirement for boost::Python from CMake.

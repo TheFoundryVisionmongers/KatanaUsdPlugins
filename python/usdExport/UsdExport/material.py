@@ -199,6 +199,8 @@ def AddShaderLayout(shaderLayoutAttr, shader):
     nodePositionAttr = shaderLayoutAttr.getChildByName("position")
     if nodePositionAttr:
         nodePosition = nodePositionAttr.getNearestSample(0)
+        # Negate the Y position to convert from Katana's coordinate system to USD's.
+        nodePosition = (nodePosition[0], -nodePosition[1])
         nodeGraphAPI.CreatePosAttr(ConvertParameterValueToGfType(
             nodePosition, Sdf.ValueTypeNames.Double2))
 
