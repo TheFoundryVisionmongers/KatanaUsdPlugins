@@ -693,7 +693,8 @@ void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
                                                        const TfToken& roleName,
                                                        FnKat::Attribute* valueAttr,
                                                        FnKat::Attribute* inputTypeAttr,
-                                                       FnKat::Attribute* elementSizeAttr)
+                                                       FnKat::Attribute* elementSizeAttr,
+                                                       const std::string& primvarPathStr)
 {
     // The following encoding is taken from Katana's
     // "LOCATIONS AND ATTRIBUTES" doc, which says this about
@@ -1001,7 +1002,8 @@ void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
         return;
     }
 
-    TF_WARN("Unsupported primvar value type: %s",
+    TF_WARN("%s : Unsupported primvar value type: %s",
+            primvarPathStr.c_str(),
             ArchGetDemangled(val.GetTypeid()).c_str());
 }
 

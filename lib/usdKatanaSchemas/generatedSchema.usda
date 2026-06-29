@@ -4,52 +4,53 @@
 )
 
 class "KatanaAttributeEditorAPI" (
-    doc = "Katana-specific transient attributes that enable manipulator support for usd."
+    customData = {
+        string userDocBrief = "Katana-specific transient attributes that enable manipulator support for usd."
+    }
 )
 {
     uniform string katana:attributeEditor:exclusiveTo (
-        doc = """A string value that stores the node on which to reflect manipulator changes.
-        """
+        customData = {
+            string userDocBrief = "A string value that stores the node on which to reflect manipulator changes."
+        }
     )
-
     uniform string katana:attributeEditor:exclusiveTo:xform (
-        doc = """A string value that stores the node on which to reflect xform manipulator changes.
-        """
-        katanaRotationOrder = 0
-        katanaTransformOrder = 0
-        katanaXformOpName = ""
+        customData = {
+            string userDocBrief = "A string value that stores the node on which to reflect xform manipulator changes."
+        }
     )
 }
 
 class "KatanaUsdCameraAPI" (
-    doc = "Katana-specific camera attributes that enable COI support for USD camera."
+    customData = {
+        string userDocBrief = "Katana-specific camera attributes that enable COI support for USD camera."
+    }
 )
 {
     double centerOfInterest = 20 (
-        doc = """Center of interest holds a distance extending from the camera's
-        origin in the direction it is facing. This defines a point at which the
-        camera can be pivoted around or translated towards or away from using
-        Katana's transform tools.
-        """
+        customData = {
+            string userDocBrief = """Center of interest holds a distance extending from the camera's\r
+        origin in the direction it is facing."""
+        }
     )
 }
 
 class "KatanaUsdLightAPI" (
-    doc = "Katana-specific attributes that enable COI and Lighting Tools support for USD lights."
+    customData = {
+        string userDocBrief = "Katana-specific attributes that enable COI and Lighting Tools support for USD lights."
+    }
 )
 {
     double centerOfInterest = 20 (
-        doc = """Center of interest holds a distance extending from the light's
-        origin in the direction it is facing. This defines a point at which the
-        light can be pivoted around or translated towards or away from using
-        Katana's transform tools.
-        """
+        customData = {
+            string userDocBrief = """Center of interest holds a distance extending from the light's\r
+        origin in the direction it is facing."""
+        }
     )
-
     double shadowFallDistance = 10 (
-        doc = """Defines a point that extends the center of interest point. Used primarily for UI
-        purposes in Katana's Lighting Tools manipulator (Shadow mode).
-        """
+        customData = {
+            string userDocBrief = "Defines a point that extends the center of interest point."
+        }
     )
 }
 

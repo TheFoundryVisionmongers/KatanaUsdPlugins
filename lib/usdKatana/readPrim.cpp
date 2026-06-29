@@ -848,8 +848,20 @@ FnKat::Attribute UsdKatanaGeomGetPrimvarGroup(const UsdGeomImageable& imageable,
 
         // Convert value to the required Katana attributes to describe it.
         FnKat::Attribute valueAttr, inputTypeAttr, elementSizeAttr;
-        UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(
-            vtValue, elementSize, typeName.GetRole(), &valueAttr, &inputTypeAttr, &elementSizeAttr);
+        UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(vtValue,
+                                                          elementSize,
+                                                          typeName.GetRole(),
+                                                          &valueAttr,
+                                                          &inputTypeAttr,
+                                                          &elementSizeAttr,
+                                                          primvar->GetAttr().GetPath().GetString());
+
+        // Skip primvars with unsupported value types to avoid creating incomplete arbitrary
+        // attribute groups.
+        if (!valueAttr.isValid())
+        {
+            continue;
+        }
 
         // Bundle them into a group attribute
         FnKat::GroupBuilder attrBuilder;
