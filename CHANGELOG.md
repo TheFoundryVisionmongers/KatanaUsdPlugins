@@ -1,5 +1,9 @@
 # Change List
 
+# 26.03_fn1
+
+- ID-618584 - Added FnNodeGraphAPI to handle Foundry specific NodeGraph behaviours.
+
 # 25.08_fn6
 
 - ID-618732 - When importing USD primvars with unsupported value types (e.g. int64) via the UsdIn node, an incomplete arbitrary attribute group was incorrectly created. These primvars are now skipped and a warning including the full property path is logged.

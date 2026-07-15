@@ -31,7 +31,14 @@
 
 #include <string>
 
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif
 #include <pxr/base/tf/pyAnnotatedBoolResult.h>
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
 #include <pxr/base/tf/pyContainerConversions.h>
 #include <pxr/base/tf/pyResultConversions.h>
 #include <pxr/base/tf/pyUtils.h>

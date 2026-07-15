@@ -54,3 +54,21 @@ class "KatanaUsdLightAPI" (
     )
 }
 
+class "FnNodeGraphAPI" (
+    customData = {
+        string userDocBrief = "Katana-specific attributes for displaying NodeGraph and Material prims."
+    }
+)
+{
+    float2 foundry:ui:nodegraph:node:inputsPos = (0, 0) (
+        customData = {
+            string userDocBrief = "Position of the Inputs terminal node in the USD Node Graph view."
+        }
+    )
+    float2 foundry:ui:nodegraph:node:outputsPos = (0, 0) (
+        customData = {
+            string userDocBrief = "Position of the Outputs terminal node in the USD Node Graph view."
+        }
+    )
+}
+
