@@ -1,0 +1,31 @@
+#usda 1.0
+(
+    doc = """Generated from Composed Stage of root layer"""
+)
+
+def Cube "mesh"
+{
+    half primvars:halfConstant = 0.35 (
+        interpolation = "constant"
+    )
+
+    half2 primvars:halfVec2 = (0.138, 0.076) (
+        interpolation = "constant"
+    )
+
+    half3 primvars:halfVec3 = (0.138, 0.076, 0.062) (
+        interpolation = "constant"
+    )
+
+    half4 primvars:halfVec4 = (0.138, 0.076, 0.062, 0.057) (
+        interpolation = "constant"
+    )
+
+    half[] primvars:halfArray = [1, 1, 1, 1, 1, 1, 1, 1] (
+        interpolation = "constant"
+    )
+
+    int64 primvars:unsupportedType = 42 (
+        interpolation = "constant"
+    )
+}

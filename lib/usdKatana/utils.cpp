@@ -689,32 +689,13 @@ _KTypeAndSizeFromUsdVec4(TfToken const &roleName,
     return true;
 }
 
-static bool
-_KTypeAndSizeFromUsdVec2(TfToken const &roleName,
-                         FnKat::Attribute *inputTypeAttr,
-                         FnKat::Attribute *elementSizeAttr)
-{
-    if (roleName.IsEmpty()) {
-        // Deserves explanation: there is no type in prman
-        // (or apparently, katana) that represents
-        // "a 2-vector with no additional behavior/meaning.
-        // UVs fall into this category.  In our pipeline,
-        // we have chosen to represent this as float[2] to
-        // renderers.
-        *inputTypeAttr = FnKat::StringAttribute("float");
-        *elementSizeAttr = FnKat::IntAttribute(2);
-    } else {
-        return false;
-    }
-    return true;
-}
-
 void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
                                                        int elementSize,
                                                        const TfToken& roleName,
                                                        FnKat::Attribute* valueAttr,
                                                        FnKat::Attribute* inputTypeAttr,
-                                                       FnKat::Attribute* elementSizeAttr)
+                                                       FnKat::Attribute* elementSizeAttr,
+                                                       const std::string& primvarPathStr)
 {
     // The following encoding is taken from Katana's
     // "LOCATIONS AND ATTRIBUTES" doc, which says this about
@@ -736,6 +717,13 @@ void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
         *inputTypeAttr = FnKat::StringAttribute("float");
         *elementSizeAttr = FnKat::IntAttribute(elementSize);
         // Leave elementSize empty.
+        return;
+    }
+    if (val.IsHolding<GfHalf>())
+    {
+        *valueAttr = FnKat::FloatAttribute(val.Get<GfHalf>());
+        *inputTypeAttr = FnKat::StringAttribute("float");
+        *elementSizeAttr = FnKat::IntAttribute(elementSize);
         return;
     }
     if (val.IsHolding<double>()) {
@@ -770,6 +758,15 @@ void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
         }
         return;
     }
+    if (val.IsHolding<GfVec2h>())
+    {
+        if (_KTypeAndSizeFromUsdVec2(roleName, "float", inputTypeAttr, elementSizeAttr))
+        {
+            const GfVec2f rawVal = val.Get<GfVec2h>();
+            *valueAttr = VtKatanaCopy(rawVal);
+        }
+        return;
+    }
     if (val.IsHolding<GfVec2d>()) {
         if (_KTypeAndSizeFromUsdVec2(roleName, "double",
                                      inputTypeAttr, elementSizeAttr)){
@@ -786,6 +783,16 @@ void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
         }
         return;
     }
+    if (val.IsHolding<GfVec3h>())
+    {
+        if (_KTypeAndSizeFromUsdVec3(roleName, "float", inputTypeAttr, elementSizeAttr))
+        {
+            const GfVec3f rawVal = val.Get<GfVec3h>();
+            *valueAttr = VtKatanaCopy(rawVal);
+        }
+        return;
+    }
+
     if (val.IsHolding<GfVec4f>()) {
         if (_KTypeAndSizeFromUsdVec4(roleName, "float",
                                      inputTypeAttr, elementSizeAttr)){
@@ -794,9 +801,11 @@ void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
         }
         return;
     }
-    if (val.IsHolding<GfVec2f>()) {
-        if (_KTypeAndSizeFromUsdVec2(roleName, inputTypeAttr, elementSizeAttr)){
-            const GfVec2f rawVal = val.Get<GfVec2f>();
+    if (val.IsHolding<GfVec4h>())
+    {
+        if (_KTypeAndSizeFromUsdVec4(roleName, "float", inputTypeAttr, elementSizeAttr))
+        {
+            const GfVec4f rawVal = val.Get<GfVec4h>();
             *valueAttr = VtKatanaCopy(rawVal);
         }
         return;
@@ -838,16 +847,19 @@ void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
         return;
     }
 
-    if (val.IsHolding<VtArray<GfHalf> >()) {
-        if (_KTypeAndSizeFromUsdVec3(roleName, "float",
-                                     inputTypeAttr, elementSizeAttr)){
-            const VtArray<GfHalf> rawVal = val.Get<VtArray<GfHalf> >();
-            *valueAttr = VtKatanaMapOrCopy(rawVal);
+    if (val.IsHolding<VtArray<GfHalf>>())
+    {
+        const auto& rawVal = val.Get<VtArray<GfHalf>>();
+        *valueAttr = VtKatanaMapOrCopy(rawVal);
+        *inputTypeAttr = FnKat::StringAttribute("float");
+        if (elementSize > 1)
+        {
+            *elementSizeAttr = FnKat::IntAttribute(elementSize);
         }
         return;
     }
-
-    if (val.IsHolding<VtFloatArray>()) {
+    if (val.IsHolding<VtFloatArray>())
+    {
         const VtFloatArray rawVal = val.Get<VtFloatArray>();
         *valueAttr = VtKatanaMapOrCopy(rawVal);
         *inputTypeAttr = FnKat::StringAttribute("float");
@@ -991,7 +1003,8 @@ void UsdKatanaUtils::ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
         return;
     }
 
-    TF_WARN("Unsupported primvar value type: %s",
+    TF_WARN("%s : Unsupported primvar value type: %s",
+            primvarPathStr.c_str(),
             ArchGetDemangled(val.GetTypeid()).c_str());
 }
 

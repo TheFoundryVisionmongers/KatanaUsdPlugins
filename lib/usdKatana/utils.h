@@ -85,12 +85,13 @@ struct UsdKatanaUtils
     /// Convert a VtValue to a Katana custom geometry attribute (primvar).
     /// Katana uses a different encoding here from other attributes, which
     /// requires the inputType and elementSize attributes.
-    USDKATANA_API static void ConvertVtValueToKatCustomGeomAttr( const VtValue & val,
-                                        int elementSize,
-                                        const TfToken &roleName,
-                                        FnKat::Attribute *valueAttr,
-                                        FnKat::Attribute *inputTypeAttr,
-                                        FnKat::Attribute *elementSizeAttr );
+    USDKATANA_API static void ConvertVtValueToKatCustomGeomAttr(const VtValue& val,
+                                                                int elementSize,
+                                                                const TfToken& roleName,
+                                                                FnKat::Attribute* valueAttr,
+                                                                FnKat::Attribute* inputTypeAttr,
+                                                                FnKat::Attribute* elementSizeAttr,
+                                                                const std::string& primvarPathStr);
 
     /// Returns whether the given attribute is varying over time.
     USDKATANA_API static bool IsAttributeVarying(const UsdAttribute &attr, double currentTime);

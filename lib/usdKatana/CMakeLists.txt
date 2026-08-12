@@ -95,6 +95,7 @@ if (BUILD_KATANA_INTERNAL_USD_PLUGINS AND UNIX)
         test/main.cpp
         test/readLightTest.cpp
         test/readLightFilterTest.cpp
+        test/readUsdTypes.cpp
     )
 
     target_compile_definitions(${PACKAGE_TESTS}
@@ -108,6 +109,7 @@ if (BUILD_KATANA_INTERNAL_USD_PLUGINS AND UNIX)
         test/light3.usda
         test/light4.usda
         test/lightfilter1.usda
+        test/types.usda
         DESTINATION
         ${CMAKE_CURRENT_BINARY_DIR}/test)
     file(COPY

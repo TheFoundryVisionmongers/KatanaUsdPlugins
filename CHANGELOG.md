@@ -1,5 +1,10 @@
 # Change List
 
+# 24.05_PySide_fn7
+- ID-611759 - Component type connections and nested connection attributes were not correctly retained when converting materials via KatanaToUsd.
+- ID-614903 - When converting Half types, UsdIn would ignore single values and treat arrays as Vec3.
+- ID-618732 - When a USD attribute with an unsupported primvar type was converted with UsdIn, an arbitrary group attribute corresponding to that value was being created.
+
 # 24.05_fn7 - 24.05_PySide_fn6
 
 - ID-611759 - When converting material connections via the KatanaToUsd node, component type port connections would not be retained.
