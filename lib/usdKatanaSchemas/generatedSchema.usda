@@ -60,14 +60,24 @@ class "FnNodeGraphAPI" (
     }
 )
 {
-    float2 foundry:ui:nodegraph:node:inputsPos = (0, 0) (
+    uniform float2 foundry:ui:nodegraph:node:inputsPos = (0, 0) (
         customData = {
             string userDocBrief = "Position of the Inputs terminal node in the USD Node Graph view."
         }
     )
-    float2 foundry:ui:nodegraph:node:outputsPos = (0, 0) (
+    uniform float2 foundry:ui:nodegraph:node:outputsPos = (0, 0) (
         customData = {
             string userDocBrief = "Position of the Outputs terminal node in the USD Node Graph view."
+        }
+    )
+    uniform token foundry:ui:nodegraph:node:inputsExpansionState = "open" (
+        customData = {
+            string userDocBrief = "Expansion state of the Inputs terminal node in the USD Node Graph view."
+        }
+    )
+    uniform token foundry:ui:nodegraph:node:outputsExpansionState = "open" (
+        customData = {
+            string userDocBrief = "Expansion state of the Outputs terminal node in the USD Node Graph view."
         }
     )
 }

@@ -92,11 +92,19 @@ class "FnNodeGraphAPI" (
     doc = """Katana-specific attributes for displaying NodeGraph and Material prims."""
 )
 {
-    float2 foundry:ui:nodegraph:node:inputsPos = (0.0, 0.0) (
+    uniform float2 foundry:ui:nodegraph:node:inputsPos = (0.0, 0.0) (
         doc = """Position of the Inputs terminal node in the USD Node Graph view."""
     )
 
-    float2 foundry:ui:nodegraph:node:outputsPos = (0.0, 0.0) (
+    uniform float2 foundry:ui:nodegraph:node:outputsPos = (0.0, 0.0) (
         doc = """Position of the Outputs terminal node in the USD Node Graph view."""
+    )
+
+    uniform token foundry:ui:nodegraph:node:inputsExpansionState = "open" (
+        doc = """Expansion state of the Inputs terminal node in the USD Node Graph view."""
+    )
+
+    uniform token foundry:ui:nodegraph:node:outputsExpansionState = "open" (
+        doc = """Expansion state of the Outputs terminal node in the USD Node Graph view."""
     )
 }

@@ -1,5 +1,11 @@
 # Change List
 
+# 26.03_fn2
+
+- KAT-12314 - Set the FnNodeGraphAPI terminal node position properties to uniform time variability.
+- KAT-481 - Added expansion state properties for the Inputs and Outputs terminal nodes in the FnNodeGraphAPI schema.
+- KAT-51 - Updated UsdMaterialBake Qt imports to use PySide6.
+
 # 26.03_fn1
 
 - ID-618584 - Added FnNodeGraphAPI to handle Foundry specific NodeGraph behaviours.

@@ -294,7 +294,8 @@ class UsdMaterialBakeNode(NodegraphAPI.SuperTool):
         if (time.time() - self.__timer) > 0.1:
             # Ensure we import QtWidgets if we know we have the interrupt
             # widget, which means we must be in a UI session.
-            from Katana import QtWidgets
+            from PySide6 import QtWidgets
+
             QtWidgets.QApplication.processEvents()
             self.__timer = time.time()
             tick = True
