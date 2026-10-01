@@ -20,9 +20,11 @@
 # KIND, either express or implied. See the Apache License for the specific
 # language governing permissions and limitations under the Apache License.
 
-from Katana import QtWidgets, QtCore, QtGui
-from Katana import NodegraphAPI, Utils
+from PySide6 import QtCore, QtGui, QtWidgets
+
 import UI4
+from Katana import Utils
+
 
 class VariantsWidget(QtWidgets.QFrame):
     """ Main Variants widget, contains a toolbar and the VariantsListWidget.
